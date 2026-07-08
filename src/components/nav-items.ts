@@ -7,6 +7,7 @@ import {
   BarChart2,
   Package,
   GraduationCap,
+  ShieldCheck,
   Star,
   HelpCircle,
   type LucideIcon,
@@ -27,6 +28,7 @@ export const navItems: NavItem[] = [
   { label: "ফলাফল", href: "/results", icon: BarChart2 },
   { label: "বই ও অর্ডার", href: "/books", icon: Package },
   { label: "শিক্ষক", href: "/teachers", icon: GraduationCap },
+  { label: "মডারেটর", href: "/moderators", icon: ShieldCheck },
   { label: "রিভিউ", href: "/reviews", icon: Star },
   { label: "FAQ", href: "/faq", icon: HelpCircle },
 ];

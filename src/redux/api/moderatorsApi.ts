@@ -162,6 +162,16 @@ export const moderatorsApi = baseApi.injectEndpoints({
     createAdmin: builder.mutation<Moderator, CreateAdminInput>({
       query: (body) => ({ url: "admin/users/create/", method: "POST", body }),
     }),
+    promoteToModerator: builder.mutation<Moderator, number>({
+      query: (studentId) => ({
+        url: `admin/students/${studentId}/promote-to-moderator/`,
+        method: "POST",
+      }),
+      invalidatesTags: [
+        { type: "Moderators", id: "LIST" },
+        { type: "Students", id: "LIST" },
+      ],
+    }),
   }),
   overrideExisting: false,
 });
@@ -179,4 +189,5 @@ export const {
   useGetPermissionCatalogQuery,
   useGetGroupedPermissionCatalogQuery,
   useCreateAdminMutation,
+  usePromoteToModeratorMutation,
 } = moderatorsApi;
