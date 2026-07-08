@@ -1,5 +1,8 @@
+"use client";
+
 import { ClipboardCheck, Users, TrendingUp, Trophy, type LucideIcon } from "lucide-react";
-import { results } from "./types";
+import { useGetAdminDashboardQuery } from "@/redux/api/dashboardApi";
+import { useGetExamAttemptsQuery } from "@/redux/api/examsApi";
 
 type Stat = {
   label: string;
@@ -9,45 +12,48 @@ type Stat = {
   iconColor: string;
 };
 
-const totalResults = results.length;
-const totalStudents = new Set(results.map((r) => r.studentId)).size;
-const averageScore = Math.round(
-  (results.reduce((sum, r) => sum + r.score / r.maxScore, 0) / results.length) * 100
-);
-const topScorer = results.slice().sort((a, b) => b.score / b.maxScore - a.score / a.maxScore)[0];
-
-const stats: Stat[] = [
-  {
-    label: "মোট ফলাফল",
-    value: String(totalResults),
-    icon: ClipboardCheck,
-    gradient: "from-blue-500/20 to-blue-500/5",
-    iconColor: "text-blue-500",
-  },
-  {
-    label: "মোট শিক্ষার্থী",
-    value: String(totalStudents),
-    icon: Users,
-    gradient: "from-sky-500/20 to-sky-500/5",
-    iconColor: "text-sky-500",
-  },
-  {
-    label: "গড় নম্বর",
-    value: `${averageScore}%`,
-    icon: TrendingUp,
-    gradient: "from-green-500/20 to-green-500/5",
-    iconColor: "text-green-500",
-  },
-  {
-    label: "শীর্ষ স্কোরার",
-    value: topScorer.studentName.split(" ")[0],
-    icon: Trophy,
-    gradient: "from-amber-500/20 to-amber-500/5",
-    iconColor: "text-amber-500",
-  },
-];
-
 export default function Stats() {
+  const { data: dashboard } = useGetAdminDashboardQuery();
+  const { data: topAttempt } = useGetExamAttemptsQuery({
+    status: "submitted",
+    ordering: "-final_marks",
+    page: 1,
+  });
+
+  const topScorer = topAttempt?.results?.[0];
+  const averagePercentile = dashboard?.exams.average_percentile;
+
+  const stats: Stat[] = [
+    {
+      label: "মোট ফলাফল",
+      value: String(dashboard?.exams.total_attempts ?? "—"),
+      icon: ClipboardCheck,
+      gradient: "from-blue-500/20 to-blue-500/5",
+      iconColor: "text-blue-500",
+    },
+    {
+      label: "মোট শিক্ষার্থী",
+      value: String(dashboard?.students.total ?? "—"),
+      icon: Users,
+      gradient: "from-sky-500/20 to-sky-500/5",
+      iconColor: "text-sky-500",
+    },
+    {
+      label: "গড় পার্সেন্টাইল",
+      value: averagePercentile != null ? `${Math.round(averagePercentile)}%` : "—",
+      icon: TrendingUp,
+      gradient: "from-green-500/20 to-green-500/5",
+      iconColor: "text-green-500",
+    },
+    {
+      label: "শীর্ষ স্কোরার",
+      value: topScorer?.student_name?.split(" ")[0] ?? "—",
+      icon: Trophy,
+      gradient: "from-amber-500/20 to-amber-500/5",
+      iconColor: "text-amber-500",
+    },
+  ];
+
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {stats.map(({ label, value, icon: Icon, gradient, iconColor }) => (

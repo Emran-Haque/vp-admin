@@ -16,7 +16,7 @@ Access: Admin/Super Admin, or moderator with `can_view_dashboard`
 {
   "students": { "total": 500, "active": 480, "new_last_30_days": 30 },
   "courses": { "total": 20, "published": 15 },
-  "exams": { "total": 40, "total_attempts": 3000, "pending_results": 2 },
+  "exams": { "total": 40, "total_attempts": 3000, "pending_results": 2, "average_percentile": 62.35 },
   "ecommerce": { "total_books": 12, "total_orders": 200, "paid_orders": 180, "pending_orders": 5, "revenue": "150000.00" },
   "content": { "teachers": 8, "reviews": 40, "success_stories": 15 }
 }
@@ -439,11 +439,13 @@ Output:
 ```
 
 ### GET admin/exam-attempts/  (read-only)
-Query: `?exam=1&status=submitted&ordering=-final_marks`
+Query: `?exam=1&course=5&status=submitted&search=karim&ordering=-final_marks`
+- `course` filters via the attempt's exam → course relation (so you can view all results for a course without picking one exam at a time).
+- `search` matches student name/ID or exam title.
 ```json
 {
   "count": 100, "next": "...", "previous": null,
-  "results": [ { "id": 1, "exam": 1, "status": "submitted", "score": "20.00", "correct_count": 20, "wrong_count": 3, "unanswered_count": 2, "negative_marks": "0.75", "final_marks": "19.25", "time_taken_seconds": 1200, "rank": 3, "percentile": "88.00", "is_passed": true, "submitted_at": "...", "leaderboard_visible": false } ]
+  "results": [ { "id": 1, "exam": 1, "student": 4, "student_name": "Karim", "status": "submitted", "score": "20.00", "correct_count": 20, "wrong_count": 3, "unanswered_count": 2, "negative_marks": "0.75", "final_marks": "19.25", "time_taken_seconds": 1200, "rank": 3, "percentile": "88.00", "is_passed": true, "submitted_at": "...", "leaderboard_visible": false } ]
 }
 ```
 
@@ -549,6 +551,7 @@ Query: `?payment_status=pending&order_status=processing&search=VP2026070700001`
       "items": [ { "id": 1, "item_type": "book", "book": 1, "course": null, "title_snapshot": "Physics Guide", "price": "500.00", "quantity": 2, "line_total": "1000.00" } ],
       "subtotal": "1000.00", "discount": "0.00", "total": "1000.00",
       "payment_method": "bkash", "payment_status": "pending", "order_status": "pending",
+      "status_timeline": [ { "status": "pending", "at": "2026-07-08T10:00:00Z" }, { "status": "confirmed", "at": null }, { "status": "processing", "at": null }, { "status": "shipped", "at": null }, { "status": "completed", "at": null } ],
       "transaction_id": "", "customer_phone": "01700000000", "shipping_address": "...",
       "admin_note": "", "promo_code": "", "created_at": "...", "updated_at": "..."
     }

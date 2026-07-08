@@ -109,6 +109,8 @@ export type ExamAnalytics = {
 export type ExamAttempt = {
   id: number;
   exam: number;
+  student: number;
+  student_name: string;
   status: string;
   score: string;
   correct_count: number;
@@ -126,7 +128,9 @@ export type ExamAttempt = {
 
 export type ExamAttemptListParams = {
   exam?: number;
+  course?: number;
   status?: string;
+  search?: string;
   ordering?: string;
   page?: number;
 };
@@ -173,7 +177,7 @@ export const examsApi = baseApi.injectEndpoints({
       query: ({ examId, data }) => ({
         url: `admin/exams/${examId}/questions/`,
         method: "POST",
-        body: data,
+        body: { ...data, exam: examId },
       }),
       invalidatesTags: (_result, _error, { examId }) => [
         { type: "ExamQuestions", id: examId },

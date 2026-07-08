@@ -24,6 +24,7 @@ export type Order = {
   payment_method: string;
   payment_status: string;
   order_status: string;
+  status_timeline: { status: string; at: string | null }[];
   transaction_id: string;
   customer_phone: string;
   shipping_address: string;

@@ -45,7 +45,7 @@ export default function AddNoticeModal({ onClose }: { onClose: () => void }) {
           <button
             type="button"
             onClick={onClose}
-            className="flex size-8 items-center justify-center rounded-lg bg-white/5 text-slate-400"
+            className="flex size-8 cursor-pointer items-center justify-center rounded-lg bg-white/5 text-slate-400"
           >
             <X size={16} />
           </button>
@@ -87,11 +87,13 @@ export default function AddNoticeModal({ onClose }: { onClose: () => void }) {
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
-                className="w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
+                className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
               >
-                <option value="">নির্বাচন করুন</option>
+                <option value="" className="bg-slate-800 text-slate-200">
+                  নির্বাচন করুন
+                </option>
                 {priorities.map((p) => (
-                  <option key={p.value} value={p.value}>
+                  <option key={p.value} value={p.value} className="bg-slate-800 text-slate-200">
                     {p.label}
                   </option>
                 ))}
@@ -103,10 +105,10 @@ export default function AddNoticeModal({ onClose }: { onClose: () => void }) {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
+                className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
               >
                 {categories.map((c) => (
-                  <option key={c} value={c}>
+                  <option key={c} value={c} className="bg-slate-800 text-slate-200">
                     {c}
                   </option>
                 ))}
@@ -114,12 +116,12 @@ export default function AddNoticeModal({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
-          <label className="flex items-center gap-2.5">
+          <label className="flex cursor-pointer items-center gap-2.5">
             <input
               type="checkbox"
               checked={visible}
               onChange={(e) => setVisible(e.target.checked)}
-              className="size-4 accent-blue-500"
+              className="size-4 cursor-pointer accent-blue-500"
             />
             <span className="text-xs font-medium text-slate-400">সকলের কাছে দৃশ্যমান রাখুন</span>
           </label>
@@ -128,7 +130,7 @@ export default function AddNoticeModal({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               onClick={onClose}
-              className="rounded-[10px] border border-slate-400/20 bg-slate-400/5 px-4 py-2 text-xs font-bold text-slate-400"
+              className="cursor-pointer rounded-[10px] border border-slate-400/20 bg-slate-400/5 px-4 py-2 text-xs font-bold text-slate-400"
             >
               বাতিল
             </button>
@@ -136,7 +138,7 @@ export default function AddNoticeModal({ onClose }: { onClose: () => void }) {
               type="button"
               onClick={handleSave}
               disabled={isLoading || !title.trim()}
-              className="flex items-center gap-1.5 rounded-[10px] bg-gradient-to-br from-blue-500 to-blue-600 px-4 py-2 text-xs font-bold text-white shadow-[0px_4px_12px_0px_rgba(0,200,150,0.19)] disabled:opacity-50"
+              className="flex cursor-pointer items-center gap-1.5 rounded-[10px] bg-gradient-to-br from-blue-500 to-blue-600 px-4 py-2 text-xs font-bold text-white shadow-[0px_4px_12px_0px_rgba(0,200,150,0.19)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Save size={14} />
               {isLoading ? "সংরক্ষণ হচ্ছে…" : "সংরক্ষণ করুন"}

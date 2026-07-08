@@ -72,8 +72,10 @@ export default function NoticeList() {
               <button
                 type="button"
                 onClick={() => toggleVisibility(notice.id)}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold ${
-                  notice.is_visible ? "bg-teal-500/10 text-teal-500" : "bg-white/5 text-slate-400"
+                className={`flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors duration-200 ${
+                  notice.is_visible
+                    ? "bg-teal-500/10 text-teal-500 hover:bg-teal-500/20"
+                    : "bg-white/5 text-slate-400 hover:bg-white/10"
                 }`}
               >
                 {notice.is_visible ? <Eye size={14} /> : <EyeOff size={14} />}
@@ -84,7 +86,7 @@ export default function NoticeList() {
                 onClick={() => {
                   if (confirm(`"${notice.title}" নোটিশটি মুছে ফেলতে চান?`)) deleteNotice(notice.id);
                 }}
-                className="flex size-7 items-center justify-center rounded-lg bg-red-500/10 text-red-500"
+                className="flex size-7 cursor-pointer items-center justify-center rounded-lg bg-red-500/10 text-red-500 transition-colors duration-200 hover:bg-red-500/20"
               >
                 <Trash2 size={12} />
               </button>

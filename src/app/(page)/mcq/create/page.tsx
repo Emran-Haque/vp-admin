@@ -27,6 +27,30 @@ const emptyBasicInfo: ExamBasicInfo = {
 
 const optionLetters = ["A", "B", "C", "D"] as const;
 
+function extractErrorMessage(error: unknown): string {
+  if (typeof error === "object" && error !== null && "data" in error) {
+    const data = (error as { data?: unknown }).data;
+    if (typeof data === "string") return data;
+    if (data && typeof data === "object") {
+      const obj = data as Record<string, unknown>;
+      if (typeof obj.detail === "string") return obj.detail;
+      const fieldErrors = Object.entries(obj)
+        .map(([field, val]) => {
+          if (Array.isArray(val)) return `${field}: ${val.join(", ")}`;
+          if (typeof val === "string") return `${field}: ${val}`;
+          return null;
+        })
+        .filter((v): v is string => v !== null);
+      if (fieldErrors.length) return fieldErrors.join(" | ");
+    }
+  }
+  if (typeof error === "object" && error !== null && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string") return message;
+  }
+  return "অজানা ত্রুটি";
+}
+
 export default function Page() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [basicInfo, setBasicInfo] = useState<ExamBasicInfo>(emptyBasicInfo);
@@ -42,13 +66,15 @@ export default function Page() {
   const handlePublish = async () => {
     setIsPublishing(true);
     setPublishError(null);
-    try {
-      const startDateTime =
-        basicInfo.examDate && basicInfo.startTime
-          ? new Date(`${basicInfo.examDate}T${basicInfo.startTime}:00`).toISOString()
-          : undefined;
 
-      const exam = await createExam({
+    const startDateTime =
+      basicInfo.examDate && basicInfo.startTime
+        ? new Date(`${basicInfo.examDate}T${basicInfo.startTime}:00`).toISOString()
+        : undefined;
+
+    let exam;
+    try {
+      exam = await createExam({
         course: Number(basicInfo.course),
         title: basicInfo.name,
         subject: basicInfo.subject,
@@ -60,9 +86,16 @@ export default function Page() {
         start_time: startDateTime,
         end_time: startDateTime,
       }).unwrap();
+    } catch (err) {
+      console.error("Failed to create exam:", err);
+      setPublishError(`পরীক্ষা তৈরি করা যায়নি: ${extractErrorMessage(err)}`);
+      setIsPublishing(false);
+      return;
+    }
 
-      for (let i = 0; i < questions.length; i++) {
-        const q = questions[i];
+    for (let i = 0; i < questions.length; i++) {
+      const q = questions[i];
+      try {
         await addExamQuestion({
           examId: exam.id,
           data: {
@@ -76,18 +109,27 @@ export default function Page() {
             order: i + 1,
           },
         }).unwrap();
+      } catch (err) {
+        console.error(`Failed to add question ${i + 1}:`, err);
+        setPublishError(`প্রশ্ন ${i + 1} যোগ করা যায়নি: ${extractErrorMessage(err)}`);
+        setIsPublishing(false);
+        return;
       }
-
-      if (questions.length > 0) {
-        await publishExam(exam.id).unwrap();
-      }
-
-      setPublished(true);
-    } catch {
-      setPublishError("পরীক্ষা প্রকাশ করা যায়নি। তথ্য ও API সংযোগ যাচাই করে আবার চেষ্টা করুন।");
-    } finally {
-      setIsPublishing(false);
     }
+
+    if (questions.length > 0) {
+      try {
+        await publishExam(exam.id).unwrap();
+      } catch (err) {
+        console.error("Failed to publish exam:", err);
+        setPublishError(`পরীক্ষা প্রকাশ করা যায়নি: ${extractErrorMessage(err)}`);
+        setIsPublishing(false);
+        return;
+      }
+    }
+
+    setPublished(true);
+    setIsPublishing(false);
   };
 
   return (

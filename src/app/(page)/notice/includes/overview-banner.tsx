@@ -19,7 +19,7 @@ export default function OverviewBanner({ onAddClick }: { onAddClick: () => void 
         <button
           type="button"
           onClick={onAddClick}
-          className="flex items-center gap-2 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 px-6 py-3.5 text-lg font-semibold text-white shadow-[0px_0px_40px_-10px_rgba(0,229,200,0.50)]"
+          className="flex cursor-pointer items-center gap-2 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 px-6 py-3.5 text-lg font-semibold text-white shadow-[0px_0px_40px_-10px_rgba(0,229,200,0.50)] transition-all duration-200 hover:brightness-110"
         >
           <Plus size={16} />
           নতুন নোটিশ যোগ করুন

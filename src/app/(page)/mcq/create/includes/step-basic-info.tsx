@@ -144,7 +144,7 @@ export default function StepBasicInfo({ value, onChange }: Props) {
             type="date"
             value={value.examDate}
             onChange={(e) => set("examDate", e.target.value)}
-            className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 focus:outline-none"
+            className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 focus:outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100"
           />
         </div>
       </div>
@@ -155,7 +155,7 @@ export default function StepBasicInfo({ value, onChange }: Props) {
           type="time"
           value={value.startTime}
           onChange={(e) => set("startTime", e.target.value)}
-          className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 focus:outline-none sm:w-1/2"
+          className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 focus:outline-none sm:w-1/2 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100"
         />
       </div>
 

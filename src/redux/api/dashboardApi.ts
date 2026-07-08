@@ -3,7 +3,7 @@ import { baseApi } from "./baseApi";
 export type AdminDashboard = {
   students: { total: number; active: number; new_last_30_days: number };
   courses: { total: number; published: number };
-  exams: { total: number; total_attempts: number; pending_results: number };
+  exams: { total: number; total_attempts: number; pending_results: number; average_percentile: number | null };
   ecommerce: {
     total_books: number;
     total_orders: number;
