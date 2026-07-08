@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Sidebar from "@/components/sidebar";
 import Header from "@/components/header";
 import { useAppSelector } from "@/redux/hooks";
@@ -14,11 +14,16 @@ export default function PageLayout({ children }: { children: ReactNode }) {
   const role = useAppSelector((state) => state.auth.user?.role);
   const isAuthorized = Boolean(token) && Boolean(role) && ALLOWED_ROLES.includes(role as string);
 
+  const [mounted, setMounted] = useState(false);
   useEffect(() => {
-    if (!isAuthorized) router.replace("/login");
-  }, [isAuthorized, router]);
+    setMounted(true);
+  }, []);
 
-  if (!isAuthorized) return null;
+  useEffect(() => {
+    if (mounted && !isAuthorized) router.replace("/login");
+  }, [mounted, isAuthorized, router]);
+
+  if (!mounted || !isAuthorized) return null;
 
   return (
     <div className="min-h-screen bg-zinc-900">

@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { User, LogOut } from "lucide-react";
 import { navItems } from "./nav-items";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { logout } from "@/redux/slices/authSlice";
+import LogoutConfirmModal from "./logout-confirm-modal";
 
 const ROLE_LABELS: Record<string, string> = {
   admin: "অ্যাডমিন",
@@ -19,6 +21,7 @@ export default function Sidebar() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -28,7 +31,7 @@ export default function Sidebar() {
   return (
     <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col bg-gray-950/95 border-r border-white/5 md:flex">
       <div className="flex h-24 items-center px-6">
-        <Image src="/main_logo_white.png" alt="ভাইয়াদের পাঠশালা" width={160} height={64} className="h-16 w-auto object-contain" priority />
+        <Image src="/main_logo_white.png" alt="ভাইয়াদের পাঠশালা" width={188} height={64} className="h-16 w-auto object-contain" priority />
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2">
@@ -74,13 +77,17 @@ export default function Sidebar() {
 
         <button
           type="button"
-          onClick={handleLogout}
+          onClick={() => setShowLogoutConfirm(true)}
           className="flex w-full items-center gap-2.5 rounded-[10px] border border-red-500/20 bg-red-500/5 px-3.5 py-2.5 text-xs font-medium text-red-500"
         >
           <LogOut size={14} />
           লগআউট
         </button>
       </div>
+
+      {showLogoutConfirm && (
+        <LogoutConfirmModal onConfirm={handleLogout} onCancel={() => setShowLogoutConfirm(false)} />
+      )}
     </aside>
   );
 }

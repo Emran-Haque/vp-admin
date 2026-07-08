@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type { RootState } from "../store";
 
-const API_BASE_URL = "http://165.22.110.31/api/v1/";
+const API_BASE_URL = "https://api.vaiyaderpathshala.com/api/v1/";
 
 export const baseApi = createApi({
   reducerPath: "api",
