@@ -80,11 +80,11 @@ export const coursesApi = baseApi.injectEndpoints({
       query: (id) => `admin/courses/${id}/`,
       providesTags: (_result, _error, id) => [{ type: "Courses", id }],
     }),
-    createCourse: builder.mutation<Course, CreateCourseInput>({
+    createCourse: builder.mutation<Course, CreateCourseInput | FormData>({
       query: (body) => ({ url: "admin/courses/", method: "POST", body }),
       invalidatesTags: [{ type: "Courses", id: "LIST" }],
     }),
-    updateCourse: builder.mutation<Course, { id: number; data: UpdateCourseInput }>({
+    updateCourse: builder.mutation<Course, { id: number; data: UpdateCourseInput | FormData }>({
       query: ({ id, data }) => ({ url: `admin/courses/${id}/`, method: "PATCH", body: data }),
       invalidatesTags: (_result, _error, { id }) => [
         { type: "Courses", id },

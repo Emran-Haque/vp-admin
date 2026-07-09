@@ -6,7 +6,7 @@ export type Exam = {
   course: number;
   title: string;
   slug: string;
-  subject: string;
+  subject: number | null;
   instructions: string;
   total_questions: number;
   duration_minutes: number;
@@ -37,7 +37,19 @@ export type ExamListParams = {
 };
 
 export type CreateExamInput = Partial<
-  Omit<Exam, "id" | "slug" | "created_by" | "published_by" | "status" | "total_questions" | "total_marks">
+  Omit<
+    Exam,
+    | "id"
+    | "slug"
+    | "created_by"
+    | "published_by"
+    | "status"
+    | "total_questions"
+    | "total_marks"
+    // result/leaderboard publish scheduling is not accepted by admin/exams/ — use publishExamResult
+    | "result_publish_at"
+    | "leaderboard_publish_at"
+  >
 > & {
   course: number;
   title: string;

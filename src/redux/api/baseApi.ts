@@ -20,6 +20,7 @@ export const baseApi = createApi({
     "Moderators",
     "Courses",
     "CourseCategories",
+    "CourseSubjects",
     "Enrollments",
     "Classes",
     "Resources",

@@ -18,7 +18,7 @@ function resultStatusOf(exam: Exam) {
   return resultStatusStyles[exam.result_status] ?? resultStatusStyles.hidden;
 }
 
-export default function ExamList() {
+export default function ExamList({ onEdit }: { onEdit: (exam: Exam) => void }) {
   const { data, isLoading, isError } = useGetExamsQuery();
   const [deleteExam] = useDeleteExamMutation();
   const [publishResult] = usePublishExamResultMutation();
@@ -90,7 +90,8 @@ export default function ExamList() {
 
               <button
                 type="button"
-                className="flex size-10 items-center justify-center rounded-xl border border-slate-800 text-blue-50"
+                onClick={() => onEdit(exam)}
+                className="flex size-10 cursor-pointer items-center justify-center rounded-xl border border-slate-800 text-blue-50 transition-colors duration-200 hover:bg-white/5"
               >
                 <Pencil size={16} />
               </button>

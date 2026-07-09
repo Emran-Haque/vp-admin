@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { X, Save, AlertTriangle } from "lucide-react";
-import { useCreateNoticeMutation } from "@/redux/api/noticesApi";
+import { X, Save, AlertTriangle, Users, GraduationCap, BookOpen } from "lucide-react";
+import { useCreateNoticeMutation, type Notice } from "@/redux/api/noticesApi";
+import { useGetCoursesQuery } from "@/redux/api/coursesApi";
 
 const priorities = [
   { value: "urgent", label: "জরুরি" },
@@ -10,14 +11,23 @@ const priorities = [
   { value: "normal", label: "সাধারণ" },
 ];
 
-const categories = ["সাধারণ", "পরীক্ষা", "সময়সূচি", "রিসোর্স"];
+const targetTypes: { value: Notice["target_type"]; label: string; icon: typeof Users }[] = [
+  { value: "all", label: "সবার জন্য", icon: Users },
+  { value: "students", label: "সকল শিক্ষার্থী", icon: GraduationCap },
+  { value: "course_specific", label: "নির্দিষ্ট কোর্স", icon: BookOpen },
+];
 
 export default function AddNoticeModal({ onClose }: { onClose: () => void }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("");
-  const [category, setCategory] = useState(categories[0]);
+  const [category, setCategory] = useState("");
+  const [targetType, setTargetType] = useState<Notice["target_type"]>("all");
+  const [course, setCourse] = useState("");
   const [visible, setVisible] = useState(true);
+
+  const { data: coursesData } = useGetCoursesQuery();
+  const courses = coursesData?.results ?? [];
 
   const [createNotice, { isLoading, isError }] = useCreateNoticeMutation();
 
@@ -26,9 +36,10 @@ export default function AddNoticeModal({ onClose }: { onClose: () => void }) {
       await createNotice({
         title,
         description,
-        category,
+        category: category || "general",
         priority: priority || "normal",
-        target_type: "all",
+        target_type: targetType,
+        course: targetType === "course_specific" ? Number(course) : null,
         is_visible: visible,
       }).unwrap();
       onClose();
@@ -36,6 +47,8 @@ export default function AddNoticeModal({ onClose }: { onClose: () => void }) {
       // error state shown inline below
     }
   };
+
+  const canSave = title.trim() && (targetType !== "course_specific" || course);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-800/95 p-4">
@@ -102,19 +115,56 @@ export default function AddNoticeModal({ onClose }: { onClose: () => void }) {
 
             <div>
               <label className="block pb-1.5 text-xs font-semibold text-slate-400">ক্যাটাগরি</label>
-              <select
+              <input
+                type="text"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
+                placeholder="যেমন: general, class, exam"
+                className="w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 placeholder:text-slate-200/50 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block pb-1.5 text-xs font-semibold text-slate-400">কাদের জন্য</label>
+            <div className="grid grid-cols-3 gap-2">
+              {targetTypes.map(({ value, label, icon: Icon }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setTargetType(value)}
+                  className={`flex cursor-pointer flex-col items-center gap-1 rounded-[10px] border px-2 py-2.5 text-[11px] font-semibold transition-colors duration-200 ${
+                    targetType === value
+                      ? "border-blue-500 bg-blue-500/10 text-blue-500"
+                      : "border-white/10 bg-white/5 text-slate-400 hover:bg-white/10"
+                  }`}
+                >
+                  <Icon size={16} />
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {targetType === "course_specific" && (
+            <div>
+              <label className="block pb-1.5 text-xs font-semibold text-slate-400">কোর্স নির্বাচন করুন</label>
+              <select
+                value={course}
+                onChange={(e) => setCourse(e.target.value)}
                 className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
               >
-                {categories.map((c) => (
-                  <option key={c} value={c} className="bg-slate-800 text-slate-200">
-                    {c}
+                <option value="" className="bg-slate-800 text-slate-200">
+                  নির্বাচন করুন
+                </option>
+                {courses.map((c) => (
+                  <option key={c.id} value={c.id} className="bg-slate-800 text-slate-200">
+                    {c.title}
                   </option>
                 ))}
               </select>
             </div>
-          </div>
+          )}
 
           <label className="flex cursor-pointer items-center gap-2.5">
             <input
@@ -137,7 +187,7 @@ export default function AddNoticeModal({ onClose }: { onClose: () => void }) {
             <button
               type="button"
               onClick={handleSave}
-              disabled={isLoading || !title.trim()}
+              disabled={isLoading || !canSave}
               className="flex cursor-pointer items-center gap-1.5 rounded-[10px] bg-gradient-to-br from-blue-500 to-blue-600 px-4 py-2 text-xs font-bold text-white shadow-[0px_4px_12px_0px_rgba(0,200,150,0.19)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Save size={14} />

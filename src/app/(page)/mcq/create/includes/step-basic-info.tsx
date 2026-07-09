@@ -1,15 +1,15 @@
 "use client";
 
-import { ClipboardList, Clock } from "lucide-react";
+import { ClipboardList, Clock, Megaphone, Trophy } from "lucide-react";
 import { useGetCoursesQuery } from "@/redux/api/coursesApi";
+import { useGetCourseSubjectsQuery } from "@/redux/api/courseSubjectsApi";
+import { combineDateTime, addMinutes, formatTimeOfDay } from "@/lib/exam-datetime";
 import type { ExamBasicInfo, ExamStatus } from "./types";
 
 type Props = {
   value: ExamBasicInfo;
   onChange: (value: ExamBasicInfo) => void;
 };
-
-const subjects = ["বাংলা", "ইংরেজি", "গণিত", "সাধারণ জ্ঞান", "বিজ্ঞান"];
 
 const statusOptions: { value: ExamStatus; label: string }[] = [
   { value: "draft", label: "ড্রাফট" },
@@ -21,9 +21,19 @@ export default function StepBasicInfo({ value, onChange }: Props) {
   const { data: coursesData } = useGetCoursesQuery();
   const courses = coursesData?.results ?? [];
 
+  const { data: courseSubjectsData } = useGetCourseSubjectsQuery(
+    { course: Number(value.course) },
+    { skip: !value.course }
+  );
+  const courseSubjects = courseSubjectsData?.results ?? [];
+
   const set = <K extends keyof ExamBasicInfo>(key: K, val: ExamBasicInfo[K]) => {
     onChange({ ...value, [key]: val });
   };
+
+  const endTimePreview = formatTimeOfDay(
+    addMinutes(combineDateTime(value.examDate, value.startTime), Number(value.duration) || 0)
+  );
 
   return (
     <section className="rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
@@ -56,7 +66,7 @@ export default function StepBasicInfo({ value, onChange }: Props) {
         </label>
         <select
           value={value.course}
-          onChange={(e) => set("course", e.target.value)}
+          onChange={(e) => onChange({ ...value, course: e.target.value, subject: "", subjectName: "" })}
           className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3.5 text-base text-blue-50 focus:outline-none"
         >
           <option value="">নির্বাচন করুন</option>
@@ -75,16 +85,24 @@ export default function StepBasicInfo({ value, onChange }: Props) {
           </label>
           <select
             value={value.subject}
-            onChange={(e) => set("subject", e.target.value)}
-            className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3.5 text-base text-blue-50 focus:outline-none"
+            disabled={!value.course}
+            onChange={(e) => {
+              const id = e.target.value;
+              const name = courseSubjects.find((s) => String(s.id) === id)?.name ?? "";
+              onChange({ ...value, subject: id, subjectName: name });
+            }}
+            className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3.5 text-base text-blue-50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           >
             <option value="">নির্বাচন করুন</option>
-            {subjects.map((s) => (
-              <option key={s} value={s}>
-                {s}
+            {courseSubjects.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
               </option>
             ))}
           </select>
+          <p className="mt-1.5 text-sm text-slate-400">
+            {value.course ? "নির্বাচিত কোর্সের বিষয়সমূহ" : "প্রথমে কোর্স নির্বাচন করুন"}
+          </p>
         </div>
 
         <div>
@@ -149,14 +167,60 @@ export default function StepBasicInfo({ value, onChange }: Props) {
         </div>
       </div>
 
-      <div className="pt-6">
-        <label className="block pb-2 text-base font-medium text-blue-50">শুরু সময়</label>
-        <input
-          type="time"
-          value={value.startTime}
-          onChange={(e) => set("startTime", e.target.value)}
-          className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 focus:outline-none sm:w-1/2 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100"
-        />
+      <div className="grid grid-cols-1 gap-6 pt-6 sm:grid-cols-2">
+        <div>
+          <label className="block pb-2 text-base font-medium text-blue-50">শুরু সময়</label>
+          <input
+            type="time"
+            value={value.startTime}
+            onChange={(e) => set("startTime", e.target.value)}
+            className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 focus:outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100"
+          />
+        </div>
+
+        <div>
+          <label className="block pb-2 text-base font-medium text-blue-50">শেষ সময় (স্বয়ংক্রিয়)</label>
+          <div className="flex items-center gap-2 rounded-xl border border-slate-800 bg-gray-800/60 px-4 py-3 text-base text-slate-400">
+            <Clock size={16} />
+            {endTimePreview}
+          </div>
+          <p className="mt-1.5 text-sm text-slate-400">শুরু সময় ও সময়কাল (মিনিট) থেকে হিসাব করা হয়</p>
+        </div>
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-slate-800 bg-gray-800/40 p-5">
+        <p className="text-base font-semibold text-blue-50">ফলাফল ও লিডারবোর্ড প্রকাশের সময়সূচি</p>
+        <p className="mt-0.5 text-sm text-slate-400">কখন ফলাফল ও লিডারবোর্ড শিক্ষার্থীদের কাছে প্রকাশিত হবে তা নির্ধারণ করুন</p>
+
+        <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div>
+            <label className="flex items-center gap-1.5 pb-2 text-base font-medium text-blue-50">
+              <Megaphone size={16} className="text-cyan-500" />
+              ফলাফল প্রকাশের সময়
+            </label>
+            <input
+              type="datetime-local"
+              value={value.resultPublishAt}
+              onChange={(e) => set("resultPublishAt", e.target.value)}
+              className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 focus:outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100"
+            />
+            <p className="mt-1.5 text-sm text-slate-400">খালি রাখলে ফলাফল ম্যানুয়ালি প্রকাশ করতে হবে</p>
+          </div>
+
+          <div>
+            <label className="flex items-center gap-1.5 pb-2 text-base font-medium text-blue-50">
+              <Trophy size={16} className="text-amber-500" />
+              লিডারবোর্ড প্রকাশের সময়
+            </label>
+            <input
+              type="datetime-local"
+              value={value.leaderboardPublishAt}
+              onChange={(e) => set("leaderboardPublishAt", e.target.value)}
+              className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 focus:outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100"
+            />
+            <p className="mt-1.5 text-sm text-slate-400">খালি রাখলে লিডারবোর্ড ম্যানুয়ালি প্রকাশ করতে হবে</p>
+          </div>
+        </div>
       </div>
 
       <div className="pt-6">

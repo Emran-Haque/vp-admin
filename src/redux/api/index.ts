@@ -5,6 +5,7 @@ export * from "./dashboardApi";
 export * from "./studentsApi";
 export * from "./moderatorsApi";
 export * from "./coursesApi";
+export * from "./courseSubjectsApi";
 export * from "./classesApi";
 export * from "./resourcesApi";
 export * from "./examsApi";

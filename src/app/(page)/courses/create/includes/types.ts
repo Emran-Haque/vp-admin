@@ -14,9 +14,30 @@ export type CourseModule = {
 
 export type BasicInfo = {
   name: string;
-  description: string;
+  shortDescription: string;
+  fullDescription: string;
+  whyNeeded: string;
   category: string;
   level: string;
   price: string;
+  oldPrice: string;
+  discount: string;
+  isFree: boolean;
   duration: string;
+  batchStartDate: string;
+  classStartDate: string;
+  totalClasses: string;
+  totalQuizzes: string;
+  totalAssignments: string;
+  promoVideoUrl: string;
+  syllabusDriveLink: string;
 };
+
+export type CourseFiles = {
+  thumbnail: File | null;
+  coverImage: File | null;
+  syllabusPdf: File | null;
+};
+
+export type SubjectDraft = { id: string; name: string };
+export type FaqDraft = { id: string; question: string; answer: string };

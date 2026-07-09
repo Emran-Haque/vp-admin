@@ -15,7 +15,7 @@ const statBoxes: { key: keyof Course; label: string; icon: LucideIcon }[] = [
   { key: "enrollment_count", label: "ছাত্র", icon: Users },
 ];
 
-export default function CourseList() {
+export default function CourseList({ onEdit }: { onEdit: (course: Course) => void }) {
   const { data, isLoading, isError } = useGetCoursesQuery();
   const [deleteCourse] = useDeleteCourseMutation();
 
@@ -79,7 +79,8 @@ export default function CourseList() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  className="flex size-10 items-center justify-center rounded-xl border border-slate-800 text-blue-50"
+                  onClick={() => onEdit(course)}
+                  className="flex size-10 cursor-pointer items-center justify-center rounded-xl border border-slate-800 text-blue-50 transition-colors duration-200 hover:bg-white/5"
                 >
                   <Pencil size={16} />
                 </button>

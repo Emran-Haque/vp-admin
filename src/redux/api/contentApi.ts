@@ -131,11 +131,11 @@ export const contentApi = baseApi.injectEndpoints({
       query: (id) => `admin/teachers/${id}/`,
       providesTags: (_r, _e, id) => [{ type: "Teachers", id }],
     }),
-    createTeacher: builder.mutation<Teacher, CreateTeacherInput>({
+    createTeacher: builder.mutation<Teacher, CreateTeacherInput | FormData>({
       query: (body) => ({ url: "admin/teachers/", method: "POST", body }),
       invalidatesTags: [{ type: "Teachers", id: "LIST" }],
     }),
-    updateTeacher: builder.mutation<Teacher, { id: number; data: UpdateTeacherInput }>({
+    updateTeacher: builder.mutation<Teacher, { id: number; data: UpdateTeacherInput | FormData }>({
       query: ({ id, data }) => ({ url: `admin/teachers/${id}/`, method: "PATCH", body: data }),
       invalidatesTags: (_r, _e, { id }) => [{ type: "Teachers", id }, { type: "Teachers", id: "LIST" }],
     }),

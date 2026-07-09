@@ -1,11 +1,25 @@
 "use client";
 
-import { Eye, EyeOff, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Pencil, Trash2, Users, GraduationCap, BookOpen } from "lucide-react";
 import {
   useGetNoticesQuery,
   useDeleteNoticeMutation,
   useToggleNoticeVisibilityMutation,
+  type Notice,
 } from "@/redux/api/noticesApi";
+
+const targetTypeStyles: Record<string, { label: string; icon: typeof Users }> = {
+  all: { label: "সবার জন্য", icon: Users },
+  students: { label: "সকল শিক্ষার্থী", icon: GraduationCap },
+  course_specific: { label: "নির্দিষ্ট কোর্স", icon: BookOpen },
+};
+
+function targetLabel(notice: Notice): string {
+  if (notice.target_type === "course_specific") {
+    return notice.course_title || "নির্দিষ্ট কোর্স";
+  }
+  return targetTypeStyles[notice.target_type]?.label ?? notice.target_type;
+}
 
 const priorityStyles: Record<string, { label: string; dot: string; badge: string }> = {
   urgent: {
@@ -25,7 +39,7 @@ const priorityStyles: Record<string, { label: string; dot: string; badge: string
   },
 };
 
-export default function NoticeList() {
+export default function NoticeList({ onEdit }: { onEdit: (notice: Notice) => void }) {
   const { data, isLoading, isError } = useGetNoticesQuery();
   const [deleteNotice] = useDeleteNoticeMutation();
   const [toggleVisibility] = useToggleNoticeVisibilityMutation();
@@ -48,6 +62,7 @@ export default function NoticeList() {
     <section className="flex flex-col gap-2.5">
       {notices.map((notice) => {
         const priority = priorityStyles[notice.priority] ?? priorityStyles.normal;
+        const TargetIcon = targetTypeStyles[notice.target_type]?.icon ?? Users;
         return (
           <div
             key={notice.id}
@@ -58,9 +73,13 @@ export default function NoticeList() {
             <div className="min-w-48 flex-1">
               <p className="text-sm font-semibold text-slate-50">{notice.title}</p>
               <p className="mt-1 text-xs text-slate-400">{notice.description}</p>
-              <div className="mt-1.5 flex items-center gap-2">
+              <div className="mt-1.5 flex flex-wrap items-center gap-2">
                 <span className={`rounded-md px-2 py-0.5 text-[10px] font-bold ${priority.badge}`}>
                   {priority.label}
+                </span>
+                <span className="flex items-center gap-1 rounded-md bg-white/5 px-2 py-0.5 text-[10px] font-bold text-slate-300">
+                  <TargetIcon size={10} />
+                  {targetLabel(notice)}
                 </span>
                 <span className="text-xs text-gray-400">
                   {notice.category} • {new Date(notice.created_at).toLocaleDateString("bn-BD")}
@@ -80,6 +99,13 @@ export default function NoticeList() {
               >
                 {notice.is_visible ? <Eye size={14} /> : <EyeOff size={14} />}
                 {notice.is_visible ? "দৃশ্যমান" : "লুকানো"}
+              </button>
+              <button
+                type="button"
+                onClick={() => onEdit(notice)}
+                className="flex size-7 cursor-pointer items-center justify-center rounded-lg bg-white/5 text-slate-300 transition-colors duration-200 hover:bg-white/10"
+              >
+                <Pencil size={12} />
               </button>
               <button
                 type="button"

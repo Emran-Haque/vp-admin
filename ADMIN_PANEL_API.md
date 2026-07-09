@@ -89,6 +89,11 @@ Output:
 { "detail": "Student reactivated." }
 ```
 
+### POST admin/students/{id}/promote-to-moderator/
+Changes an existing student's `role` to `moderator` in place — same id, same login (email/password/token untouched). Creates a `ModeratorPermission` row with every flag defaulting to `false`. The user then shows up in `admin/moderators/` and drops out of `admin/students/`; their student-specific data (enrollments, exam attempts, etc.) is left untouched.
+Output (200): moderator object, same shape as `GET admin/moderators/{id}/` (see section 3) — `permissions` all `false`.
+`400 { "detail": "This user is already a moderator or admin." }` if not currently a student. `404` if the id doesn't exist.
+
 ---
 
 ## 3. Moderator Management (Admin / Super Admin only)
@@ -228,11 +233,16 @@ Query params: `?category=1&is_published=true&is_free=false&search=physics`
       "is_free": false, "is_published": true, "enrollment_count": 120,
       "batch_start_date": "2026-08-01", "class_start_date": "2026-08-05",
       "level": "beginner", "duration": "6 months", "total_classes": 40,
-      "total_quizzes": 10, "total_assignments": 5
+      "total_quizzes": 10, "total_assignments": 5,
+      "subjects": [
+        { "id": 10, "course": 5, "name": "Physics", "ordering": 0 },
+        { "id": 11, "course": 5, "name": "Chemistry", "ordering": 1 }
+      ]
     }
   ]
 }
 ```
+`subjects` is read-only here — the fixed subject list for a course is managed via `admin/course-subjects/` (below), not by writing to the course object directly.
 
 ### POST admin/courses/
 Input:
@@ -267,6 +277,33 @@ Output:
 }
 ```
 
+### Course Subjects — admin/course-subjects/ (full CRUD)
+Flags: `can_view_courses` (list/retrieve), `can_create_course` (create), `can_edit_course` (update), `can_delete_course` (delete).
+
+Each course has its own fixed list of subjects (e.g. "CU Admission Crash Course" → Bangla, English, Math, Physics). This list is what populates the `subject` dropdown when creating classes, resources, exams, and assignments under that course — `subject` is no longer free text on those objects, and the backend rejects any subject that doesn't belong to the record's course.
+
+#### GET admin/course-subjects/
+Query: `?course=5`
+```json
+{
+  "count": 4, "next": null, "previous": null,
+  "results": [
+    { "id": 10, "course": 5, "name": "Physics", "ordering": 0 },
+    { "id": 11, "course": 5, "name": "Bangla", "ordering": 1 }
+  ]
+}
+```
+
+#### POST admin/course-subjects/
+Input:
+```json
+{ "course": 5, "name": "Chemistry", "ordering": 2 }
+```
+Output (201): subject object. `(course, name)` must be unique — creating a duplicate returns `400`.
+
+#### GET / PATCH / PUT / DELETE admin/course-subjects/{id}/
+Standard CRUD. Deleting a subject sets `subject` to `null` on any class/resource/exam/assignment that referenced it (it does not delete those records).
+
 ### Course Categories — `public/categories/` (read) is public; categories are created via Django admin or a dedicated endpoint if added later. Category fields for reference:
 ```json
 { "id": 1, "name": "HSC", "slug": "hsc", "kind": "hsc", "description": "...", "ordering": 0, "is_active": true }
@@ -285,7 +322,7 @@ Query params: `?course=5&is_live=true&status=scheduled`
   "count": 40, "next": null, "previous": null,
   "results": [
     {
-      "id": 1, "course": 5, "subject": "Physics", "title": "Chapter 1: Motion",
+      "id": 1, "course": 5, "subject": 10, "title": "Chapter 1: Motion",
       "description": "...", "teacher": 2, "class_date": "2026-07-10",
       "start_time": "18:00:00", "end_time": "19:30:00", "status": "scheduled",
       "is_live": false, "live_url": "", "thumbnail": "url",
@@ -300,12 +337,13 @@ Query params: `?course=5&is_live=true&status=scheduled`
 Input:
 ```json
 {
-  "course": 5, "subject": "Physics", "title": "Chapter 1: Motion",
+  "course": 5, "subject": 10, "title": "Chapter 1: Motion",
   "description": "...", "teacher": 2, "class_date": "2026-07-10",
   "start_time": "18:00:00", "end_time": "19:30:00", "status": "scheduled",
   "is_live": false, "live_url": ""
 }
 ```
+`subject` must be the id of a `CourseSubject` belonging to `course` (see "Course Subjects" above) — `400` otherwise. It's optional (`null` allowed).
 Output (201): class object (as above; `status` choices: `scheduled | live | completed | cancelled`).
 
 ### GET / PATCH / PUT / DELETE admin/classes/{id}/
@@ -324,7 +362,7 @@ Query: `?course=5&resource_type=question_bank&is_active=true`
 {
   "count": 10, "next": null, "previous": null,
   "results": [
-    { "id": 1, "course": 5, "title": "Question Bank 2026", "subject": "Physics", "resource_type": "question_bank", "file": "url", "external_link": "", "file_size": "2MB", "download_count": 15, "is_active": true, "created_at": "..." }
+    { "id": 1, "course": 5, "title": "Question Bank 2026", "subject": 10, "resource_type": "question_bank", "file": "url", "external_link": "", "file_size": "2MB", "download_count": 15, "is_active": true, "created_at": "..." }
   ]
 }
 ```
@@ -332,8 +370,9 @@ Query: `?course=5&resource_type=question_bank&is_active=true`
 ### POST admin/resources/
 Input:
 ```json
-{ "course": 5, "title": "Question Bank 2026", "subject": "Physics", "resource_type": "question_bank", "file": "<upload>", "external_link": "", "is_active": true }
+{ "course": 5, "title": "Question Bank 2026", "subject": 10, "resource_type": "question_bank", "file": "<upload>", "external_link": "", "is_active": true }
 ```
+`subject` must be the id of a `CourseSubject` belonging to `course` — `400` otherwise. It's optional (`null` allowed).
 `resource_type` choices: `book | note | pdf | question_bank | magazine | short_note | link`
 Output (201): resource object (`download_count` read-only, starts 0).
 
@@ -353,7 +392,7 @@ Query: `?course=5&status=published&result_status=hidden&search=weekly`
   "results": [
     {
       "id": 1, "course": 5, "title": "Weekly MCQ Test 1", "slug": "weekly-mcq-test-1",
-      "subject": "Physics", "instructions": "Read carefully.",
+      "subject": 10, "instructions": "Read carefully.",
       "total_questions": 25, "duration_minutes": 30, "total_marks": "25.00",
       "marks_per_question": "1.00", "negative_mark_per_wrong": "0.25",
       "pass_mark_percentage": "33.00", "exam_date": "2026-07-10",
@@ -371,7 +410,7 @@ Query: `?course=5&status=published&result_status=hidden&search=weekly`
 Input:
 ```json
 {
-  "course": 5, "title": "Weekly MCQ Test 1", "subject": "Physics",
+  "course": 5, "title": "Weekly MCQ Test 1", "subject": 10,
   "instructions": "Read carefully.", "duration_minutes": 30,
   "marks_per_question": "1.00", "negative_mark_per_wrong": "0.25",
   "pass_mark_percentage": "33.00", "exam_date": "2026-07-10",
@@ -380,6 +419,7 @@ Input:
   "allow_late_enrolled_students": true
 }
 ```
+`subject` must be the id of a `CourseSubject` belonging to `course` — `400` otherwise. It's optional (`null` allowed).
 Output (201): exam object (`slug`, `created_by`, `published_by` auto-set; `status` starts `draft`).
 
 ### GET / PATCH / PUT / DELETE admin/exams/{id}/
@@ -460,7 +500,7 @@ Query: `?course=5&status=active`
 {
   "count": 10, "next": null, "previous": null,
   "results": [
-    { "id": 1, "course": 5, "subject": "Physics", "title": "Assignment 1", "description": "...", "due_date": "2026-07-15T23:59:00Z", "max_marks": "100.00", "status": "active", "created_by": 2, "attachments": [ { "id": 1, "file": "url", "filename": "assignment1.pdf", "size": "1MB", "external_link": "" } ], "created_at": "..." }
+    { "id": 1, "course": 5, "subject": 10, "title": "Assignment 1", "description": "...", "due_date": "2026-07-15T23:59:00Z", "max_marks": "100.00", "status": "active", "created_by": 2, "attachments": [ { "id": 1, "file": "url", "filename": "assignment1.pdf", "size": "1MB", "external_link": "" } ], "created_at": "..." }
   ]
 }
 ```
@@ -468,8 +508,9 @@ Query: `?course=5&status=active`
 ### POST admin/assignments/
 Input:
 ```json
-{ "course": 5, "subject": "Physics", "title": "Assignment 1", "description": "Solve chapter 1 problems.", "due_date": "2026-07-15T23:59:00Z", "max_marks": "100.00", "status": "active" }
+{ "course": 5, "subject": 10, "title": "Assignment 1", "description": "Solve chapter 1 problems.", "due_date": "2026-07-15T23:59:00Z", "max_marks": "100.00", "status": "active" }
 ```
+`subject` must be the id of a `CourseSubject` belonging to `course` — `400` otherwise. It's optional (`null` allowed).
 `status` choices: `active | closed | evaluated`
 Output (201): assignment object (`created_by` auto-set).
 

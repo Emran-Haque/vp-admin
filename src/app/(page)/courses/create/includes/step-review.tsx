@@ -1,31 +1,17 @@
 import Link from "next/link";
-import { Video, FileText, HelpCircle, CheckCircle2, AlertTriangle } from "lucide-react";
-import type { BasicInfo, CourseModule } from "./types";
+import { Video, FileText, HelpCircle, CheckCircle2, BookMarked, Image as ImageIcon } from "lucide-react";
+import type { BasicInfo, CourseFiles, CourseModule, SubjectDraft, FaqDraft } from "./types";
 
 type Props = {
   basicInfo: BasicInfo;
+  files: CourseFiles;
   modules: CourseModule[];
+  subjects: SubjectDraft[];
+  faqs: FaqDraft[];
   published: boolean;
-  isPublishing?: boolean;
-  error?: unknown;
 };
 
-function describeError(error: unknown): string {
-  if (error && typeof error === "object" && "status" in error) {
-    const status = (error as { status: unknown }).status;
-    const data = (error as { data?: unknown }).data;
-    const detail =
-      data && typeof data === "object"
-        ? ((data as Record<string, unknown>).detail ?? JSON.stringify(data))
-        : data;
-    if (status === "FETCH_ERROR") return "সার্ভারে সংযোগ করা যায়নি (নেটওয়ার্ক বা CORS সমস্যা)।";
-    if (status === 401) return "সেশন মেয়াদোত্তীর্ণ — আবার লগইন করুন। (401 Unauthorized)";
-    return `সার্ভার ত্রুটি (${String(status)}): ${detail ? String(detail) : "বিস্তারিত পাওয়া যায়নি"}`;
-  }
-  return "অজানা ত্রুটি।";
-}
-
-export default function StepReview({ basicInfo, modules, published, isPublishing, error }: Props) {
+export default function StepReview({ basicInfo, files, modules, subjects, faqs, published }: Props) {
   const totals = modules.reduce(
     (acc, m) => {
       for (const item of m.items) acc[item.type] += 1;
@@ -36,17 +22,21 @@ export default function StepReview({ basicInfo, modules, published, isPublishing
 
   const fields: { label: string; value: string }[] = [
     { label: "কোর্সের নাম", value: basicInfo.name || "—" },
-    { label: "ক্যাটাগরি", value: basicInfo.category || "—" },
     { label: "স্তর", value: basicInfo.level || "—" },
-    { label: "মূল্য", value: basicInfo.price ? `৳${basicInfo.price}` : "—" },
+    { label: "মূল্য", value: basicInfo.isFree ? "ফ্রি" : basicInfo.price ? `৳${basicInfo.price}` : "—" },
     { label: "মোট সময়কাল", value: basicInfo.duration || "—" },
+    { label: "ব্যাচ শুরু", value: basicInfo.batchStartDate || "—" },
+    { label: "ক্লাস শুরু", value: basicInfo.classStartDate || "—" },
+    { label: "মোট ক্লাস", value: basicInfo.totalClasses || "0" },
+    { label: "মোট কুইজ", value: basicInfo.totalQuizzes || "0" },
+    { label: "মোট অ্যাসাইনমেন্ট", value: basicInfo.totalAssignments || "0" },
   ];
 
   if (published) {
     return (
       <section className="flex flex-col items-center gap-3 rounded-3xl border border-emerald-500/40 bg-emerald-500/10 p-10 text-center shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
         <CheckCircle2 size={48} className="text-emerald-500" />
-        <p className="text-xl font-bold text-blue-50">কোর্সটি সফলভাবে তৈরি হয়েছে!</p>
+        <p className="text-xl font-bold text-blue-50">কোর্সটি সফলভাবে প্রকাশিত হয়েছে!</p>
         <p className="text-sm text-slate-400">&quot;{basicInfo.name || "নতুন কোর্স"}&quot; প্রকাশিত হয়েছে</p>
         <Link
           href="/courses"
@@ -60,27 +50,9 @@ export default function StepReview({ basicInfo, modules, published, isPublishing
 
   return (
     <div className="flex flex-col gap-6">
-      {isPublishing && (
-        <p className="rounded-2xl border border-slate-800 bg-slate-900 p-4 text-center text-sm text-slate-400">
-          কোর্স প্রকাশ করা হচ্ছে…
-        </p>
-      )}
-
-      {Boolean(error) && (
-        <div className="flex items-start gap-3 rounded-2xl border border-red-500/30 bg-red-500/5 p-5">
-          <AlertTriangle size={20} className="mt-0.5 shrink-0 text-red-500" />
-          <div className="flex flex-col gap-1">
-            <p className="text-sm text-red-500">
-              কোর্স প্রকাশ করা যায়নি। API সার্ভার সংযোগ ও তথ্য যাচাই করে আবার চেষ্টা করুন।
-            </p>
-            <p className="text-xs text-red-400/80">{describeError(error)}</p>
-          </div>
-        </div>
-      )}
-
       <section className="rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
         <h2 className="text-xl font-bold leading-8 text-blue-50">কোর্সের তথ্য</h2>
-        <p className="mt-2 text-sm text-slate-400">{basicInfo.description || "কোনো বিবরণ দেওয়া হয়নি"}</p>
+        <p className="mt-2 text-sm text-slate-400">{basicInfo.shortDescription || "কোনো বিবরণ দেওয়া হয়নি"}</p>
 
         <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3">
           {fields.map(({ label, value }) => (
@@ -90,6 +62,49 @@ export default function StepReview({ basicInfo, modules, published, isPublishing
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
+        <div className="flex items-center gap-2.5">
+          <ImageIcon size={20} className="text-blue-500" />
+          <h2 className="text-xl font-bold leading-8 text-blue-50">মিডিয়া</h2>
+        </div>
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="rounded-xl border border-slate-800 bg-gray-900/30 p-3">
+            <p className="text-xs text-slate-400">থাম্বনেইল</p>
+            <p className="mt-0.5 truncate text-sm font-semibold text-blue-50">
+              {files.thumbnail?.name || "যোগ করা হয়নি"}
+            </p>
+          </div>
+          <div className="rounded-xl border border-slate-800 bg-gray-900/30 p-3">
+            <p className="text-xs text-slate-400">কভার ইমেজ</p>
+            <p className="mt-0.5 truncate text-sm font-semibold text-blue-50">
+              {files.coverImage?.name || "যোগ করা হয়নি"}
+            </p>
+          </div>
+          <div className="rounded-xl border border-slate-800 bg-gray-900/30 p-3">
+            <p className="text-xs text-slate-400">সিলেবাস পিডিএফ</p>
+            <p className="mt-0.5 truncate text-sm font-semibold text-blue-50">
+              {files.syllabusPdf?.name || "যোগ করা হয়নি"}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
+        <div className="flex items-center gap-2.5">
+          <BookMarked size={20} className="text-blue-500" />
+          <h2 className="text-xl font-bold leading-8 text-blue-50">সাবজেক্ট ও FAQ</h2>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {subjects.map((s) => (
+            <span key={s.id} className="rounded-lg border border-slate-800 bg-gray-900/30 px-3 py-1.5 text-sm text-blue-50">
+              {s.name}
+            </span>
+          ))}
+          {subjects.length === 0 && <p className="text-sm text-slate-400">কোনো সাবজেক্ট যোগ করা হয়নি</p>}
+        </div>
+        <p className="mt-3 text-sm text-slate-400">{faqs.length} টি FAQ যোগ করা হয়েছে</p>
       </section>
 
       <section className="rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">

@@ -4,10 +4,11 @@ import { ArrowLeft, BookOpen, ChevronRight } from "lucide-react";
 const steps = [
   { step: 1, label: "মৌলিক তথ্য" },
   { step: 2, label: "মডিউল ও পাঠ" },
-  { step: 3, label: "রিভিউ ও প্রকাশ" },
+  { step: 3, label: "সাবজেক্ট ও FAQ" },
+  { step: 4, label: "রিভিউ ও প্রকাশ" },
 ] as const;
 
-export default function WizardHeader({ step }: { step: 1 | 2 | 3 }) {
+export default function WizardHeader({ step }: { step: 1 | 2 | 3 | 4 }) {
   return (
     <section className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
       <div className="h-1.5 bg-gradient-to-r from-rose-500 via-amber-500 to-fuchsia-500" />

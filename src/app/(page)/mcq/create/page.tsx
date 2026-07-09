@@ -8,48 +8,34 @@ import StepReview from "./includes/step-review";
 import ExamSummary from "./includes/exam-summary";
 import TipsBox from "./includes/tips-box";
 import WizardFooter from "./includes/wizard-footer";
-import { useCreateExamMutation, useAddExamQuestionMutation, usePublishExamMutation } from "@/redux/api/examsApi";
+import {
+  useCreateExamMutation,
+  useAddExamQuestionMutation,
+  usePublishExamMutation,
+  usePublishExamResultMutation,
+} from "@/redux/api/examsApi";
+import { combineDateTime, addMinutes, localDateTimeToIso } from "@/lib/exam-datetime";
+import { extractErrorMessage } from "@/lib/api-error";
 import type { ExamBasicInfo, Question } from "./includes/types";
 
 const emptyBasicInfo: ExamBasicInfo = {
   name: "",
   course: "",
   subject: "",
+  subjectName: "",
   duration: "30",
   totalQuestions: "30",
   passMark: "40",
   negativeMark: "0.25",
   examDate: "",
   startTime: "",
+  resultPublishAt: "",
+  leaderboardPublishAt: "",
   description: "",
   status: "draft",
 };
 
 const optionLetters = ["A", "B", "C", "D"] as const;
-
-function extractErrorMessage(error: unknown): string {
-  if (typeof error === "object" && error !== null && "data" in error) {
-    const data = (error as { data?: unknown }).data;
-    if (typeof data === "string") return data;
-    if (data && typeof data === "object") {
-      const obj = data as Record<string, unknown>;
-      if (typeof obj.detail === "string") return obj.detail;
-      const fieldErrors = Object.entries(obj)
-        .map(([field, val]) => {
-          if (Array.isArray(val)) return `${field}: ${val.join(", ")}`;
-          if (typeof val === "string") return `${field}: ${val}`;
-          return null;
-        })
-        .filter((v): v is string => v !== null);
-      if (fieldErrors.length) return fieldErrors.join(" | ");
-    }
-  }
-  if (typeof error === "object" && error !== null && "message" in error) {
-    const message = (error as { message?: unknown }).message;
-    if (typeof message === "string") return message;
-  }
-  return "অজানা ত্রুটি";
-}
 
 export default function Page() {
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -62,29 +48,29 @@ export default function Page() {
   const [createExam] = useCreateExamMutation();
   const [addExamQuestion] = useAddExamQuestionMutation();
   const [publishExam] = usePublishExamMutation();
+  const [publishExamResult] = usePublishExamResultMutation();
 
   const handlePublish = async () => {
     setIsPublishing(true);
     setPublishError(null);
 
-    const startDateTime =
-      basicInfo.examDate && basicInfo.startTime
-        ? new Date(`${basicInfo.examDate}T${basicInfo.startTime}:00`).toISOString()
-        : undefined;
+    const durationMinutes = Number(basicInfo.duration) || 0;
+    const startDateTime = combineDateTime(basicInfo.examDate, basicInfo.startTime);
+    const endDateTime = addMinutes(startDateTime, durationMinutes);
 
     let exam;
     try {
       exam = await createExam({
         course: Number(basicInfo.course),
         title: basicInfo.name,
-        subject: basicInfo.subject,
+        subject: basicInfo.subject ? Number(basicInfo.subject) : undefined,
         instructions: basicInfo.description,
-        duration_minutes: Number(basicInfo.duration) || 0,
+        duration_minutes: durationMinutes,
         negative_mark_per_wrong: basicInfo.negativeMark || "0",
         pass_mark_percentage: basicInfo.passMark || "0",
         exam_date: basicInfo.examDate || undefined,
         start_time: startDateTime,
-        end_time: startDateTime,
+        end_time: endDateTime,
       }).unwrap();
     } catch (err) {
       console.error("Failed to create exam:", err);
@@ -123,6 +109,26 @@ export default function Page() {
       } catch (err) {
         console.error("Failed to publish exam:", err);
         setPublishError(`পরীক্ষা প্রকাশ করা যায়নি: ${extractErrorMessage(err)}`);
+        setIsPublishing(false);
+        return;
+      }
+    }
+
+    const resultPublishAt = localDateTimeToIso(basicInfo.resultPublishAt);
+    const leaderboardPublishAt = localDateTimeToIso(basicInfo.leaderboardPublishAt);
+
+    if (resultPublishAt || leaderboardPublishAt) {
+      try {
+        await publishExamResult({
+          id: exam.id,
+          data: {
+            ...(resultPublishAt ? { result_publish_at: resultPublishAt } : {}),
+            ...(leaderboardPublishAt ? { leaderboard_publish_at: leaderboardPublishAt } : {}),
+          },
+        }).unwrap();
+      } catch (err) {
+        console.error("Failed to schedule result/leaderboard publish:", err);
+        setPublishError(`ফলাফল/লিডারবোর্ড প্রকাশের সময়সূচি নির্ধারণ করা যায়নি: ${extractErrorMessage(err)}`);
         setIsPublishing(false);
         return;
       }

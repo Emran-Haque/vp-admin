@@ -77,11 +77,11 @@ export const booksApi = baseApi.injectEndpoints({
       query: (id) => `admin/books/${id}/`,
       providesTags: (_result, _error, id) => [{ type: "Books", id }],
     }),
-    createBook: builder.mutation<Book, CreateBookInput>({
+    createBook: builder.mutation<Book, CreateBookInput | FormData>({
       query: (body) => ({ url: "admin/books/", method: "POST", body }),
       invalidatesTags: [{ type: "Books", id: "LIST" }],
     }),
-    updateBook: builder.mutation<Book, { id: number; data: UpdateBookInput }>({
+    updateBook: builder.mutation<Book, { id: number; data: UpdateBookInput | FormData }>({
       query: ({ id, data }) => ({ url: `admin/books/${id}/`, method: "PATCH", body: data }),
       invalidatesTags: (_result, _error, { id }) => [
         { type: "Books", id },

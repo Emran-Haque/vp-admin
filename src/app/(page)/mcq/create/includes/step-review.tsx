@@ -1,6 +1,13 @@
 import Link from "next/link";
-import { Eye, ListChecks, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Eye, ListChecks, AlertTriangle, CheckCircle2, Megaphone, Trophy, Clock, CalendarClock } from "lucide-react";
+import { combineDateTime, addMinutes, formatTimeOfDay } from "@/lib/exam-datetime";
 import type { ExamBasicInfo, Question } from "./types";
+
+function formatLocalDateTime(value: string): string {
+  if (!value) return "ম্যানুয়ালি প্রকাশ করতে হবে";
+  const [date, time] = value.split("T");
+  return time ? `${date} ${time}` : date;
+}
 
 const optionLabels = ["ক", "খ", "গ", "ঘ"];
 
@@ -13,8 +20,12 @@ type Props = {
 };
 
 export default function StepReview({ basicInfo, questions, published, isPublishing, error }: Props) {
+  const endTime = formatTimeOfDay(
+    addMinutes(combineDateTime(basicInfo.examDate, basicInfo.startTime), Number(basicInfo.duration) || 0)
+  );
+
   const previewStats: { label: string; value: string }[] = [
-    { label: "বিষয়", value: basicInfo.subject || "—" },
+    { label: "বিষয়", value: basicInfo.subjectName || "—" },
     { label: "সময়", value: basicInfo.duration ? `${basicInfo.duration} মিনিট` : "—" },
     { label: "প্রশ্ন", value: `${questions.length} টি` },
     { label: "নেগেটিভ", value: basicInfo.negativeMark || "0" },
@@ -77,6 +88,56 @@ export default function StepReview({ basicInfo, questions, published, isPublishi
         </div>
 
         {basicInfo.description && <p className="mt-3 text-base text-slate-400">{basicInfo.description}</p>}
+
+        <div className="mt-6 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+          <div className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-gray-900/40 p-3.5">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue-500/20">
+              <CalendarClock size={16} className="text-blue-500" />
+            </span>
+            <div>
+              <p className="text-sm text-slate-400">পরীক্ষা শুরু</p>
+              <p className="mt-0.5 text-sm font-semibold text-blue-50">
+                {basicInfo.examDate ? `${basicInfo.examDate} ${basicInfo.startTime || "—"}` : "—"}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-gray-900/40 p-3.5">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue-500/20">
+              <Clock size={16} className="text-blue-500" />
+            </span>
+            <div>
+              <p className="text-sm text-slate-400">পরীক্ষা শেষ (স্বয়ংক্রিয়)</p>
+              <p className="mt-0.5 text-sm font-semibold text-blue-50">
+                {basicInfo.examDate && basicInfo.startTime ? `${basicInfo.examDate} ${endTime}` : "—"}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-gray-900/40 p-3.5">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-cyan-500/20">
+              <Megaphone size={16} className="text-cyan-500" />
+            </span>
+            <div>
+              <p className="text-sm text-slate-400">ফলাফল প্রকাশের সময়</p>
+              <p className="mt-0.5 text-sm font-semibold text-blue-50">
+                {formatLocalDateTime(basicInfo.resultPublishAt)}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-gray-900/40 p-3.5">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/20">
+              <Trophy size={16} className="text-amber-500" />
+            </span>
+            <div>
+              <p className="text-sm text-slate-400">লিডারবোর্ড প্রকাশের সময়</p>
+              <p className="mt-0.5 text-sm font-semibold text-blue-50">
+                {formatLocalDateTime(basicInfo.leaderboardPublishAt)}
+              </p>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section className="rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">

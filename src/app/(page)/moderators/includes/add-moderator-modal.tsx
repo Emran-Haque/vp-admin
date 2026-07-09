@@ -53,7 +53,7 @@ export default function AddModeratorModal({ onClose }: { onClose: () => void }) 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-800/95 p-4">
       <div className="flex max-h-[85vh] w-full max-w-[520px] flex-col rounded-[20px] border border-white/5 bg-gray-900/75 shadow-[0px_15px_30px_0px_rgba(59,130,246,0.46)]">
-        <div className="flex items-center justify-between p-7 pb-0">
+        <div className="flex items-center justify-between p-7 pb-0">werQ7fRztY2MAnu
           <h2 className="text-base font-bold text-slate-50">নতুন মডারেটর যোগ করুন</h2>
           <button
             type="button"
