@@ -13,24 +13,29 @@ import {
   HelpCircle,
   type LucideIcon,
 } from "lucide-react";
+import type { ModeratorPermissions } from "@/redux/api/moderatorsApi";
 
 export type NavItem = {
   label: string;
   href: string;
   icon: LucideIcon;
+  /** Moderators need this permission granted to see/access this section. Admins always have access. */
+  permission?: keyof Omit<ModeratorPermissions, "user" | "granted">;
+  /** Only admins/super admins can see/access this section, regardless of moderator permissions. */
+  adminOnly?: boolean;
 };
 
 export const navItems: NavItem[] = [
-  { label: "ড্যাশবোর্ড", href: "/home", icon: LayoutGrid },
-  { label: "শিক্ষার্থী", href: "/students", icon: Users },
-  { label: "কোর্স", href: "/courses", icon: BookOpen },
-  { label: "MCQ পরীক্ষা", href: "/mcq", icon: ClipboardList },
-  { label: "নোটিশ", href: "/notice", icon: Bell },
-  { label: "ফলাফল", href: "/results", icon: BarChart2 },
-  { label: "বই", href: "/books", icon: Package },
-  { label: "অর্ডার", href: "/orders", icon: ReceiptText },
-  { label: "শিক্ষক", href: "/teachers", icon: GraduationCap },
-  { label: "মডারেটর", href: "/moderators", icon: ShieldCheck },
-  { label: "রিভিউ", href: "/reviews", icon: Star },
-  { label: "FAQ", href: "/faq", icon: HelpCircle },
+  { label: "ড্যাশবোর্ড", href: "/home", icon: LayoutGrid, permission: "can_view_dashboard" },
+  { label: "শিক্ষার্থী", href: "/students", icon: Users, permission: "can_view_students" },
+  { label: "কোর্স", href: "/courses", icon: BookOpen, permission: "can_view_courses" },
+  { label: "MCQ পরীক্ষা", href: "/mcq", icon: ClipboardList, permission: "can_view_exams" },
+  { label: "নোটিশ", href: "/notice", icon: Bell, permission: "can_manage_notices" },
+  { label: "ফলাফল", href: "/results", icon: BarChart2, permission: "can_view_results" },
+  { label: "বই", href: "/books", icon: Package, permission: "can_view_books" },
+  { label: "অর্ডার", href: "/orders", icon: ReceiptText, permission: "can_view_orders" },
+  { label: "শিক্ষক", href: "/teachers", icon: GraduationCap, permission: "can_manage_teachers" },
+  { label: "মডারেটর", href: "/moderators", icon: ShieldCheck, adminOnly: true },
+  { label: "রিভিউ", href: "/reviews", icon: Star, permission: "can_manage_reviews" },
+  { label: "FAQ", href: "/faq", icon: HelpCircle, permission: "can_manage_faq" },
 ];

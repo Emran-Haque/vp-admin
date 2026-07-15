@@ -5,9 +5,9 @@ import Image from "next/image";
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { User, LogOut } from "lucide-react";
-import { navItems } from "./nav-items";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { logout } from "@/redux/slices/authSlice";
+import { useNavPermissions } from "@/hooks/use-nav-permissions";
 import LogoutConfirmModal from "./logout-confirm-modal";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -21,6 +21,7 @@ export default function Sidebar() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
+  const { visibleNavItems } = useNavPermissions();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const handleLogout = () => {
@@ -38,7 +39,7 @@ export default function Sidebar() {
         <p className="px-2 pb-2 pt-1 text-[10px] font-bold uppercase tracking-wider text-white/60">
           মেনু
         </p>
-        {navItems.map((item) => {
+        {visibleNavItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
           return (

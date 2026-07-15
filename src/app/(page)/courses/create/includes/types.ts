@@ -1,9 +1,20 @@
 export type ContentType = "video" | "file" | "quiz";
 
+export type QuizQuestion = {
+  id: string;
+  question: string;
+  options: string[];
+  correctIndex: number | null;
+};
+
 export type ModuleItem = {
   id: string;
   type: ContentType;
   title: string;
+  videoUrl?: string;
+  videoDuration?: string;
+  file?: File | null;
+  questions?: QuizQuestion[];
 };
 
 export type CourseModule = {
