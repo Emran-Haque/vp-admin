@@ -4,6 +4,7 @@ import { useState } from "react";
 import { X, Save, AlertTriangle, CheckCircle2, Circle, Phone, MapPin, Tag } from "lucide-react";
 import { useUpdateOrderStatusMutation, type Order } from "@/redux/api/ordersApi";
 import { orderStatuses, paymentStatuses } from "./status-config";
+import { usePermissions } from "@/hooks/use-permissions";
 
 export default function OrderDetailModal({ order, onClose }: { order: Order; onClose: () => void }) {
   const [paymentStatus, setPaymentStatus] = useState(order.payment_status);
@@ -12,6 +13,8 @@ export default function OrderDetailModal({ order, onClose }: { order: Order; onC
   const [adminNote, setAdminNote] = useState(order.admin_note);
 
   const [updateOrderStatus, { isLoading, isError }] = useUpdateOrderStatusMutation();
+  const { hasPermission } = usePermissions();
+  const canUpdateStatus = hasPermission("can_update_order_status");
 
   const handleSave = async () => {
     try {
@@ -139,7 +142,8 @@ export default function OrderDetailModal({ order, onClose }: { order: Order; onC
               <select
                 value={paymentStatus}
                 onChange={(e) => setPaymentStatus(e.target.value)}
-                className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
+                disabled={!canUpdateStatus}
+                className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {paymentStatuses.map((s) => (
                   <option key={s.value} value={s.value} className="bg-slate-800 text-slate-200">
@@ -154,7 +158,8 @@ export default function OrderDetailModal({ order, onClose }: { order: Order; onC
               <select
                 value={orderStatus}
                 onChange={(e) => setOrderStatus(e.target.value)}
-                className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
+                disabled={!canUpdateStatus}
+                className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {orderStatuses.map((s) => (
                   <option key={s.value} value={s.value} className="bg-slate-800 text-slate-200">
@@ -172,7 +177,8 @@ export default function OrderDetailModal({ order, onClose }: { order: Order; onC
               value={transactionId}
               onChange={(e) => setTransactionId(e.target.value)}
               placeholder="যেমন: TXN123456"
-              className="w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 placeholder:text-slate-200/50 focus:outline-none"
+              disabled={!canUpdateStatus}
+              className="w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 placeholder:text-slate-200/50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
 
@@ -183,7 +189,8 @@ export default function OrderDetailModal({ order, onClose }: { order: Order; onC
               onChange={(e) => setAdminNote(e.target.value)}
               placeholder="যেমন: বিকাশ স্টেটমেন্ট দিয়ে যাচাই করা হয়েছে"
               rows={2}
-              className="w-full resize-none rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 placeholder:text-slate-200/50 focus:outline-none"
+              disabled={!canUpdateStatus}
+              className="w-full resize-none rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 placeholder:text-slate-200/50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
 
@@ -202,15 +209,17 @@ export default function OrderDetailModal({ order, onClose }: { order: Order; onC
           >
             বাতিল
           </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={isLoading}
-            className="flex cursor-pointer items-center gap-1.5 rounded-[10px] bg-gradient-to-br from-blue-500 to-blue-600 px-4 py-2 text-xs font-bold text-white shadow-[0px_4px_12px_0px_rgba(0,200,150,0.19)] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <Save size={14} />
-            {isLoading ? "সংরক্ষণ হচ্ছে…" : "স্ট্যাটাস আপডেট করুন"}
-          </button>
+          {canUpdateStatus && (
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={isLoading}
+              className="flex cursor-pointer items-center gap-1.5 rounded-[10px] bg-gradient-to-br from-blue-500 to-blue-600 px-4 py-2 text-xs font-bold text-white shadow-[0px_4px_12px_0px_rgba(0,200,150,0.19)] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Save size={14} />
+              {isLoading ? "সংরক্ষণ হচ্ছে…" : "স্ট্যাটাস আপডেট করুন"}
+            </button>
+          )}
         </div>
       </div>
     </div>

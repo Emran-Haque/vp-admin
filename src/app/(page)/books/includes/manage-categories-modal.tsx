@@ -9,6 +9,7 @@ import {
   useDeleteBookCategoryMutation,
   type BookCategory,
 } from "@/redux/api/booksApi";
+import { usePermissions } from "@/hooks/use-permissions";
 
 function CategoryRow({ category }: { category: BookCategory }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -19,6 +20,7 @@ function CategoryRow({ category }: { category: BookCategory }) {
 
   const [updateCategory, { isLoading }] = useUpdateBookCategoryMutation();
   const [deleteCategory] = useDeleteBookCategoryMutation();
+  const { hasPermission } = usePermissions();
 
   const handleSave = async () => {
     try {
@@ -106,18 +108,22 @@ function CategoryRow({ category }: { category: BookCategory }) {
       >
         {category.is_active ? "সক্রিয়" : "নিষ্ক্রিয়"}
       </span>
-      <button type="button" onClick={() => setIsEditing(true)} className="text-slate-400">
-        <Pencil size={14} />
-      </button>
-      <button
-        type="button"
-        onClick={() => {
-          if (confirm(`"${category.name}" ক্যাটাগরি মুছে ফেলতে চান?`)) deleteCategory(category.id);
-        }}
-        className="text-red-500"
-      >
-        <Trash2 size={14} />
-      </button>
+      {hasPermission("can_edit_book") && (
+        <button type="button" onClick={() => setIsEditing(true)} className="text-slate-400">
+          <Pencil size={14} />
+        </button>
+      )}
+      {hasPermission("can_delete_book") && (
+        <button
+          type="button"
+          onClick={() => {
+            if (confirm(`"${category.name}" ক্যাটাগরি মুছে ফেলতে চান?`)) deleteCategory(category.id);
+          }}
+          className="text-red-500"
+        >
+          <Trash2 size={14} />
+        </button>
+      )}
     </div>
   );
 }
@@ -127,6 +133,7 @@ export default function ManageCategoriesModal({ onClose }: { onClose: () => void
 
   const { data, isLoading: isListLoading } = useGetBookCategoriesQuery();
   const [createCategory, { isLoading: isCreating }] = useCreateBookCategoryMutation();
+  const { hasPermission } = usePermissions();
 
   const categories = [...(data?.results ?? [])].sort((a, b) => a.order - b.order);
 
@@ -158,30 +165,32 @@ export default function ManageCategoriesModal({ onClose }: { onClose: () => void
         </div>
 
         <div className="flex flex-1 flex-col gap-3.5 overflow-y-auto p-7">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleAdd();
-                }
-              }}
-              placeholder="নতুন ক্যাটাগরির নাম"
-              className="flex-1 rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 placeholder:text-slate-200/50 focus:outline-none"
-            />
-            <button
-              type="button"
-              onClick={handleAdd}
-              disabled={isCreating || !name.trim()}
-              className="flex items-center gap-1.5 rounded-[10px] bg-blue-500 px-4 py-2.5 text-xs font-bold text-white disabled:opacity-50"
-            >
-              <Plus size={14} />
-              যোগ করুন
-            </button>
-          </div>
+          {hasPermission("can_create_book") && (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAdd();
+                  }
+                }}
+                placeholder="নতুন ক্যাটাগরির নাম"
+                className="flex-1 rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 placeholder:text-slate-200/50 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleAdd}
+                disabled={isCreating || !name.trim()}
+                className="flex items-center gap-1.5 rounded-[10px] bg-blue-500 px-4 py-2.5 text-xs font-bold text-white disabled:opacity-50"
+              >
+                <Plus size={14} />
+                যোগ করুন
+              </button>
+            </div>
+          )}
 
           <div className="flex flex-col gap-2">
             {isListLoading && <p className="text-center text-xs text-slate-400">লোড হচ্ছে…</p>}

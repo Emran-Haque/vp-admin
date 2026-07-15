@@ -2,6 +2,7 @@
 
 import { BookOpen, Star, Pencil, Trash2, User, Building2 } from "lucide-react";
 import { useGetBooksQuery, useDeleteBookMutation, type Book } from "@/redux/api/booksApi";
+import { usePermissions } from "@/hooks/use-permissions";
 
 type Props = {
   search: string;
@@ -17,6 +18,7 @@ export default function BookList({ search, category, availability, onEdit }: Pro
     is_available: availability ? availability === "true" : undefined,
   });
   const [deleteBook] = useDeleteBookMutation();
+  const { hasPermission } = usePermissions();
 
   if (isLoading) {
     return <p className="text-center text-sm text-slate-400">বইয়ের তালিকা লোড হচ্ছে…</p>;
@@ -101,22 +103,26 @@ export default function BookList({ search, category, availability, onEdit }: Pro
               <p className="mt-1 text-xs text-slate-400">স্টক: {book.stock} কপি</p>
 
               <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-800 pt-4">
-                <button
-                  type="button"
-                  onClick={() => onEdit(book)}
-                  className="flex size-9 cursor-pointer items-center justify-center rounded-xl border border-slate-800 text-blue-50 transition-colors duration-200 hover:bg-white/5"
-                >
-                  <Pencil size={14} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (confirm(`"${book.title}" বইটি মুছে ফেলতে চান?`)) deleteBook(book.id);
-                  }}
-                  className="flex size-9 items-center justify-center rounded-xl border border-red-600/40 bg-red-600/10 text-red-600"
-                >
-                  <Trash2 size={14} />
-                </button>
+                {hasPermission("can_edit_book") && (
+                  <button
+                    type="button"
+                    onClick={() => onEdit(book)}
+                    className="flex size-9 cursor-pointer items-center justify-center rounded-xl border border-slate-800 text-blue-50 transition-colors duration-200 hover:bg-white/5"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                )}
+                {hasPermission("can_delete_book") && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (confirm(`"${book.title}" বইটি মুছে ফেলতে চান?`)) deleteBook(book.id);
+                    }}
+                    className="flex size-9 items-center justify-center rounded-xl border border-red-600/40 bg-red-600/10 text-red-600"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
               </div>
             </div>
           </div>

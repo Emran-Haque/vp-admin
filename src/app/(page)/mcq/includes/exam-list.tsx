@@ -7,6 +7,7 @@ import {
   usePublishExamResultMutation,
   type Exam,
 } from "@/redux/api/examsApi";
+import { usePermissions } from "@/hooks/use-permissions";
 
 const resultStatusStyles: Record<string, { label: string; className: string }> = {
   published: { label: "ফলাফল প্রকাশিত", className: "border-emerald-500/40 bg-emerald-500/10 text-emerald-500" },
@@ -22,6 +23,7 @@ export default function ExamList({ onEdit }: { onEdit: (exam: Exam) => void }) {
   const { data, isLoading, isError } = useGetExamsQuery();
   const [deleteExam] = useDeleteExamMutation();
   const [publishResult] = usePublishExamResultMutation();
+  const { hasPermission } = usePermissions();
 
   if (isLoading) {
     return <p className="text-center text-sm text-slate-400">পরীক্ষার তালিকা লোড হচ্ছে…</p>;
@@ -77,7 +79,7 @@ export default function ExamList({ onEdit }: { onEdit: (exam: Exam) => void }) {
                 {status.label}
               </span>
 
-              {exam.result_status === "pending" && (
+              {exam.result_status === "pending" && hasPermission("can_publish_result") && (
                 <button
                   type="button"
                   onClick={() => publishResult({ id: exam.id })}
@@ -88,22 +90,26 @@ export default function ExamList({ onEdit }: { onEdit: (exam: Exam) => void }) {
                 </button>
               )}
 
-              <button
-                type="button"
-                onClick={() => onEdit(exam)}
-                className="flex size-10 cursor-pointer items-center justify-center rounded-xl border border-slate-800 text-blue-50 transition-colors duration-200 hover:bg-white/5"
-              >
-                <Pencil size={16} />
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (confirm(`"${exam.title}" পরীক্ষাটি মুছে ফেলতে চান?`)) deleteExam(exam.id);
-                }}
-                className="flex size-10 items-center justify-center rounded-xl border border-red-600/40 bg-red-600/10 text-red-600"
-              >
-                <Trash2 size={16} />
-              </button>
+              {hasPermission("can_edit_exam") && (
+                <button
+                  type="button"
+                  onClick={() => onEdit(exam)}
+                  className="flex size-10 cursor-pointer items-center justify-center rounded-xl border border-slate-800 text-blue-50 transition-colors duration-200 hover:bg-white/5"
+                >
+                  <Pencil size={16} />
+                </button>
+              )}
+              {hasPermission("can_delete_exam") && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm(`"${exam.title}" পরীক্ষাটি মুছে ফেলতে চান?`)) deleteExam(exam.id);
+                  }}
+                  className="flex size-10 items-center justify-center rounded-xl border border-red-600/40 bg-red-600/10 text-red-600"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
             </div>
           </div>
         );

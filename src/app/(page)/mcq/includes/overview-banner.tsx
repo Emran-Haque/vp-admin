@@ -1,7 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import { ClipboardList, Plus } from "lucide-react";
+import { usePermissions } from "@/hooks/use-permissions";
 
 export default function OverviewBanner() {
+  const { hasPermission } = usePermissions();
+
   return (
     <section className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
       <div className="h-1.5 bg-gradient-to-r from-rose-500 via-amber-500 to-fuchsia-500" />
@@ -17,13 +22,15 @@ export default function OverviewBanner() {
           </div>
         </div>
 
-        <Link
-          href="/mcq/create"
-          className="flex items-center gap-2 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 px-6 py-3.5 text-lg font-semibold text-white shadow-[0px_0px_40px_-10px_rgba(0,229,200,0.50)]"
-        >
-          <Plus size={16} />
-          নতুন পরীক্ষা যোগ করুন
-        </Link>
+        {hasPermission("can_create_exam") && (
+          <Link
+            href="/mcq/create"
+            className="flex items-center gap-2 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 px-6 py-3.5 text-lg font-semibold text-white shadow-[0px_0px_40px_-10px_rgba(0,229,200,0.50)]"
+          >
+            <Plus size={16} />
+            নতুন পরীক্ষা যোগ করুন
+          </Link>
+        )}
       </div>
     </section>
   );

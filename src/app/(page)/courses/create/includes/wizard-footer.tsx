@@ -1,4 +1,5 @@
 import { ChevronRight, FileEdit, Send } from "lucide-react";
+import { usePermissions } from "@/hooks/use-permissions";
 
 type Props = {
   step: 1 | 2 | 3 | 4;
@@ -19,6 +20,8 @@ export default function WizardFooter({
   onSaveDraft,
   onPublish,
 }: Props) {
+  const { hasPermission } = usePermissions();
+
   if (published) return null;
 
   return (
@@ -53,15 +56,17 @@ export default function WizardFooter({
             <ChevronRight size={16} />
           </button>
         ) : (
-          <button
-            type="button"
-            onClick={onPublish}
-            disabled={isSubmitting}
-            className="flex items-center gap-2 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 px-6 py-3 text-lg font-semibold text-white shadow-[0px_0px_40px_-10px_rgba(0,229,200,0.50)] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <Send size={16} />
-            কোর্স প্রকাশ করুন
-          </button>
+          hasPermission("can_publish_course") && (
+            <button
+              type="button"
+              onClick={onPublish}
+              disabled={isSubmitting}
+              className="flex items-center gap-2 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 px-6 py-3 text-lg font-semibold text-white shadow-[0px_0px_40px_-10px_rgba(0,229,200,0.50)] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Send size={16} />
+              কোর্স প্রকাশ করুন
+            </button>
+          )
         )}
       </div>
     </div>

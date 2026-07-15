@@ -6,7 +6,10 @@ import Sidebar from "@/components/sidebar";
 import Header from "@/components/header";
 import { useAppSelector } from "@/redux/hooks";
 import { useNavPermissions } from "@/hooks/use-nav-permissions";
-import { navItems } from "@/components/nav-items";
+import { navItems, type RouteGuard } from "@/components/nav-items";
+import { actionRoutes } from "@/components/action-routes";
+
+const guardedRoutes: RouteGuard[] = [...actionRoutes, ...navItems];
 
 const ALLOWED_ROLES = ["admin", "super_admin", "moderator"];
 
@@ -18,10 +21,10 @@ export default function PageLayout({ children }: { children: ReactNode }) {
   const isAuthorized = Boolean(token) && Boolean(role) && ALLOWED_ROLES.includes(role as string);
 
   const { visibleNavItems, isItemVisible, loading: permissionsLoading } = useNavPermissions();
-  const matchedNavItem = navItems.find(
-    (item) => pathname === item.href || pathname.startsWith(`${item.href}/`)
-  );
-  const isPagePermitted = !matchedNavItem || isItemVisible(matchedNavItem);
+  const matchedRoute = guardedRoutes
+    .filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))
+    .sort((a, b) => b.href.length - a.href.length)[0];
+  const isPagePermitted = !matchedRoute || isItemVisible(matchedRoute);
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => {

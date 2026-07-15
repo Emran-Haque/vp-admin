@@ -7,6 +7,7 @@ import {
   useGetCourseCategoriesQuery,
   type Course,
 } from "@/redux/api/coursesApi";
+import { usePermissions } from "@/hooks/use-permissions";
 
 const levels = [
   { value: "beginner", label: "শুরুর স্তর" },
@@ -27,6 +28,7 @@ export default function EditCourseModal({ course, onClose }: { course: Course; o
   const categories = Array.isArray(categoriesData) ? categoriesData : categoriesData?.results ?? [];
 
   const [updateCourse, { isLoading, isError }] = useUpdateCourseMutation();
+  const { hasPermission } = usePermissions();
 
   const handleSave = async () => {
     try {
@@ -147,15 +149,17 @@ export default function EditCourseModal({ course, onClose }: { course: Course; o
             </div>
           </div>
 
-          <label className="flex cursor-pointer items-center gap-2.5">
-            <input
-              type="checkbox"
-              checked={isPublished}
-              onChange={(e) => setIsPublished(e.target.checked)}
-              className="size-4 cursor-pointer accent-blue-500"
-            />
-            <span className="text-xs font-medium text-slate-400">কোর্সটি প্রকাশিত রাখুন</span>
-          </label>
+          {hasPermission("can_publish_course") && (
+            <label className="flex cursor-pointer items-center gap-2.5">
+              <input
+                type="checkbox"
+                checked={isPublished}
+                onChange={(e) => setIsPublished(e.target.checked)}
+                className="size-4 cursor-pointer accent-blue-500"
+              />
+              <span className="text-xs font-medium text-slate-400">কোর্সটি প্রকাশিত রাখুন</span>
+            </label>
+          )}
 
           <div className="flex justify-end gap-2.5 pt-2">
             <button

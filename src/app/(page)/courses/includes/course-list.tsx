@@ -2,6 +2,7 @@
 
 import { BookOpen, Video, HelpCircle, ClipboardList, Users, Clock, Pencil, Trash2, type LucideIcon } from "lucide-react";
 import { useGetCoursesQuery, useDeleteCourseMutation, type Course } from "@/redux/api/coursesApi";
+import { usePermissions } from "@/hooks/use-permissions";
 
 const statusStyles = {
   published: { label: "প্রকাশিত", className: "bg-white text-blue-500 outline-emerald-500/40" },
@@ -18,6 +19,7 @@ const statBoxes: { key: keyof Course; label: string; icon: LucideIcon }[] = [
 export default function CourseList({ onEdit }: { onEdit: (course: Course) => void }) {
   const { data, isLoading, isError } = useGetCoursesQuery();
   const [deleteCourse] = useDeleteCourseMutation();
+  const { hasPermission } = usePermissions();
 
   if (isLoading) {
     return <p className="text-center text-sm text-slate-400">কোর্সের তালিকা লোড হচ্ছে…</p>;
@@ -77,22 +79,26 @@ export default function CourseList({ onEdit }: { onEdit: (course: Course) => voi
                 {course.duration || "—"}
               </span>
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => onEdit(course)}
-                  className="flex size-10 cursor-pointer items-center justify-center rounded-xl border border-slate-800 text-blue-50 transition-colors duration-200 hover:bg-white/5"
-                >
-                  <Pencil size={16} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (confirm(`"${course.title}" কোর্সটি মুছে ফেলতে চান?`)) deleteCourse(course.id);
-                  }}
-                  className="flex size-10 items-center justify-center rounded-xl border border-red-600/40 bg-red-600/10 text-red-600"
-                >
-                  <Trash2 size={16} />
-                </button>
+                {hasPermission("can_edit_course") && (
+                  <button
+                    type="button"
+                    onClick={() => onEdit(course)}
+                    className="flex size-10 cursor-pointer items-center justify-center rounded-xl border border-slate-800 text-blue-50 transition-colors duration-200 hover:bg-white/5"
+                  >
+                    <Pencil size={16} />
+                  </button>
+                )}
+                {hasPermission("can_delete_course") && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (confirm(`"${course.title}" কোর্সটি মুছে ফেলতে চান?`)) deleteCourse(course.id);
+                    }}
+                    className="flex size-10 items-center justify-center rounded-xl border border-red-600/40 bg-red-600/10 text-red-600"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
               </div>
             </div>
           </div>

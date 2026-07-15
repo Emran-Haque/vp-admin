@@ -15,14 +15,19 @@ import {
 } from "lucide-react";
 import type { ModeratorPermissions } from "@/redux/api/moderatorsApi";
 
-export type NavItem = {
-  label: string;
+export type PermissionKey = keyof Omit<ModeratorPermissions, "user" | "granted">;
+
+export type RouteGuard = {
   href: string;
-  icon: LucideIcon;
-  /** Moderators need this permission granted to see/access this section. Admins always have access. */
-  permission?: keyof Omit<ModeratorPermissions, "user" | "granted">;
-  /** Only admins/super admins can see/access this section, regardless of moderator permissions. */
+  /** Moderators need this permission granted to see/access this route. Admins always have access. */
+  permission?: PermissionKey;
+  /** Only admins/super admins can see/access this route, regardless of moderator permissions. */
   adminOnly?: boolean;
+};
+
+export type NavItem = RouteGuard & {
+  label: string;
+  icon: LucideIcon;
 };
 
 export const navItems: NavItem[] = [

@@ -8,6 +8,7 @@ import {
   useReactivateStudentMutation,
   type Student,
 } from "@/redux/api/studentsApi";
+import { usePermissions } from "@/hooks/use-permissions";
 
 function statusOf(student: Student): "active" | "inactive" | "pending" {
   if (!student.is_active) return "inactive";
@@ -26,6 +27,7 @@ export default function StudentList({ search }: { search: string }) {
   const [deleteStudent] = useDeleteStudentMutation();
   const [deactivateStudent] = useDeactivateStudentMutation();
   const [reactivateStudent] = useReactivateStudentMutation();
+  const { hasPermission } = usePermissions();
 
   if (isLoading) {
     return <p className="text-center text-sm text-slate-400">শিক্ষার্থীদের তালিকা লোড হচ্ছে…</p>;
@@ -82,34 +84,37 @@ export default function StudentList({ search }: { search: string }) {
             </div>
 
             <div className="flex items-center gap-2">
-              {student.is_active ? (
+              {hasPermission("can_edit_student") &&
+                (student.is_active ? (
+                  <button
+                    type="button"
+                    onClick={() => deactivateStudent(student.id)}
+                    title="নিষ্ক্রিয় করুন"
+                    className="flex size-10 items-center justify-center rounded-xl border border-amber-500/30 bg-amber-500/5 text-amber-500"
+                  >
+                    <UserX size={16} />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => reactivateStudent(student.id)}
+                    title="সক্রিয় করুন"
+                    className="flex size-10 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/5 text-emerald-500"
+                  >
+                    <UserCheck size={16} />
+                  </button>
+                ))}
+              {hasPermission("can_delete_student") && (
                 <button
                   type="button"
-                  onClick={() => deactivateStudent(student.id)}
-                  title="নিষ্ক্রিয় করুন"
-                  className="flex size-10 items-center justify-center rounded-xl border border-amber-500/30 bg-amber-500/5 text-amber-500"
+                  onClick={() => {
+                    if (confirm(`${student.full_name}-কে মুছে ফেলতে চান?`)) deleteStudent(student.id);
+                  }}
+                  className="flex size-10 items-center justify-center rounded-xl border border-red-500/20 bg-red-500/5 text-red-500"
                 >
-                  <UserX size={16} />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => reactivateStudent(student.id)}
-                  title="সক্রিয় করুন"
-                  className="flex size-10 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/5 text-emerald-500"
-                >
-                  <UserCheck size={16} />
+                  <Trash2 size={16} />
                 </button>
               )}
-              <button
-                type="button"
-                onClick={() => {
-                  if (confirm(`${student.full_name}-কে মুছে ফেলতে চান?`)) deleteStudent(student.id);
-                }}
-                className="flex size-10 items-center justify-center rounded-xl border border-red-500/20 bg-red-500/5 text-red-500"
-              >
-                <Trash2 size={16} />
-              </button>
             </div>
           </div>
         );
