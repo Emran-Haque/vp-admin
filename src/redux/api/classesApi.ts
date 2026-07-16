@@ -1,8 +1,10 @@
 import { baseApi } from "./baseApi";
 import type { Paginated } from "./types";
+import type { ClassQuiz } from "./examsApi";
 
 export type ClassVideo = {
   id: number;
+  course_class: number;
   title: string;
   video_url: string;
   duration: string;
@@ -12,6 +14,7 @@ export type ClassVideo = {
 
 export type ClassMaterial = {
   id: number;
+  course_class: number;
   title: string;
   file: string | null;
   file_url: string;
@@ -36,7 +39,27 @@ export type CourseClass = {
   thumbnail: string | null;
   videos: ClassVideo[];
   class_materials: ClassMaterial[];
+  quizzes: ClassQuiz[];
 };
+
+export type CreateClassVideoInput = {
+  course_class: number;
+  title: string;
+  video_url: string;
+  duration?: string;
+  source_type?: string;
+  order?: number;
+};
+
+export type CreateClassMaterialInput =
+  | {
+      course_class: number;
+      title: string;
+      drive_link?: string;
+      kind?: string;
+      downloadable?: boolean;
+    }
+  | FormData;
 
 export type ClassListParams = {
   course?: number;
@@ -45,7 +68,9 @@ export type ClassListParams = {
   page?: number;
 };
 
-export type CreateClassInput = Partial<Omit<CourseClass, "id" | "videos" | "class_materials">> & {
+export type CreateClassInput = Partial<
+  Omit<CourseClass, "id" | "videos" | "class_materials" | "quizzes">
+> & {
   course: number;
   title: string;
 };
@@ -83,6 +108,22 @@ export const classesApi = baseApi.injectEndpoints({
       query: (id) => ({ url: `admin/classes/${id}/`, method: "DELETE" }),
       invalidatesTags: [{ type: "Classes", id: "LIST" }],
     }),
+    createClassVideo: builder.mutation<ClassVideo, CreateClassVideoInput>({
+      query: (body) => ({ url: "admin/class-videos/", method: "POST", body }),
+      invalidatesTags: (_result, _error, { course_class }) => [{ type: "Classes", id: course_class }],
+    }),
+    deleteClassVideo: builder.mutation<void, number>({
+      query: (id) => ({ url: `admin/class-videos/${id}/`, method: "DELETE" }),
+      invalidatesTags: [{ type: "Classes", id: "LIST" }],
+    }),
+    createClassMaterial: builder.mutation<ClassMaterial, CreateClassMaterialInput>({
+      query: (body) => ({ url: "admin/class-materials/", method: "POST", body }),
+      invalidatesTags: [{ type: "Classes", id: "LIST" }],
+    }),
+    deleteClassMaterial: builder.mutation<void, number>({
+      query: (id) => ({ url: `admin/class-materials/${id}/`, method: "DELETE" }),
+      invalidatesTags: [{ type: "Classes", id: "LIST" }],
+    }),
   }),
   overrideExisting: false,
 });
@@ -93,4 +134,8 @@ export const {
   useCreateClassMutation,
   useUpdateClassMutation,
   useDeleteClassMutation,
+  useCreateClassVideoMutation,
+  useDeleteClassVideoMutation,
+  useCreateClassMaterialMutation,
+  useDeleteClassMaterialMutation,
 } = classesApi;

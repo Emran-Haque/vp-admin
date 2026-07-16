@@ -11,8 +11,16 @@ import WizardFooter from "./includes/wizard-footer";
 import { useCreateCourseMutation, useUpdateCourseMutation } from "@/redux/api/coursesApi";
 import { useCreateCourseSubjectMutation } from "@/redux/api/courseSubjectsApi";
 import { useCreateFaqMutation } from "@/redux/api/contentApi";
+import {
+  useCreateClassMutation,
+  useCreateClassVideoMutation,
+  useCreateClassMaterialMutation,
+} from "@/redux/api/classesApi";
+import { useCreateExamMutation, useAddExamQuestionMutation } from "@/redux/api/examsApi";
 import { extractErrorMessage } from "@/lib/api-error";
-import type { BasicInfo, CourseFiles, CourseModule, SubjectDraft, FaqDraft } from "./includes/types";
+import type { BasicInfo, CourseFiles, CourseModule, QuizQuestion, SubjectDraft, FaqDraft } from "./includes/types";
+
+const optionLetters = ["A", "B", "C", "D"] as const;
 
 const emptyBasicInfo: BasicInfo = {
   name: "",
@@ -54,6 +62,11 @@ export default function Page() {
   const [courseId, setCourseId] = useState<number | null>(null);
   const [persistedSubjectIds, setPersistedSubjectIds] = useState<string[]>([]);
   const [persistedFaqIds, setPersistedFaqIds] = useState<string[]>([]);
+  // Maps local (client-generated) module/item/question ids to the backend record
+  // id once persisted, so re-saving a draft doesn't create duplicates.
+  const [persistedModuleIds, setPersistedModuleIds] = useState<Record<string, number>>({});
+  const [persistedItemIds, setPersistedItemIds] = useState<Record<string, number>>({});
+  const [persistedQuestionIds, setPersistedQuestionIds] = useState<Record<string, number>>({});
 
   const [published, setPublished] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -64,6 +77,11 @@ export default function Page() {
   const [updateCourse] = useUpdateCourseMutation();
   const [createCourseSubject] = useCreateCourseSubjectMutation();
   const [createFaq] = useCreateFaqMutation();
+  const [createClass] = useCreateClassMutation();
+  const [createClassVideo] = useCreateClassVideoMutation();
+  const [createClassMaterial] = useCreateClassMaterialMutation();
+  const [createExam] = useCreateExamMutation();
+  const [addExamQuestion] = useAddExamQuestionMutation();
 
   const handleSubmit = async (isPublished: boolean) => {
     setIsSubmitting(true);
@@ -138,6 +156,84 @@ export default function Page() {
         setSubmitError(`FAQ "${f.question}" যোগ করা যায়নি: ${extractErrorMessage(err)}`);
         setIsSubmitting(false);
         return;
+      }
+    }
+
+    const persistQuizQuestions = async (examId: number, questions: QuizQuestion[]) => {
+      for (let i = 0; i < questions.length; i++) {
+        const q = questions[i];
+        if (persistedQuestionIds[q.id] || !q.question.trim()) continue;
+        const createdQuestion = await addExamQuestion({
+          examId,
+          data: {
+            question_text: q.question,
+            option_a: q.options[0] ?? "",
+            option_b: q.options[1] ?? "",
+            option_c: q.options[2] ?? "",
+            option_d: q.options[3] ?? "",
+            correct_option: optionLetters[q.correctIndex ?? 0],
+            explanation: "",
+            order: i + 1,
+          },
+        }).unwrap();
+        setPersistedQuestionIds((prev) => ({ ...prev, [q.id]: createdQuestion.id }));
+      }
+    };
+
+    for (const mod of modules) {
+      let backendModuleId = persistedModuleIds[mod.id];
+      if (!backendModuleId) {
+        try {
+          const createdClass = await createClass({ course: course.id, title: mod.title }).unwrap();
+          backendModuleId = createdClass.id;
+          setPersistedModuleIds((prev) => ({ ...prev, [mod.id]: createdClass.id }));
+        } catch (err) {
+          console.error(`Failed to add session "${mod.title}":`, err);
+          setSubmitError(`অধিবেশন "${mod.title}" যোগ করা যায়নি: ${extractErrorMessage(err)}`);
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      for (const item of mod.items) {
+        try {
+          const existingItemId = persistedItemIds[item.id];
+          if (existingItemId) {
+            if (item.type === "quiz") await persistQuizQuestions(existingItemId, item.questions ?? []);
+            continue;
+          }
+
+          if (item.type === "video") {
+            const createdVideo = await createClassVideo({
+              course_class: backendModuleId,
+              title: item.title,
+              video_url: item.videoUrl || "",
+              duration: item.videoDuration || "",
+            }).unwrap();
+            setPersistedItemIds((prev) => ({ ...prev, [item.id]: createdVideo.id }));
+          } else if (item.type === "file") {
+            const materialForm = new FormData();
+            materialForm.append("course_class", String(backendModuleId));
+            materialForm.append("title", item.title);
+            if (item.file) materialForm.append("file", item.file);
+            const createdMaterial = await createClassMaterial(materialForm).unwrap();
+            setPersistedItemIds((prev) => ({ ...prev, [item.id]: createdMaterial.id }));
+          } else {
+            const createdExam = await createExam({
+              course: course.id,
+              course_class: backendModuleId,
+              title: item.title,
+              duration_minutes: 30,
+            }).unwrap();
+            setPersistedItemIds((prev) => ({ ...prev, [item.id]: createdExam.id }));
+            await persistQuizQuestions(createdExam.id, item.questions ?? []);
+          }
+        } catch (err) {
+          console.error(`Failed to add content "${item.title}":`, err);
+          setSubmitError(`কন্টেন্ট "${item.title}" যোগ করা যায়নি: ${extractErrorMessage(err)}`);
+          setIsSubmitting(false);
+          return;
+        }
       }
     }
 

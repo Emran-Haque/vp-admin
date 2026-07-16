@@ -4,6 +4,7 @@ import type { Paginated } from "./types";
 export type Exam = {
   id: number;
   course: number;
+  course_class: number | null;
   title: string;
   slug: string;
   subject: number | null;
@@ -73,6 +74,17 @@ export type ExamQuestion = {
 
 export type CreateExamQuestionInput = Omit<ExamQuestion, "id" | "exam">;
 export type UpdateExamQuestionInput = Partial<CreateExamQuestionInput>;
+
+/** Quiz as nested read-only inside a CourseClass (session) response. */
+export type ClassQuiz = {
+  id: number;
+  title: string;
+  duration_minutes: number;
+  total_questions: number;
+  total_marks: string;
+  status: string;
+  questions: ExamQuestion[];
+};
 
 export type PublishResultInput = {
   result_publish_at?: string;
