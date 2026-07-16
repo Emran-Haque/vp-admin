@@ -16,7 +16,11 @@ import {
   useCreateClassVideoMutation,
   useCreateClassMaterialMutation,
 } from "@/redux/api/classesApi";
-import { useCreateExamMutation, useAddExamQuestionMutation } from "@/redux/api/examsApi";
+import {
+  useCreateExamMutation,
+  useAddExamQuestionMutation,
+  usePublishExamMutation,
+} from "@/redux/api/examsApi";
 import { extractErrorMessage } from "@/lib/api-error";
 import type { BasicInfo, CourseFiles, CourseModule, QuizQuestion, SubjectDraft, FaqDraft } from "./includes/types";
 
@@ -82,6 +86,7 @@ export default function Page() {
   const [createClassMaterial] = useCreateClassMaterialMutation();
   const [createExam] = useCreateExamMutation();
   const [addExamQuestion] = useAddExamQuestionMutation();
+  const [publishExam] = usePublishExamMutation();
 
   const handleSubmit = async (isPublished: boolean) => {
     setIsSubmitting(true);
@@ -195,11 +200,18 @@ export default function Page() {
         }
       }
 
+      const videoItems = mod.items.filter((i) => i.type === "video");
+
       for (const item of mod.items) {
         try {
           const existingItemId = persistedItemIds[item.id];
           if (existingItemId) {
-            if (item.type === "quiz") await persistQuizQuestions(existingItemId, item.questions ?? []);
+            if (item.type === "quiz") {
+              await persistQuizQuestions(existingItemId, item.questions ?? []);
+              if ((item.questions ?? []).some((q) => q.question.trim())) {
+                await publishExam(existingItemId).unwrap();
+              }
+            }
             continue;
           }
 
@@ -209,6 +221,7 @@ export default function Page() {
               title: item.title,
               video_url: item.videoUrl || "",
               duration: item.videoDuration || "",
+              order: videoItems.indexOf(item),
             }).unwrap();
             setPersistedItemIds((prev) => ({ ...prev, [item.id]: createdVideo.id }));
           } else if (item.type === "file") {
@@ -227,6 +240,9 @@ export default function Page() {
             }).unwrap();
             setPersistedItemIds((prev) => ({ ...prev, [item.id]: createdExam.id }));
             await persistQuizQuestions(createdExam.id, item.questions ?? []);
+            if ((item.questions ?? []).some((q) => q.question.trim())) {
+              await publishExam(createdExam.id).unwrap();
+            }
           }
         } catch (err) {
           console.error(`Failed to add content "${item.title}":`, err);
