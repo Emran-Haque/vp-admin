@@ -26,6 +26,13 @@ import type { BasicInfo, CourseFiles, CourseModule, QuizQuestion, SubjectDraft, 
 
 const optionLetters = ["A", "B", "C", "D"] as const;
 
+const inferMaterialKind = (file: File | null | undefined): string => {
+  const ext = file?.name.split(".").pop()?.toLowerCase();
+  if (ext === "doc" || ext === "docx") return "doc";
+  if (ext === "ppt" || ext === "pptx") return "ppt";
+  return "pdf";
+};
+
 const emptyBasicInfo: BasicInfo = {
   name: "",
   shortDescription: "",
@@ -228,6 +235,8 @@ export default function Page() {
             const materialForm = new FormData();
             materialForm.append("course_class", String(backendModuleId));
             materialForm.append("title", item.title);
+            materialForm.append("kind", inferMaterialKind(item.file));
+            materialForm.append("downloadable", "true");
             if (item.file) materialForm.append("file", item.file);
             const createdMaterial = await createClassMaterial(materialForm).unwrap();
             setPersistedItemIds((prev) => ({ ...prev, [item.id]: createdMaterial.id }));
