@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { BookOpen, Video, HelpCircle, ClipboardList, Users, Clock, Pencil, Trash2, type LucideIcon } from "lucide-react";
 import { useGetCoursesQuery, useDeleteCourseMutation, type Course } from "@/redux/api/coursesApi";
 import { usePermissions } from "@/hooks/use-permissions";
@@ -40,9 +41,10 @@ export default function CourseList({ onEdit }: { onEdit: (course: Course) => voi
       {courses.map((course) => {
         const status = statusStyles[course.is_published ? "published" : "draft"];
         return (
-          <div
+          <Link
             key={course.id}
-            className="flex flex-col rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]"
+            href={`/courses/${course.id}`}
+            className="flex flex-col rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)] transition-colors duration-200 hover:border-slate-700"
           >
             <div className="flex items-start justify-between">
               <span className="flex size-14 items-center justify-center rounded-2xl bg-white/10">
@@ -82,7 +84,11 @@ export default function CourseList({ onEdit }: { onEdit: (course: Course) => voi
                 {hasPermission("can_edit_course") && (
                   <button
                     type="button"
-                    onClick={() => onEdit(course)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onEdit(course);
+                    }}
                     className="flex size-10 cursor-pointer items-center justify-center rounded-xl border border-slate-800 text-blue-50 transition-colors duration-200 hover:bg-white/5"
                   >
                     <Pencil size={16} />
@@ -91,7 +97,9 @@ export default function CourseList({ onEdit }: { onEdit: (course: Course) => voi
                 {hasPermission("can_delete_course") && (
                   <button
                     type="button"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       if (confirm(`"${course.title}" কোর্সটি মুছে ফেলতে চান?`)) deleteCourse(course.id);
                     }}
                     className="flex size-10 items-center justify-center rounded-xl border border-red-600/40 bg-red-600/10 text-red-600"
@@ -101,7 +109,7 @@ export default function CourseList({ onEdit }: { onEdit: (course: Course) => voi
                 )}
               </div>
             </div>
-          </div>
+          </Link>
         );
       })}
 
