@@ -80,7 +80,7 @@ export default function McqTab({ courseId }: { courseId: number }) {
                       {statusLabels[exam.status] ?? exam.status}
                     </span>
                     <Link
-                      href="/mcq"
+                      href={`/mcq/${exam.id}/edit`}
                       className="flex size-9 items-center justify-center rounded-xl border border-slate-800 text-blue-50 hover:bg-white/5"
                     >
                       <ArrowUpRight size={15} />

@@ -22,16 +22,10 @@ import {
   usePublishExamMutation,
 } from "@/redux/api/examsApi";
 import { extractErrorMessage } from "@/lib/api-error";
+import { inferMaterialKind } from "@/lib/material-kind";
 import type { BasicInfo, CourseFiles, CourseModule, QuizQuestion, SubjectDraft, FaqDraft } from "./includes/types";
 
 const optionLetters = ["A", "B", "C", "D"] as const;
-
-const inferMaterialKind = (file: File | null | undefined): string => {
-  const ext = file?.name.split(".").pop()?.toLowerCase();
-  if (ext === "doc" || ext === "docx") return "doc";
-  if (ext === "ppt" || ext === "pptx") return "ppt";
-  return "pdf";
-};
 
 const emptyBasicInfo: BasicInfo = {
   name: "",

@@ -8,14 +8,26 @@ const steps = [
   { step: 4, label: "রিভিউ ও প্রকাশ" },
 ] as const;
 
-export default function WizardHeader({ step }: { step: 1 | 2 | 3 | 4 }) {
+type Props = {
+  step: 1 | 2 | 3 | 4;
+  title?: string;
+  subtitle?: string;
+  backHref?: string;
+};
+
+export default function WizardHeader({
+  step,
+  title = "নতুন কোর্স তৈরি করুন",
+  subtitle = "ভিডিও, ফাইল ও কুইজসহ পূর্ণাঙ্গ কোর্স ৩ ধাপে সেট আপ করুন",
+  backHref = "/courses",
+}: Props) {
   return (
     <section className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
       <div className="h-1.5 bg-gradient-to-r from-rose-500 via-amber-500 to-fuchsia-500" />
 
       <div className="flex items-center gap-4 p-7 pb-0">
         <Link
-          href="/courses"
+          href={backHref}
           className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-slate-800 text-blue-50"
         >
           <ArrowLeft size={16} />
@@ -26,10 +38,8 @@ export default function WizardHeader({ step }: { step: 1 | 2 | 3 | 4 }) {
         </span>
 
         <div>
-          <h1 className="text-2xl font-bold leading-9 text-blue-50">নতুন কোর্স তৈরি করুন</h1>
-          <p className="mt-1 text-base text-slate-400">
-            ভিডিও, ফাইল ও কুইজসহ পূর্ণাঙ্গ কোর্স ৩ ধাপে সেট আপ করুন
-          </p>
+          <h1 className="text-2xl font-bold leading-9 text-blue-50">{title}</h1>
+          <p className="mt-1 text-base text-slate-400">{subtitle}</p>
         </div>
       </div>
 

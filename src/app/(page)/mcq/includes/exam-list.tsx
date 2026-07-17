@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ClipboardList, HelpCircle, Clock, Calendar, CheckCircle2, Pencil, Trash2 } from "lucide-react";
 import {
   useGetExamsQuery,
@@ -19,7 +20,7 @@ function resultStatusOf(exam: Exam) {
   return resultStatusStyles[exam.result_status] ?? resultStatusStyles.hidden;
 }
 
-export default function ExamList({ onEdit }: { onEdit: (exam: Exam) => void }) {
+export default function ExamList() {
   const { data, isLoading, isError } = useGetExamsQuery();
   const [deleteExam] = useDeleteExamMutation();
   const [publishResult] = usePublishExamResultMutation();
@@ -91,13 +92,12 @@ export default function ExamList({ onEdit }: { onEdit: (exam: Exam) => void }) {
               )}
 
               {hasPermission("can_edit_exam") && (
-                <button
-                  type="button"
-                  onClick={() => onEdit(exam)}
+                <Link
+                  href={`/mcq/${exam.id}/edit`}
                   className="flex size-10 cursor-pointer items-center justify-center rounded-xl border border-slate-800 text-blue-50 transition-colors duration-200 hover:bg-white/5"
                 >
                   <Pencil size={16} />
-                </button>
+                </Link>
               )}
               {hasPermission("can_delete_exam") && (
                 <button

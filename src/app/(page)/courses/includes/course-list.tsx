@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { BookOpen, Video, HelpCircle, ClipboardList, Users, Clock, Pencil, Trash2, type LucideIcon } from "lucide-react";
 import { useGetCoursesQuery, useDeleteCourseMutation, type Course } from "@/redux/api/coursesApi";
 import { usePermissions } from "@/hooks/use-permissions";
@@ -17,10 +18,11 @@ const statBoxes: { key: keyof Course; label: string; icon: LucideIcon }[] = [
   { key: "enrollment_count", label: "ছাত্র", icon: Users },
 ];
 
-export default function CourseList({ onEdit }: { onEdit: (course: Course) => void }) {
+export default function CourseList() {
   const { data, isLoading, isError } = useGetCoursesQuery();
   const [deleteCourse] = useDeleteCourseMutation();
   const { hasPermission } = usePermissions();
+  const router = useRouter();
 
   if (isLoading) {
     return <p className="text-center text-sm text-slate-400">কোর্সের তালিকা লোড হচ্ছে…</p>;
@@ -87,7 +89,7 @@ export default function CourseList({ onEdit }: { onEdit: (course: Course) => voi
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      onEdit(course);
+                      router.push(`/courses/${course.id}/edit`);
                     }}
                     className="flex size-10 cursor-pointer items-center justify-center rounded-xl border border-slate-800 text-blue-50 transition-colors duration-200 hover:bg-white/5"
                   >

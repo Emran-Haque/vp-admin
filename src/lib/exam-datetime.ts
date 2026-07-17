@@ -37,3 +37,14 @@ export function localDateTimeToIso(localDateTime: string): string | undefined {
   const date = new Date(localDateTime);
   return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
 }
+
+/** Converts an ISO datetime string into a "YYYY-MM-DDTHH:MM" value for a datetime-local input. */
+export function isoToLocalDateTimeInput(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const y = date.getFullYear();
+  const m = pad(date.getMonth() + 1);
+  const d = pad(date.getDate());
+  return `${y}-${m}-${d}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}

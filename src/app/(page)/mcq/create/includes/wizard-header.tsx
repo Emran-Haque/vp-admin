@@ -14,7 +14,21 @@ const statusLabel: Record<ExamStatus, string> = {
   published: "প্রকাশিত",
 };
 
-export default function WizardHeader({ step, status }: { step: 1 | 2 | 3; status: ExamStatus }) {
+type Props = {
+  step: 1 | 2 | 3;
+  status: ExamStatus;
+  title?: string;
+  subtitle?: string;
+  backHref?: string;
+};
+
+export default function WizardHeader({
+  step,
+  status,
+  title = "নতুন পরীক্ষা যোগ করুন",
+  subtitle = "ধাপে ধাপে MCQ পরীক্ষার বিস্তারিত, প্রশ্ন এবং প্রকাশনার সেটিংস তৈরি করুন",
+  backHref = "/mcq",
+}: Props) {
   return (
     <section className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
       <div className="h-1.5 bg-gradient-to-r from-rose-500 via-amber-500 to-fuchsia-500" />
@@ -22,16 +36,14 @@ export default function WizardHeader({ step, status }: { step: 1 | 2 | 3; status
       <div className="flex items-start justify-between gap-4 p-7 pb-0">
         <div className="flex items-start gap-4">
           <Link
-            href="/mcq"
+            href={backHref}
             className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-slate-800 text-blue-50"
           >
             <ArrowLeft size={16} />
           </Link>
           <div>
-            <h1 className="text-2xl font-bold leading-9 text-blue-50">নতুন পরীক্ষা যোগ করুন</h1>
-            <p className="mt-1 text-base text-slate-400">
-              ধাপে ধাপে MCQ পরীক্ষার বিস্তারিত, প্রশ্ন এবং প্রকাশনার সেটিংস তৈরি করুন
-            </p>
+            <h1 className="text-2xl font-bold leading-9 text-blue-50">{title}</h1>
+            <p className="mt-1 text-base text-slate-400">{subtitle}</p>
           </div>
         </div>
 
