@@ -191,7 +191,7 @@ export default function Page() {
     setBasicInfo(toBasicInfo(course));
 
     const courseSubjects = subjectsData.results;
-    setSubjects(courseSubjects.map((s) => ({ id: String(s.id), name: s.name })));
+    setSubjects(courseSubjects.map((s) => ({ id: String(s.id), name: s.name, description: s.description })));
     originalSubjectIdsRef.current = courseSubjects.map((s) => s.id);
 
     const courseFaqs = faqsData.results.filter((f) => f.related_course === courseId);
@@ -267,11 +267,19 @@ export default function Page() {
       for (let i = 0; i < subjects.length; i++) {
         const s = subjects[i];
         if (isPersisted(s.id)) {
-          await updateCourseSubject({ id: Number(s.id), data: { name: s.name, ordering: i } }).unwrap();
+          await updateCourseSubject({
+            id: Number(s.id),
+            data: { name: s.name, description: s.description, ordering: i },
+          }).unwrap();
           nextSubjects.push(s);
         } else {
-          const created = await createCourseSubject({ course: courseId, name: s.name, ordering: i }).unwrap();
-          nextSubjects.push({ id: String(created.id), name: s.name });
+          const created = await createCourseSubject({
+            course: courseId,
+            name: s.name,
+            description: s.description,
+            ordering: i,
+          }).unwrap();
+          nextSubjects.push({ id: String(created.id), name: s.name, description: s.description });
         }
       }
 

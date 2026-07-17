@@ -50,5 +50,5 @@ export type CourseFiles = {
   syllabusPdf: File | null;
 };
 
-export type SubjectDraft = { id: string; name: string };
+export type SubjectDraft = { id: string; name: string; description: string };
 export type FaqDraft = { id: string; question: string; answer: string };

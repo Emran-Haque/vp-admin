@@ -13,13 +13,18 @@ type Props = {
 
 export default function StepSubjectsFaqs({ subjects, onSubjectsChange, faqs, onFaqsChange }: Props) {
   const [subjectName, setSubjectName] = useState("");
+  const [subjectDescription, setSubjectDescription] = useState("");
   const [faqQuestion, setFaqQuestion] = useState("");
   const [faqAnswer, setFaqAnswer] = useState("");
 
   const addSubject = () => {
     if (!subjectName.trim()) return;
-    onSubjectsChange([...subjects, { id: crypto.randomUUID(), name: subjectName.trim() }]);
+    onSubjectsChange([
+      ...subjects,
+      { id: crypto.randomUUID(), name: subjectName.trim(), description: subjectDescription.trim() },
+    ]);
     setSubjectName("");
+    setSubjectDescription("");
   };
 
   const removeSubject = (id: string) => {
@@ -52,41 +57,42 @@ export default function StepSubjectsFaqs({ subjects, onSubjectsChange, faqs, onF
           </div>
         </div>
 
-        <div className="mt-5 flex gap-2.5">
+        <div className="mt-5 flex flex-col gap-2.5 rounded-2xl border border-slate-800 bg-gray-900/30 p-4">
           <input
             type="text"
             value={subjectName}
             onChange={(e) => setSubjectName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                addSubject();
-              }
-            }}
             placeholder="যেমন: পদার্থবিজ্ঞান"
-            className="flex-1 rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 placeholder:text-slate-400 focus:outline-none"
+            className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-2.5 text-sm text-blue-50 placeholder:text-slate-400 focus:outline-none"
+          />
+          <textarea
+            value={subjectDescription}
+            onChange={(e) => setSubjectDescription(e.target.value)}
+            placeholder="বিষয়ের বিবরণ (ঐচ্ছিক)"
+            rows={2}
+            className="w-full resize-none rounded-xl border border-slate-800 bg-gray-800 px-4 py-2.5 text-sm text-blue-50 placeholder:text-slate-400 focus:outline-none"
           />
           <button
             type="button"
             onClick={addSubject}
-            className="flex items-center gap-2 rounded-xl bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white"
+            className="flex w-fit items-center gap-2 rounded-xl bg-blue-500 px-4 py-2 text-sm font-semibold text-white"
           >
             <Plus size={16} />
             যোগ করুন
           </button>
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-col gap-2.5">
           {subjects.map((s) => (
-            <span
-              key={s.id}
-              className="flex items-center gap-2 rounded-xl border border-slate-800 bg-gray-800 px-3.5 py-2 text-sm text-blue-50"
-            >
-              {s.name}
-              <button type="button" onClick={() => removeSubject(s.id)} className="text-slate-400">
-                <Trash2 size={14} />
-              </button>
-            </span>
+            <div key={s.id} className="rounded-xl border border-slate-800 bg-gray-800 px-3.5 py-2.5">
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-sm font-semibold text-blue-50">{s.name}</p>
+                <button type="button" onClick={() => removeSubject(s.id)} className="shrink-0 text-slate-400">
+                  <Trash2 size={14} />
+                </button>
+              </div>
+              {s.description && <p className="mt-1 text-sm text-slate-400">{s.description}</p>}
+            </div>
           ))}
           {subjects.length === 0 && <p className="text-sm text-slate-400">এখনো কোনো সাবজেক্ট যোগ হয়নি</p>}
         </div>

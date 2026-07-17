@@ -5,6 +5,7 @@ export type CourseSubject = {
   id: number;
   course: number;
   name: string;
+  description: string;
   ordering: number;
 };
 
@@ -15,6 +16,7 @@ export type CourseSubjectListParams = {
 export type CreateCourseSubjectInput = {
   course: number;
   name: string;
+  description?: string;
   ordering?: number;
 };
 

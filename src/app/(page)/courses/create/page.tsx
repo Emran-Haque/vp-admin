@@ -134,7 +134,12 @@ export default function Page() {
     const newSubjects = subjects.filter((s) => !persistedSubjectIds.includes(s.id));
     for (const s of newSubjects) {
       try {
-        await createCourseSubject({ course: course.id, name: s.name, ordering: subjects.indexOf(s) }).unwrap();
+        await createCourseSubject({
+          course: course.id,
+          name: s.name,
+          description: s.description,
+          ordering: subjects.indexOf(s),
+        }).unwrap();
         setPersistedSubjectIds((prev) => [...prev, s.id]);
       } catch (err) {
         console.error(`Failed to add subject "${s.name}":`, err);
