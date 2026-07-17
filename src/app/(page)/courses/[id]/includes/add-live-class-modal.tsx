@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { X, Save, AlertTriangle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { X, Save, AlertTriangle, Upload } from "lucide-react";
 import { useCreateClassMutation } from "@/redux/api/classesApi";
 import { extractErrorMessage } from "@/lib/api-error";
 
@@ -10,21 +10,36 @@ export default function AddLiveClassModal({ courseId, onClose }: { courseId: num
   const [classDate, setClassDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [liveUrl, setLiveUrl] = useState("");
+  const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!thumbnail) {
+      setPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(thumbnail);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [thumbnail]);
 
   const [createClass, { isLoading }] = useCreateClassMutation();
 
   const handleSave = async () => {
     setError(null);
     try {
-      await createClass({
-        course: courseId,
-        title,
-        class_date: classDate,
-        start_time: startTime,
-        is_live: true,
-        live_url: liveUrl,
-      }).unwrap();
+      const formData = new FormData();
+      formData.append("course", String(courseId));
+      formData.append("title", title);
+      formData.append("class_date", classDate);
+      formData.append("start_time", startTime);
+      formData.append("is_live", "true");
+      formData.append("live_url", liveUrl);
+      if (thumbnail) formData.append("thumbnail", thumbnail);
+
+      await createClass(formData).unwrap();
       onClose();
     } catch (err) {
       setError(extractErrorMessage(err));
@@ -94,6 +109,39 @@ export default function AddLiveClassModal({ courseId, onClose }: { courseId: num
               placeholder="Zoom / Google Meet / YouTube লাইভ লিংক"
               className="w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 placeholder:text-slate-200/50 focus:outline-none"
             />
+          </div>
+
+          <div>
+            <label className="block pb-1.5 text-xs font-semibold text-slate-400">থাম্বনেইল</label>
+            {previewUrl ? (
+              <div className="relative overflow-hidden rounded-[10px] border border-white/10">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={previewUrl} alt="থাম্বনেইল" className="h-32 w-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setThumbnail(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  }}
+                  className="absolute right-2 top-2 flex size-7 cursor-pointer items-center justify-center rounded-lg bg-gray-900/80 text-slate-200"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              <label className="flex cursor-pointer flex-col items-center gap-1 rounded-[10px] border-2 border-dashed border-white/10 bg-white/5 p-5 text-center">
+                <Upload size={22} className="text-slate-400" strokeWidth={1.5} />
+                <p className="pt-1 text-xs font-semibold text-slate-300">ছবি আপলোড করতে ক্লিক করুন</p>
+                <p className="text-[11px] text-slate-500">PNG, JPG (সর্বোচ্চ 5MB)</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg"
+                  className="hidden"
+                  onChange={(e) => setThumbnail(e.target.files?.[0] ?? null)}
+                />
+              </label>
+            )}
           </div>
 
           <div className="flex justify-end gap-2.5 pt-2">

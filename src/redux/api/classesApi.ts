@@ -68,12 +68,12 @@ export type ClassListParams = {
   page?: number;
 };
 
-export type CreateClassInput = Partial<
-  Omit<CourseClass, "id" | "videos" | "class_materials" | "quizzes">
-> & {
-  course: number;
-  title: string;
-};
+export type CreateClassInput =
+  | (Partial<Omit<CourseClass, "id" | "videos" | "class_materials" | "quizzes">> & {
+      course: number;
+      title: string;
+    })
+  | FormData;
 
 export type UpdateClassInput = Partial<CreateClassInput>;
 
