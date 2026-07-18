@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { X, Save, AlertTriangle, Upload } from "lucide-react";
 import { useCreateClassMutation } from "@/redux/api/classesApi";
+import { useGetTeachersQuery } from "@/redux/api/contentApi";
 import { extractErrorMessage } from "@/lib/api-error";
 
 export default function AddLiveClassModal({ courseId, onClose }: { courseId: number; onClose: () => void }) {
@@ -10,10 +11,14 @@ export default function AddLiveClassModal({ courseId, onClose }: { courseId: num
   const [classDate, setClassDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [liveUrl, setLiveUrl] = useState("");
+  const [teacher, setTeacher] = useState("");
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const { data: teachersData } = useGetTeachersQuery();
+  const teachers = teachersData?.results ?? [];
 
   useEffect(() => {
     if (!thumbnail) {
@@ -37,6 +42,7 @@ export default function AddLiveClassModal({ courseId, onClose }: { courseId: num
       formData.append("start_time", startTime);
       formData.append("is_live", "true");
       formData.append("live_url", liveUrl);
+      if (teacher) formData.append("teacher", teacher);
       if (thumbnail) formData.append("thumbnail", thumbnail);
 
       await createClass(formData).unwrap();
@@ -109,6 +115,22 @@ export default function AddLiveClassModal({ courseId, onClose }: { courseId: num
               placeholder="Zoom / Google Meet / YouTube লাইভ লিংক"
               className="w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 placeholder:text-slate-200/50 focus:outline-none"
             />
+          </div>
+
+          <div>
+            <label className="block pb-1.5 text-xs font-semibold text-slate-400">শিক্ষক</label>
+            <select
+              value={teacher}
+              onChange={(e) => setTeacher(e.target.value)}
+              className="w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
+            >
+              <option value="">নির্বাচন করুন</option>
+              {teachers.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
