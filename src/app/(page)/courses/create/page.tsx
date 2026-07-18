@@ -46,6 +46,7 @@ const emptyBasicInfo: BasicInfo = {
   totalAssignments: "",
   promoVideoUrl: "",
   syllabusDriveLink: "",
+  teacherIds: [],
 };
 
 const emptyFiles: CourseFiles = {
@@ -114,6 +115,7 @@ export default function Page() {
     formData.append("total_assignments", basicInfo.totalAssignments || "0");
     if (basicInfo.promoVideoUrl) formData.append("promo_video_url", basicInfo.promoVideoUrl);
     if (basicInfo.syllabusDriveLink) formData.append("syllabus_drive_link", basicInfo.syllabusDriveLink);
+    for (const teacherId of basicInfo.teacherIds) formData.append("teachers", teacherId);
     if (files.thumbnail) formData.append("thumbnail", files.thumbnail);
     if (files.coverImage) formData.append("cover_image", files.coverImage);
     if (files.syllabusPdf) formData.append("syllabus_pdf", files.syllabusPdf);
@@ -303,6 +305,8 @@ export default function Page() {
           onSubjectsChange={setSubjects}
           faqs={faqs}
           onFaqsChange={setFaqs}
+          teacherIds={basicInfo.teacherIds}
+          onTeacherIdsChange={(teacherIds) => setBasicInfo({ ...basicInfo, teacherIds })}
         />
       )}
       {step === 4 && (

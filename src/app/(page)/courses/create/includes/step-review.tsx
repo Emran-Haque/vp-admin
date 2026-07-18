@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Video, FileText, HelpCircle, CheckCircle2, BookMarked, Image as ImageIcon } from "lucide-react";
+import { useGetTeachersQuery } from "@/redux/api/contentApi";
 import type { BasicInfo, CourseFiles, CourseModule, SubjectDraft, FaqDraft } from "./types";
 
 type Props = {
@@ -12,6 +13,11 @@ type Props = {
 };
 
 export default function StepReview({ basicInfo, files, modules, subjects, faqs, published }: Props) {
+  const { data: teachersData } = useGetTeachersQuery();
+  const teacherNames = (teachersData?.results ?? [])
+    .filter((t) => basicInfo.teacherIds.includes(String(t.id)))
+    .map((t) => t.name);
+
   const totals = modules.reduce(
     (acc, m) => {
       for (const item of m.items) acc[item.type] += 1;
@@ -105,6 +111,16 @@ export default function StepReview({ basicInfo, files, modules, subjects, faqs, 
           {subjects.length === 0 && <p className="text-sm text-slate-400">কোনো সাবজেক্ট যোগ করা হয়নি</p>}
         </div>
         <p className="mt-3 text-sm text-slate-400">{faqs.length} টি FAQ যোগ করা হয়েছে</p>
+
+        <p className="mt-4 text-xs text-slate-400">শিক্ষক</p>
+        <div className="mt-1.5 flex flex-wrap gap-2">
+          {teacherNames.map((name) => (
+            <span key={name} className="rounded-lg border border-slate-800 bg-gray-900/30 px-3 py-1.5 text-sm text-blue-50">
+              {name}
+            </span>
+          ))}
+          {teacherNames.length === 0 && <p className="text-sm text-slate-400">কোনো শিক্ষক নির্বাচন করা হয়নি</p>}
+        </div>
       </section>
 
       <section className="rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">

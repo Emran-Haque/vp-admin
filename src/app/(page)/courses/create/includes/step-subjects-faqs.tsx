@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, BookMarked, HelpCircle } from "lucide-react";
+import { Plus, Trash2, BookMarked, HelpCircle, Users } from "lucide-react";
+import { useGetTeachersQuery } from "@/redux/api/contentApi";
 import type { SubjectDraft, FaqDraft } from "./types";
 
 type Props = {
@@ -9,13 +10,31 @@ type Props = {
   onSubjectsChange: (subjects: SubjectDraft[]) => void;
   faqs: FaqDraft[];
   onFaqsChange: (faqs: FaqDraft[]) => void;
+  teacherIds: string[];
+  onTeacherIdsChange: (teacherIds: string[]) => void;
 };
 
-export default function StepSubjectsFaqs({ subjects, onSubjectsChange, faqs, onFaqsChange }: Props) {
+export default function StepSubjectsFaqs({
+  subjects,
+  onSubjectsChange,
+  faqs,
+  onFaqsChange,
+  teacherIds,
+  onTeacherIdsChange,
+}: Props) {
   const [subjectName, setSubjectName] = useState("");
   const [subjectDescription, setSubjectDescription] = useState("");
   const [faqQuestion, setFaqQuestion] = useState("");
   const [faqAnswer, setFaqAnswer] = useState("");
+
+  const { data: teachersData } = useGetTeachersQuery();
+  const teachers = teachersData?.results ?? [];
+
+  const toggleTeacher = (id: string) => {
+    onTeacherIdsChange(
+      teacherIds.includes(id) ? teacherIds.filter((t) => t !== id) : [...teacherIds, id]
+    );
+  };
 
   const addSubject = () => {
     if (!subjectName.trim()) return;
@@ -44,6 +63,41 @@ export default function StepSubjectsFaqs({ subjects, onSubjectsChange, faqs, onF
 
   return (
     <div className="flex flex-col gap-6">
+      <section className="rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
+        <div className="flex items-start gap-3.5">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-cyan-500/20">
+            <Users size={24} className="text-blue-500" />
+          </span>
+          <div>
+            <h2 className="text-xl font-bold leading-8 text-blue-50">কোর্স শিক্ষক</h2>
+            <p className="mt-0.5 text-base text-slate-400">এই কোর্সটি যেসব শিক্ষক পড়াবেন তাদের নির্বাচন করুন</p>
+          </div>
+        </div>
+
+        <div className="mt-5 flex flex-wrap gap-2.5">
+          {teachers.map((t) => {
+            const id = String(t.id);
+            const selected = teacherIds.includes(id);
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => toggleTeacher(id)}
+                className={`rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors ${
+                  selected
+                    ? "border-blue-500 bg-blue-500/20 text-blue-500"
+                    : "border-slate-800 bg-gray-800 text-blue-50"
+                }`}
+              >
+                {t.name}
+                {t.designation && <span className="ml-1.5 text-xs font-normal text-slate-400">({t.designation})</span>}
+              </button>
+            );
+          })}
+          {teachers.length === 0 && <p className="text-sm text-slate-400">কোনো শিক্ষক পাওয়া যায়নি</p>}
+        </div>
+      </section>
+
       <section className="rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
         <div className="flex items-start gap-3.5">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-cyan-500/20">

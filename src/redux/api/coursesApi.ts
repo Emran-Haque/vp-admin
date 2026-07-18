@@ -27,6 +27,7 @@ export type Course = {
   total_classes: number;
   total_quizzes: number;
   total_assignments: number;
+  teachers: number[];
 };
 
 export type CourseListParams = {

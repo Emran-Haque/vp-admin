@@ -42,6 +42,7 @@ export type BasicInfo = {
   totalAssignments: string;
   promoVideoUrl: string;
   syllabusDriveLink: string;
+  teacherIds: string[];
 };
 
 export type CourseFiles = {
