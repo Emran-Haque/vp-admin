@@ -49,6 +49,32 @@ export function parseQuestionsCsv(file: File): Promise<CsvImportResult> {
         const errors: string[] = [];
         const questions: Question[] = [];
 
+        const fields = new Set(results.meta.fields ?? []);
+        const requiredColumns = [
+          "question",
+          "option_a",
+          "option_b",
+          "option_c",
+          "option_d",
+          "correct_option",
+        ];
+        const missingColumns = requiredColumns.filter((col) => !fields.has(col));
+
+        if (missingColumns.length > 0) {
+          errors.push(
+            `CSV ফাইলের প্রথম সারিতে প্রয়োজনীয় কলাম পাওয়া যায়নি: ${missingColumns.join(", ")}। ` +
+              `কলামের নাম অবশ্যই এভাবে দিতে হবে: question, option_a, option_b, option_c, option_d, correct_option, explanation (ঐচ্ছিক)।`
+          );
+          resolve({ questions, errors });
+          return;
+        }
+
+        if (results.data.length === 0) {
+          errors.push("CSV ফাইলে কোনো প্রশ্নের সারি পাওয়া যায়নি (শুধু হেডার সারি আছে)।");
+          resolve({ questions, errors });
+          return;
+        }
+
         results.data.forEach((row, index) => {
           const rowNumber = index + 2; // header is row 1
           const text = (row.question ?? "").trim();
