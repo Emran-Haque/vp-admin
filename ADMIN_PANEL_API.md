@@ -1,4 +1,4 @@
-# Admin Panel API Reference
+ # Admin Panel API Reference
 
 Base URL prefix: `/api/v1/`
 Auth header: `Authorization: Token <token>`

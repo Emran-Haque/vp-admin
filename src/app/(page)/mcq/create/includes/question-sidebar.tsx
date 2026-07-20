@@ -1,4 +1,5 @@
 import { Plus } from "lucide-react";
+import CsvImportButton from "./csv-import-button";
 import type { Question } from "./types";
 
 type Props = {
@@ -6,9 +7,18 @@ type Props = {
   selectedId: string | null;
   onSelect: (id: string) => void;
   onAdd: () => void;
+  onImport: (questions: Question[]) => void;
+  onImportErrors: (errors: string[]) => void;
 };
 
-export default function QuestionSidebar({ questions, selectedId, onSelect, onAdd }: Props) {
+export default function QuestionSidebar({
+  questions,
+  selectedId,
+  onSelect,
+  onAdd,
+  onImport,
+  onImportErrors,
+}: Props) {
   return (
     <div className="flex w-60 shrink-0 flex-col rounded-3xl border border-slate-800 bg-slate-900 p-4 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
       <div className="flex items-center justify-between">
@@ -47,6 +57,12 @@ export default function QuestionSidebar({ questions, selectedId, onSelect, onAdd
         <Plus size={16} />
         প্রশ্ন যোগ করুন
       </button>
+
+      <CsvImportButton
+        onImport={onImport}
+        onErrors={onImportErrors}
+        className="mt-2.5 flex items-center justify-center gap-2 rounded-xl border border-slate-700 px-3.5 py-3 text-base font-medium text-slate-200 hover:bg-white/5"
+      />
     </div>
   );
 }
