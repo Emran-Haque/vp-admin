@@ -26,14 +26,23 @@ export default function StepSubjectsFaqs({
   const [subjectDescription, setSubjectDescription] = useState("");
   const [faqQuestion, setFaqQuestion] = useState("");
   const [faqAnswer, setFaqAnswer] = useState("");
+  const [selectedTeacherId, setSelectedTeacherId] = useState("");
 
   const { data: teachersData } = useGetTeachersQuery();
   const teachers = teachersData?.results ?? [];
+  const availableTeachers = teachers.filter((t) => !teacherIds.includes(String(t.id)));
+  const selectedTeachers = teacherIds
+    .map((id) => teachers.find((t) => String(t.id) === id))
+    .filter((t): t is NonNullable<typeof t> => Boolean(t));
 
-  const toggleTeacher = (id: string) => {
-    onTeacherIdsChange(
-      teacherIds.includes(id) ? teacherIds.filter((t) => t !== id) : [...teacherIds, id]
-    );
+  const addTeacher = () => {
+    if (!selectedTeacherId || teacherIds.includes(selectedTeacherId)) return;
+    onTeacherIdsChange([...teacherIds, selectedTeacherId]);
+    setSelectedTeacherId("");
+  };
+
+  const removeTeacher = (id: string) => {
+    onTeacherIdsChange(teacherIds.filter((t) => t !== id));
   };
 
   const addSubject = () => {
@@ -74,27 +83,52 @@ export default function StepSubjectsFaqs({
           </div>
         </div>
 
-        <div className="mt-5 flex flex-wrap gap-2.5">
-          {teachers.map((t) => {
-            const id = String(t.id);
-            const selected = teacherIds.includes(id);
-            return (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => toggleTeacher(id)}
-                className={`rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors ${
-                  selected
-                    ? "border-blue-500 bg-blue-500/20 text-blue-500"
-                    : "border-slate-800 bg-gray-800 text-blue-50"
-                }`}
-              >
+        <div className="mt-5 flex flex-col gap-2.5 rounded-2xl border border-slate-800 bg-gray-900/30 p-4 sm:flex-row">
+          <select
+            value={selectedTeacherId}
+            onChange={(e) => setSelectedTeacherId(e.target.value)}
+            className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-2.5 text-sm text-blue-50 focus:outline-none"
+          >
+            <option value="">শিক্ষক নির্বাচন করুন</option>
+            {availableTeachers.map((t) => (
+              <option key={t.id} value={String(t.id)}>
                 {t.name}
-                {t.designation && <span className="ml-1.5 text-xs font-normal text-slate-400">({t.designation})</span>}
+                {t.designation ? ` (${t.designation})` : ""}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={addTeacher}
+            disabled={!selectedTeacherId}
+            className="flex w-fit shrink-0 items-center gap-2 rounded-xl bg-blue-500 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Plus size={16} />
+            যোগ করুন
+          </button>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2.5">
+          {selectedTeachers.map((t) => (
+            <span
+              key={t.id}
+              className="flex items-center gap-2 rounded-xl border border-blue-500 bg-blue-500/20 px-4 py-2.5 text-sm font-semibold text-blue-500"
+            >
+              {t.name}
+              {t.designation && <span className="text-xs font-normal text-slate-400">({t.designation})</span>}
+              <button
+                type="button"
+                onClick={() => removeTeacher(String(t.id))}
+                className="text-slate-400 hover:text-red-500"
+              >
+                <Trash2 size={14} />
               </button>
-            );
-          })}
+            </span>
+          ))}
           {teachers.length === 0 && <p className="text-sm text-slate-400">কোনো শিক্ষক পাওয়া যায়নি</p>}
+          {teachers.length > 0 && selectedTeachers.length === 0 && (
+            <p className="text-sm text-slate-400">এখনো কোনো শিক্ষক যোগ হয়নি</p>
+          )}
         </div>
       </section>
 
