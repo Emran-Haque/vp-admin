@@ -17,17 +17,32 @@ export type UpdateTeacherInput = Partial<CreateTeacherInput>;
 
 export type Review = {
   id: number;
-  student_name: string;
-  image: string | null;
-  institution: string;
-  unit: string;
-  merit_position: string;
+  course: number;
+  course_title?: string;
+  student: number;
+  student_name?: string;
   rating: number;
   comment: string;
   is_featured: boolean;
   is_visible: boolean;
+  created_at?: string;
 };
-export type CreateReviewInput = Omit<Review, "id">;
+export type ReviewListParams = {
+  course?: number;
+  student?: number;
+  is_featured?: boolean;
+  is_visible?: boolean;
+  search?: string;
+  page?: number;
+};
+export type CreateReviewInput = {
+  course: number;
+  student: number;
+  rating: number;
+  comment: string;
+  is_featured?: boolean;
+  is_visible?: boolean;
+};
 export type UpdateReviewInput = Partial<CreateReviewInput>;
 
 export type SuccessStory = {
@@ -54,6 +69,14 @@ export type Faq = {
   related_book: number | null;
   ordering: number;
   is_active: boolean;
+};
+export type FaqListParams = {
+  category?: string;
+  related_course?: number;
+  related_book?: number;
+  is_active?: boolean;
+  search?: string;
+  page?: number;
 };
 export type CreateFaqInput = Omit<Faq, "id">;
 export type UpdateFaqInput = Partial<CreateFaqInput>;
@@ -145,9 +168,15 @@ export const contentApi = baseApi.injectEndpoints({
     }),
 
     // Reviews
-    getReviews: builder.query<Paginated<Review>, void>({
-      query: () => "admin/reviews/",
-      providesTags: [{ type: "Reviews", id: "LIST" }],
+    getReviews: builder.query<Paginated<Review>, ReviewListParams | void>({
+      query: (params) => ({ url: "admin/reviews/", params: params ?? undefined }),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.results.map((r) => ({ type: "Reviews" as const, id: r.id })),
+              { type: "Reviews" as const, id: "LIST" },
+            ]
+          : [{ type: "Reviews" as const, id: "LIST" }],
     }),
     createReview: builder.mutation<Review, CreateReviewInput>({
       query: (body) => ({ url: "admin/reviews/", method: "POST", body }),
@@ -191,9 +220,15 @@ export const contentApi = baseApi.injectEndpoints({
     }),
 
     // FAQs
-    getFaqs: builder.query<Paginated<Faq>, void>({
-      query: () => "admin/faqs/",
-      providesTags: [{ type: "Faqs", id: "LIST" }],
+    getFaqs: builder.query<Paginated<Faq>, FaqListParams | void>({
+      query: (params) => ({ url: "admin/faqs/", params: params ?? undefined }),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.results.map((f) => ({ type: "Faqs" as const, id: f.id })),
+              { type: "Faqs" as const, id: "LIST" },
+            ]
+          : [{ type: "Faqs" as const, id: "LIST" }],
     }),
     createFaq: builder.mutation<Faq, CreateFaqInput>({
       query: (body) => ({ url: "admin/faqs/", method: "POST", body }),

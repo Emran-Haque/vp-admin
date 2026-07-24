@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { X, Save, AlertTriangle, Upload, BookOpen, FileText } from "lucide-react";
+import { X, Save, AlertTriangle, Upload, BookOpen, FileText, HelpCircle, Plus, Trash2 } from "lucide-react";
 import { useCreateBookMutation, useGetBookCategoriesQuery } from "@/redux/api/booksApi";
+import { useCreateFaqMutation } from "@/redux/api/contentApi";
+import type { FaqDraft } from "@/app/(page)/courses/create/includes/types";
 
 export default function AddBookModal({ onClose }: { onClose: () => void }) {
   const [title, setTitle] = useState("");
@@ -21,6 +23,7 @@ export default function AddBookModal({ onClose }: { onClose: () => void }) {
   const [sampleDriveLink, setSampleDriveLink] = useState("");
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [samplePreviewFile, setSamplePreviewFile] = useState<File | null>(null);
+  const [faqs, setFaqs] = useState<FaqDraft[]>([]);
 
   const coverInputRef = useRef<HTMLInputElement>(null);
   const sampleInputRef = useRef<HTMLInputElement>(null);
@@ -29,6 +32,19 @@ export default function AddBookModal({ onClose }: { onClose: () => void }) {
   const categories = categoriesData?.results ?? [];
 
   const [createBook, { isLoading, isError }] = useCreateBookMutation();
+  const [createFaq] = useCreateFaqMutation();
+
+  const handleAddFaq = () => {
+    setFaqs((prev) => [...prev, { id: crypto.randomUUID(), question: "", answer: "" }]);
+  };
+
+  const handleRemoveFaq = (id: string) => {
+    setFaqs((prev) => prev.filter((f) => f.id !== id));
+  };
+
+  const handleUpdateFaq = (id: string, field: "question" | "answer", val: string) => {
+    setFaqs((prev) => prev.map((f) => (f.id === id ? { ...f, [field]: val } : f)));
+  };
 
   const handleSave = async () => {
     const formData = new FormData();
@@ -50,7 +66,21 @@ export default function AddBookModal({ onClose }: { onClose: () => void }) {
     if (samplePreviewFile) formData.append("sample_preview_file", samplePreviewFile);
 
     try {
-      await createBook(formData).unwrap();
+      const createdBook = await createBook(formData).unwrap();
+      for (let i = 0; i < faqs.length; i++) {
+        const f = faqs[i];
+        if (f.question.trim() && f.answer.trim()) {
+          await createFaq({
+            question: f.question.trim(),
+            answer: f.answer.trim(),
+            category: "book",
+            related_book: createdBook.id,
+            related_course: null,
+            ordering: i,
+            is_active: true,
+          }).unwrap().catch(() => undefined);
+        }
+      }
       onClose();
     } catch {
       // error state shown inline below
@@ -272,6 +302,57 @@ export default function AddBookModal({ onClose }: { onClose: () => void }) {
                 className="w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-xs text-slate-200 placeholder:text-slate-200/50 focus:outline-none"
               />
             </div>
+          </div>
+
+          {/* FAQ section */}
+          <div className="mt-1 flex flex-col gap-3 rounded-[14px] border border-white/10 bg-white/5 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <HelpCircle size={16} className="text-purple-400" />
+                <label className="text-xs font-bold text-slate-200">বইয়ের FAQ (প্রশ্ন ও উত্তর)</label>
+              </div>
+              <button
+                type="button"
+                onClick={handleAddFaq}
+                className="flex items-center gap-1 rounded-lg bg-purple-500/20 px-2.5 py-1 text-xs font-semibold text-purple-300 transition-colors hover:bg-purple-500/30"
+              >
+                <Plus size={14} />
+                FAQ যোগ করুন
+              </button>
+            </div>
+
+            {faqs.map((faq, index) => (
+              <div key={faq.id} className="flex flex-col gap-2 rounded-xl border border-white/5 bg-gray-900/60 p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-semibold text-slate-400">প্রশ্ন {index + 1}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFaq(faq.id)}
+                    className="text-red-400 hover:text-red-300"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={faq.question}
+                  onChange={(e) => handleUpdateFaq(faq.id, "question", e.target.value)}
+                  placeholder="যেমন: এই বইটি কোন বিষয়ের জন্য উপযোগী?"
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none"
+                />
+                <textarea
+                  value={faq.answer}
+                  onChange={(e) => handleUpdateFaq(faq.id, "answer", e.target.value)}
+                  placeholder="প্রশ্নের উত্তর বিস্তারিত লিখুন..."
+                  rows={2}
+                  className="w-full resize-none rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none"
+                />
+              </div>
+            ))}
+
+            {faqs.length === 0 && (
+              <p className="text-center text-xs text-slate-500">কোনো FAQ যুক্ত হয়নি। উপরের বাটন চেপে যোগ করুন।</p>
+            )}
           </div>
 
           <div className="flex items-center gap-6">
