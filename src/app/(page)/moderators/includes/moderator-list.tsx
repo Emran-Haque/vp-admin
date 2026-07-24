@@ -8,6 +8,7 @@ import {
   useReactivateModeratorMutation,
   type Moderator,
 } from "@/redux/api/moderatorsApi";
+import ErrorState from "@/components/error-state";
 
 type Props = {
   search: string;
@@ -15,7 +16,7 @@ type Props = {
 };
 
 export default function ModeratorList({ search, onManagePermissions }: Props) {
-  const { data, isLoading, isError } = useGetModeratorsQuery({ search: search || undefined });
+  const { data, isLoading, isError, error } = useGetModeratorsQuery({ search: search || undefined });
   const [deleteModerator] = useDeleteModeratorMutation();
   const [deactivateModerator] = useDeactivateModeratorMutation();
   const [reactivateModerator] = useReactivateModeratorMutation();
@@ -25,11 +26,7 @@ export default function ModeratorList({ search, onManagePermissions }: Props) {
   }
 
   if (isError) {
-    return (
-      <p className="rounded-2xl border border-red-500/30 bg-red-500/5 p-5 text-center text-sm text-red-500">
-        মডারেটরদের তালিকা আনতে সমস্যা হয়েছে। API সার্ভার সংযোগ পরীক্ষা করুন।
-      </p>
-    );
+    return <ErrorState message="মডারেটরদের তালিকা আনতে সমস্যা হয়েছে। API সার্ভার সংযোগ পরীক্ষা করুন।" error={error} />;
   }
 
   const moderators = data?.results ?? [];

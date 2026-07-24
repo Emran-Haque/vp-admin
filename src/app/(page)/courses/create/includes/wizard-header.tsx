@@ -3,7 +3,7 @@ import { ArrowLeft, BookOpen, ChevronRight } from "lucide-react";
 
 const steps = [
   { step: 1, label: "মৌলিক তথ্য" },
-  { step: 2, label: "মডিউল ও পাঠ" },
+  { step: 2, label: "কোর্স ম্যাটেরিয়াল" },
   { step: 3, label: "সাবজেক্ট ও FAQ" },
   { step: 4, label: "রিভিউ ও প্রকাশ" },
 ] as const;

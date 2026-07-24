@@ -7,6 +7,7 @@ import {
   useToggleNoticeVisibilityMutation,
   type Notice,
 } from "@/redux/api/noticesApi";
+import ErrorState from "@/components/error-state";
 
 const targetTypeStyles: Record<string, { label: string; icon: typeof Users }> = {
   all: { label: "সবার জন্য", icon: Users },
@@ -40,7 +41,7 @@ const priorityStyles: Record<string, { label: string; dot: string; badge: string
 };
 
 export default function NoticeList({ onEdit }: { onEdit: (notice: Notice) => void }) {
-  const { data, isLoading, isError } = useGetNoticesQuery();
+  const { data, isLoading, isError, error } = useGetNoticesQuery();
   const [deleteNotice] = useDeleteNoticeMutation();
   const [toggleVisibility] = useToggleNoticeVisibilityMutation();
 
@@ -49,11 +50,7 @@ export default function NoticeList({ onEdit }: { onEdit: (notice: Notice) => voi
   }
 
   if (isError) {
-    return (
-      <p className="rounded-2xl border border-red-500/30 bg-red-500/5 p-5 text-center text-sm text-red-500">
-        নোটিশের তালিকা আনতে সমস্যা হয়েছে। API সার্ভার সংযোগ পরীক্ষা করুন।
-      </p>
-    );
+    return <ErrorState message="নোটিশের তালিকা আনতে সমস্যা হয়েছে। API সার্ভার সংযোগ পরীক্ষা করুন।" error={error} />;
   }
 
   const notices = data?.results ?? [];

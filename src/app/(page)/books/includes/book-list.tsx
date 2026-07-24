@@ -3,6 +3,7 @@
 import { BookOpen, Star, Pencil, Trash2, User, Building2 } from "lucide-react";
 import { useGetBooksQuery, useDeleteBookMutation, type Book } from "@/redux/api/booksApi";
 import { usePermissions } from "@/hooks/use-permissions";
+import ErrorState from "@/components/error-state";
 
 type Props = {
   search: string;
@@ -12,7 +13,7 @@ type Props = {
 };
 
 export default function BookList({ search, category, availability, onEdit }: Props) {
-  const { data, isLoading, isError } = useGetBooksQuery({
+  const { data, isLoading, isError, error } = useGetBooksQuery({
     search: search || undefined,
     category: category ? Number(category) : undefined,
     is_available: availability ? availability === "true" : undefined,
@@ -25,11 +26,7 @@ export default function BookList({ search, category, availability, onEdit }: Pro
   }
 
   if (isError) {
-    return (
-      <p className="rounded-2xl border border-red-500/30 bg-red-500/5 p-5 text-center text-sm text-red-500">
-        বইয়ের তালিকা আনতে সমস্যা হয়েছে। API সার্ভার সংযোগ পরীক্ষা করুন।
-      </p>
-    );
+    return <ErrorState message="বইয়ের তালিকা আনতে সমস্যা হয়েছে। API সার্ভার সংযোগ পরীক্ষা করুন।" error={error} />;
   }
 
   const books = data?.results ?? [];

@@ -1,29 +1,29 @@
 import Link from "next/link";
 import { Video, FileText, HelpCircle, CheckCircle2, BookMarked, Image as ImageIcon } from "lucide-react";
 import { useGetTeachersQuery } from "@/redux/api/contentApi";
-import type { BasicInfo, CourseFiles, CourseModule, SubjectDraft, FaqDraft } from "./types";
+import type { BasicInfo, CourseFiles, MaterialDraft, SubjectDraft, FaqDraft } from "./types";
 
 type Props = {
   basicInfo: BasicInfo;
   files: CourseFiles;
-  modules: CourseModule[];
+  materials: MaterialDraft[];
   subjects: SubjectDraft[];
   faqs: FaqDraft[];
   published: boolean;
 };
 
-export default function StepReview({ basicInfo, files, modules, subjects, faqs, published }: Props) {
+export default function StepReview({ basicInfo, files, materials, subjects, faqs, published }: Props) {
   const { data: teachersData } = useGetTeachersQuery();
   const teacherNames = (teachersData?.results ?? [])
     .filter((t) => basicInfo.teacherIds.includes(String(t.id)))
     .map((t) => t.name);
 
-  const totals = modules.reduce(
+  const totals = materials.reduce(
     (acc, m) => {
-      for (const item of m.items) acc[item.type] += 1;
+      acc[m.kind] += 1;
       return acc;
     },
-    { video: 0, file: 0, quiz: 0 }
+    { video: 0, pdf: 0, mcq: 0 }
   );
 
   const fields: { label: string; value: string }[] = [
@@ -124,47 +124,34 @@ export default function StepReview({ basicInfo, files, modules, subjects, faqs, 
       </section>
 
       <section className="rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
-        <h2 className="text-xl font-bold leading-8 text-blue-50">কন্টেন্ট সারসংক্ষেপ</h2>
-        <p className="mt-1 text-xs text-amber-500">
-          মডিউল ও পাঠ এখনো সংরক্ষিত হয় না — এই তথ্যের জন্য আলাদা API যুক্ত হলে সংরক্ষণ চালু হবে।
-        </p>
+        <h2 className="text-xl font-bold leading-8 text-blue-50">ম্যাটেরিয়াল সারসংক্ষেপ</h2>
+        <p className="mt-1 text-xs text-slate-400">সব ম্যাটেরিয়াল বিনামূল্যে ও উন্মুক্ত থাকবে</p>
 
         <div className="mt-4 grid grid-cols-3 gap-4">
           <div className="rounded-2xl border border-blue-500/40 bg-blue-500/10 p-4 text-center">
             <Video size={20} className="mx-auto text-blue-500" />
             <p className="mt-1 text-xl font-bold text-blue-500">{totals.video}</p>
-            <p className="text-xs text-blue-500 opacity-80">ভিডিও ক্লাস</p>
+            <p className="text-xs text-blue-500 opacity-80">ভিডিও</p>
           </div>
           <div className="rounded-2xl border border-violet-500/40 bg-violet-500/10 p-4 text-center">
             <FileText size={20} className="mx-auto text-violet-500" />
-            <p className="mt-1 text-xl font-bold text-violet-500">{totals.file}</p>
-            <p className="text-xs text-violet-500 opacity-80">ফাইল/নোট</p>
+            <p className="mt-1 text-xl font-bold text-violet-500">{totals.pdf}</p>
+            <p className="text-xs text-violet-500 opacity-80">পিডিএফ</p>
           </div>
           <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-4 text-center">
             <HelpCircle size={20} className="mx-auto text-emerald-500" />
-            <p className="mt-1 text-xl font-bold text-emerald-500">{totals.quiz}</p>
+            <p className="mt-1 text-xl font-bold text-emerald-500">{totals.mcq}</p>
             <p className="text-xs text-emerald-500 opacity-80">কুইজ</p>
           </div>
         </div>
 
         <div className="mt-5 flex flex-col gap-2">
-          {modules.map((module, index) => (
-            <div key={module.id} className="rounded-xl border border-slate-800 bg-gray-900/30 p-3">
-              <p className="text-sm font-semibold text-blue-50">
-                {index + 1}. {module.title} ({module.items.length} আইটেম)
-              </p>
-              {module.items.length > 0 && (
-                <ul className="mt-1.5 flex flex-col gap-1 pl-4">
-                  {module.items.map((item, itemIndex) => (
-                    <li key={item.id} className="list-decimal text-xs text-slate-400">
-                      {itemIndex + 1}. {item.title}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+          {materials.map((item, index) => (
+            <p key={item.id} className="rounded-xl border border-slate-800 bg-gray-900/30 p-3 text-sm text-blue-50">
+              {index + 1}. {item.title}
+            </p>
           ))}
-          {modules.length === 0 && <p className="text-sm text-slate-400">কোনো মডিউল যোগ করা হয়নি</p>}
+          {materials.length === 0 && <p className="text-sm text-slate-400">কোনো ম্যাটেরিয়াল যোগ করা হয়নি</p>}
         </div>
       </section>
     </div>

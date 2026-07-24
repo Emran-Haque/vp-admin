@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { BookOpen, Video, HelpCircle, ClipboardList, Users, Clock, Pencil, Trash2, type LucideIcon } from "lucide-react";
 import { useGetCoursesQuery, useDeleteCourseMutation, type Course } from "@/redux/api/coursesApi";
 import { usePermissions } from "@/hooks/use-permissions";
+import ErrorState from "@/components/error-state";
 
 const statusStyles = {
   published: { label: "প্রকাশিত", className: "bg-white text-blue-500 outline-emerald-500/40" },
@@ -19,7 +20,7 @@ const statBoxes: { key: keyof Course; label: string; icon: LucideIcon }[] = [
 ];
 
 export default function CourseList() {
-  const { data, isLoading, isError } = useGetCoursesQuery();
+  const { data, isLoading, isError, error } = useGetCoursesQuery();
   const [deleteCourse] = useDeleteCourseMutation();
   const { hasPermission } = usePermissions();
   const router = useRouter();
@@ -29,11 +30,7 @@ export default function CourseList() {
   }
 
   if (isError) {
-    return (
-      <p className="rounded-2xl border border-red-500/30 bg-red-500/5 p-5 text-center text-sm text-red-500">
-        কোর্সের তালিকা আনতে সমস্যা হয়েছে। API সার্ভার সংযোগ পরীক্ষা করুন।
-      </p>
-    );
+    return <ErrorState message="কোর্সের তালিকা আনতে সমস্যা হয়েছে। API সার্ভার সংযোগ পরীক্ষা করুন।" error={error} />;
   }
 
   const courses = data?.results ?? [];

@@ -9,9 +9,10 @@ type Props = {
   onPrev: () => void;
   onNext: () => void;
   onSave: () => void;
+  showSave?: boolean;
 };
 
-export default function EditWizardFooter({ step, isSaving, onPrev, onNext, onSave }: Props) {
+export default function EditWizardFooter({ step, isSaving, onPrev, onNext, onSave, showSave = true }: Props) {
   const { hasPermission } = usePermissions();
 
   return (
@@ -36,7 +37,7 @@ export default function EditWizardFooter({ step, isSaving, onPrev, onNext, onSav
           </button>
         )}
 
-        {hasPermission("can_edit_exam") && (
+        {showSave && hasPermission("can_edit_exam") && (
           <button
             type="button"
             onClick={onSave}

@@ -6,12 +6,13 @@ import { useGetCourseSubjectsQuery } from "@/redux/api/courseSubjectsApi";
 import CourseDetailsHeader from "./includes/course-details-header";
 import CourseStatCards from "./includes/course-stat-cards";
 import CourseTabs from "./includes/course-tabs";
+import ErrorState from "@/components/error-state";
 
 export default function Page() {
   const params = useParams<{ id: string }>();
   const courseId = Number(params.id);
 
-  const { data: course, isLoading, isError } = useGetCourseQuery(courseId, { skip: !courseId });
+  const { data: course, isLoading, isError, error } = useGetCourseQuery(courseId, { skip: !courseId });
   const { data: subjectsData } = useGetCourseSubjectsQuery({ course: courseId }, { skip: !courseId });
 
   if (isLoading) {
@@ -20,9 +21,10 @@ export default function Page() {
 
   if (isError || !course) {
     return (
-      <p className="rounded-2xl border border-red-500/30 bg-red-500/5 p-5 text-center text-sm text-red-500">
-        কোর্সটি খুঁজে পাওয়া যায়নি। API সার্ভার সংযোগ পরীক্ষা করুন।
-      </p>
+      <ErrorState
+        message="কোর্সটি খুঁজে পাওয়া যায়নি। API সার্ভার সংযোগ পরীক্ষা করুন।"
+        error={isError ? error : undefined}
+      />
     );
   }
 

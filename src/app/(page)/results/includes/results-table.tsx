@@ -1,5 +1,6 @@
 import { Medal } from "lucide-react";
 import type { ResultRow } from "./types";
+import ErrorState from "@/components/error-state";
 
 const medalColor: Record<number, string> = {
   1: "text-amber-500",
@@ -11,18 +12,17 @@ type Props = {
   rows: ResultRow[];
   isLoading: boolean;
   isError: boolean;
+  error?: unknown;
 };
 
-export default function ResultsTable({ rows, isLoading, isError }: Props) {
+export default function ResultsTable({ rows, isLoading, isError, error }: Props) {
   if (isLoading) {
     return <p className="p-8 text-center text-sm text-slate-400">ফলাফলের তালিকা লোড হচ্ছে…</p>;
   }
 
   if (isError) {
     return (
-      <p className="p-8 text-center text-sm text-red-500">
-        ফলাফলের তালিকা আনতে সমস্যা হয়েছে। API সার্ভার সংযোগ পরীক্ষা করুন।
-      </p>
+      <ErrorState message="ফলাফলের তালিকা আনতে সমস্যা হয়েছে। API সার্ভার সংযোগ পরীক্ষা করুন।" error={error} />
     );
   }
 

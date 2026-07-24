@@ -1,4 +1,4 @@
-export type ContentType = "video" | "file" | "quiz";
+export type MaterialKind = "pdf" | "video" | "mcq";
 
 export type QuizQuestion = {
   id: string;
@@ -7,20 +7,15 @@ export type QuizQuestion = {
   correctIndex: number | null;
 };
 
-export type ModuleItem = {
+export type MaterialDraft = {
   id: string;
-  type: ContentType;
+  kind: MaterialKind;
   title: string;
-  videoUrl?: string;
-  videoDuration?: string;
   file?: File | null;
+  driveLink?: string;
+  videoUrl?: string;
+  quizId?: number | null;
   questions?: QuizQuestion[];
-};
-
-export type CourseModule = {
-  id: string;
-  title: string;
-  items: ModuleItem[];
 };
 
 export type BasicInfo = {

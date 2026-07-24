@@ -6,28 +6,38 @@ import {
   useDeleteStudentMutation,
   useDeactivateStudentMutation,
   useReactivateStudentMutation,
-  type Student,
 } from "@/redux/api/studentsApi";
 import { usePermissions } from "@/hooks/use-permissions";
+import { statusOf, studentStatusStyles } from "@/lib/student-status";
+import type { StatusFilter } from "./toolbar";
+import StudentDetailModal from "./student-detail-modal";
+import { useState } from "react";
+import ErrorState from "@/components/error-state";
 
-function statusOf(student: Student): "active" | "inactive" | "pending" {
-  if (!student.is_active) return "inactive";
-  if (!student.is_verified) return "pending";
-  return "active";
-}
+const STATUS_PARAMS: Record<Exclude<StatusFilter, "">, { is_active?: boolean; is_verified?: boolean }> = {
+  active: { is_active: true, is_verified: true },
+  inactive: { is_active: false },
+  pending: { is_active: true, is_verified: false },
+};
 
-const statusStyles = {
-  active: { label: "সক্রিয়", className: "border-emerald-500/40 bg-emerald-500/10 text-emerald-500" },
-  inactive: { label: "নিষ্ক্রিয়", className: "border-red-500/40 bg-red-500/10 text-red-500" },
-  pending: { label: "অপেক্ষমাণ", className: "border-amber-500/40 bg-amber-500/10 text-amber-500" },
-} as const;
-
-export default function StudentList({ search }: { search: string }) {
-  const { data, isLoading, isError } = useGetStudentsQuery({ search: search || undefined });
+export default function StudentList({
+  search,
+  batch,
+  status,
+}: {
+  search: string;
+  batch: string;
+  status: StatusFilter;
+}) {
+  const { data, isLoading, isError, error } = useGetStudentsQuery({
+    search: search || undefined,
+    ...(status ? STATUS_PARAMS[status] : {}),
+  });
   const [deleteStudent] = useDeleteStudentMutation();
   const [deactivateStudent] = useDeactivateStudentMutation();
   const [reactivateStudent] = useReactivateStudentMutation();
   const { hasPermission } = usePermissions();
+  const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
 
   if (isLoading) {
     return <p className="text-center text-sm text-slate-400">শিক্ষার্থীদের তালিকা লোড হচ্ছে…</p>;
@@ -35,22 +45,23 @@ export default function StudentList({ search }: { search: string }) {
 
   if (isError) {
     return (
-      <p className="rounded-2xl border border-red-500/30 bg-red-500/5 p-5 text-center text-sm text-red-500">
-        শিক্ষার্থীদের তালিকা আনতে সমস্যা হয়েছে। API সার্ভার সংযোগ পরীক্ষা করুন।
-      </p>
+      <ErrorState message="শিক্ষার্থীদের তালিকা আনতে সমস্যা হয়েছে। API সার্ভার সংযোগ পরীক্ষা করুন।" error={error} />
     );
   }
 
-  const students = data?.results ?? [];
+  const students = (data?.results ?? []).filter(
+    (student) => !batch || student.student_profile?.batch === batch
+  );
 
   return (
     <section className="flex flex-col gap-6">
       {students.map((student) => {
-        const status = statusStyles[statusOf(student)];
+        const status = studentStatusStyles[statusOf(student)];
         return (
           <div
             key={student.id}
-            className="flex flex-wrap items-center gap-6 rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]"
+            onClick={() => setSelectedStudentId(student.id)}
+            className="flex cursor-pointer flex-wrap items-center gap-6 rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)] transition-colors hover:border-slate-700"
           >
             <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-sky-500">
               <GraduationCap size={28} className="text-white" strokeWidth={2} />
@@ -83,7 +94,7 @@ export default function StudentList({ search }: { search: string }) {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
               {hasPermission("can_edit_student") &&
                 (student.is_active ? (
                   <button
@@ -124,6 +135,10 @@ export default function StudentList({ search }: { search: string }) {
         <p className="rounded-2xl border border-dashed border-slate-800 p-8 text-center text-sm text-slate-400">
           কোনো শিক্ষার্থী পাওয়া যায়নি।
         </p>
+      )}
+
+      {selectedStudentId !== null && (
+        <StudentDetailModal studentId={selectedStudentId} onClose={() => setSelectedStudentId(null)} />
       )}
     </section>
   );

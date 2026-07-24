@@ -9,6 +9,7 @@ import {
   type ModeratorPermissions,
 } from "@/redux/api/moderatorsApi";
 import { groupLabels, permissionLabels } from "./permission-labels";
+import ErrorState from "@/components/error-state";
 
 type Props = {
   moderator: Moderator;
@@ -27,7 +28,7 @@ function toFlagState(permissions: ModeratorPermissions): FlagState {
 }
 
 export default function PermissionsModal({ moderator, onClose }: Props) {
-  const { data: catalog, isLoading, isError } = useGetGroupedPermissionCatalogQuery();
+  const { data: catalog, isLoading, isError, error } = useGetGroupedPermissionCatalogQuery();
   const [updatePermissions, { isLoading: isSaving, isError: isSaveError }] =
     useUpdateModeratorPermissionsMutation();
 
@@ -84,9 +85,7 @@ export default function PermissionsModal({ moderator, onClose }: Props) {
           {isLoading && <p className="text-center text-sm text-slate-400">অনুমতির তালিকা লোড হচ্ছে…</p>}
 
           {isError && (
-            <p className="rounded-2xl border border-red-500/30 bg-red-500/5 p-5 text-center text-sm text-red-500">
-              অনুমতির তালিকা আনতে সমস্যা হয়েছে। API সার্ভার সংযোগ পরীক্ষা করুন।
-            </p>
+            <ErrorState message="অনুমতির তালিকা আনতে সমস্যা হয়েছে। API সার্ভার সংযোগ পরীক্ষা করুন।" error={error} />
           )}
 
           {isSaveError && (

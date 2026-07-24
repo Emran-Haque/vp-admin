@@ -4,26 +4,21 @@ import { useState } from "react";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import WizardHeader from "./includes/wizard-header";
 import StepBasicInfo from "./includes/step-basic-info";
-import StepModules from "./includes/step-modules";
+import StepMaterials from "./includes/step-materials";
 import StepSubjectsFaqs from "./includes/step-subjects-faqs";
 import StepReview from "./includes/step-review";
 import WizardFooter from "./includes/wizard-footer";
 import { useCreateCourseMutation, useUpdateCourseMutation } from "@/redux/api/coursesApi";
 import { useCreateCourseSubjectMutation } from "@/redux/api/courseSubjectsApi";
 import { useCreateFaqMutation } from "@/redux/api/contentApi";
-import {
-  useCreateClassMutation,
-  useCreateClassVideoMutation,
-  useCreateClassMaterialMutation,
-} from "@/redux/api/classesApi";
+import { useCreateCourseMaterialMutation } from "@/redux/api/courseMaterialsApi";
 import {
   useCreateExamMutation,
   useAddExamQuestionMutation,
   usePublishExamMutation,
 } from "@/redux/api/examsApi";
 import { extractErrorMessage } from "@/lib/api-error";
-import { inferMaterialKind } from "@/lib/material-kind";
-import type { BasicInfo, CourseFiles, CourseModule, QuizQuestion, SubjectDraft, FaqDraft } from "./includes/types";
+import type { BasicInfo, CourseFiles, MaterialDraft, QuizQuestion, SubjectDraft, FaqDraft } from "./includes/types";
 
 const optionLetters = ["A", "B", "C", "D"] as const;
 
@@ -59,7 +54,7 @@ export default function Page() {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [basicInfo, setBasicInfo] = useState<BasicInfo>(emptyBasicInfo);
   const [files, setFiles] = useState<CourseFiles>(emptyFiles);
-  const [modules, setModules] = useState<CourseModule[]>([]);
+  const [materials, setMaterials] = useState<MaterialDraft[]>([]);
   const [subjects, setSubjects] = useState<SubjectDraft[]>([]);
   const [faqs, setFaqs] = useState<FaqDraft[]>([]);
 
@@ -68,10 +63,10 @@ export default function Page() {
   const [courseId, setCourseId] = useState<number | null>(null);
   const [persistedSubjectIds, setPersistedSubjectIds] = useState<string[]>([]);
   const [persistedFaqIds, setPersistedFaqIds] = useState<string[]>([]);
-  // Maps local (client-generated) module/item/question ids to the backend record
+  // Maps local (client-generated) material/question ids to the backend record
   // id once persisted, so re-saving a draft doesn't create duplicates.
-  const [persistedModuleIds, setPersistedModuleIds] = useState<Record<string, number>>({});
-  const [persistedItemIds, setPersistedItemIds] = useState<Record<string, number>>({});
+  const [persistedMaterialIds, setPersistedMaterialIds] = useState<Record<string, number>>({});
+  const [persistedExamIds, setPersistedExamIds] = useState<Record<string, number>>({});
   const [persistedQuestionIds, setPersistedQuestionIds] = useState<Record<string, number>>({});
 
   const [published, setPublished] = useState(false);
@@ -83,9 +78,7 @@ export default function Page() {
   const [updateCourse] = useUpdateCourseMutation();
   const [createCourseSubject] = useCreateCourseSubjectMutation();
   const [createFaq] = useCreateFaqMutation();
-  const [createClass] = useCreateClassMutation();
-  const [createClassVideo] = useCreateClassVideoMutation();
-  const [createClassMaterial] = useCreateClassMaterialMutation();
+  const [createCourseMaterial] = useCreateCourseMaterialMutation();
   const [createExam] = useCreateExamMutation();
   const [addExamQuestion] = useAddExamQuestionMutation();
   const [publishExam] = usePublishExamMutation();
@@ -193,73 +186,76 @@ export default function Page() {
       }
     };
 
-    for (const mod of modules) {
-      let backendModuleId = persistedModuleIds[mod.id];
-      if (!backendModuleId) {
-        try {
-          const createdClass = await createClass({ course: course.id, title: mod.title }).unwrap();
-          backendModuleId = createdClass.id;
-          setPersistedModuleIds((prev) => ({ ...prev, [mod.id]: createdClass.id }));
-        } catch (err) {
-          console.error(`Failed to add session "${mod.title}":`, err);
-          setSubmitError(`অধিবেশন "${mod.title}" যোগ করা যায়নি: ${extractErrorMessage(err)}`);
-          setIsSubmitting(false);
-          return;
-        }
-      }
-
-      const videoItems = mod.items.filter((i) => i.type === "video");
-
-      for (const item of mod.items) {
-        try {
-          const existingItemId = persistedItemIds[item.id];
-          if (existingItemId) {
-            if (item.type === "quiz") {
-              await persistQuizQuestions(existingItemId, item.questions ?? []);
+    for (const item of materials) {
+      try {
+        const existingMaterialId = persistedMaterialIds[item.id];
+        if (existingMaterialId) {
+          if (item.kind === "mcq") {
+            const examId = persistedExamIds[item.id];
+            if (examId) {
+              await persistQuizQuestions(examId, item.questions ?? []);
               if ((item.questions ?? []).some((q) => q.question.trim())) {
-                await publishExam(existingItemId).unwrap();
+                await publishExam(examId).unwrap();
               }
             }
-            continue;
           }
+          continue;
+        }
 
-          if (item.type === "video") {
-            const createdVideo = await createClassVideo({
-              course_class: backendModuleId,
-              title: item.title,
-              video_url: item.videoUrl || "",
-              duration: item.videoDuration || "",
-              order: videoItems.indexOf(item),
-            }).unwrap();
-            setPersistedItemIds((prev) => ({ ...prev, [item.id]: createdVideo.id }));
-          } else if (item.type === "file") {
+        if (item.kind === "video") {
+          const createdMaterial = await createCourseMaterial({
+            course: course.id,
+            title: item.title,
+            kind: "video",
+            video_url: item.videoUrl || "",
+          }).unwrap();
+          setPersistedMaterialIds((prev) => ({ ...prev, [item.id]: createdMaterial.id }));
+        } else if (item.kind === "pdf") {
+          let createdMaterial;
+          if (item.file) {
             const materialForm = new FormData();
-            materialForm.append("course_class", String(backendModuleId));
+            materialForm.append("course", String(course.id));
             materialForm.append("title", item.title);
-            materialForm.append("kind", inferMaterialKind(item.file));
-            materialForm.append("downloadable", "true");
-            if (item.file) materialForm.append("file", item.file);
-            const createdMaterial = await createClassMaterial(materialForm).unwrap();
-            setPersistedItemIds((prev) => ({ ...prev, [item.id]: createdMaterial.id }));
+            materialForm.append("kind", "pdf");
+            materialForm.append("file", item.file);
+            createdMaterial = await createCourseMaterial(materialForm).unwrap();
           } else {
+            createdMaterial = await createCourseMaterial({
+              course: course.id,
+              title: item.title,
+              kind: "pdf",
+              drive_link: item.driveLink || "",
+            }).unwrap();
+          }
+          setPersistedMaterialIds((prev) => ({ ...prev, [item.id]: createdMaterial.id }));
+        } else {
+          let examId = item.quizId || persistedExamIds[item.id];
+          if (!examId) {
             const createdExam = await createExam({
               course: course.id,
-              course_class: backendModuleId,
               title: item.title,
               duration_minutes: 30,
             }).unwrap();
-            setPersistedItemIds((prev) => ({ ...prev, [item.id]: createdExam.id }));
+            examId = createdExam.id;
+            setPersistedExamIds((prev) => ({ ...prev, [item.id]: createdExam.id }));
             await persistQuizQuestions(createdExam.id, item.questions ?? []);
             if ((item.questions ?? []).some((q) => q.question.trim())) {
               await publishExam(createdExam.id).unwrap();
             }
           }
-        } catch (err) {
-          console.error(`Failed to add content "${item.title}":`, err);
-          setSubmitError(`কন্টেন্ট "${item.title}" যোগ করা যায়নি: ${extractErrorMessage(err)}`);
-          setIsSubmitting(false);
-          return;
+          const createdMaterial = await createCourseMaterial({
+            course: course.id,
+            title: item.title,
+            kind: "mcq",
+            quiz: examId,
+          }).unwrap();
+          setPersistedMaterialIds((prev) => ({ ...prev, [item.id]: createdMaterial.id }));
         }
+      } catch (err) {
+        console.error(`Failed to add material "${item.title}":`, err);
+        setSubmitError(`ম্যাটেরিয়াল "${item.title}" যোগ করা যায়নি: ${extractErrorMessage(err)}`);
+        setIsSubmitting(false);
+        return;
       }
     }
 
@@ -298,7 +294,7 @@ export default function Page() {
       {step === 1 && (
         <StepBasicInfo value={basicInfo} onChange={setBasicInfo} files={files} onFilesChange={setFiles} />
       )}
-      {step === 2 && <StepModules modules={modules} onChange={setModules} />}
+      {step === 2 && <StepMaterials materials={materials} onChange={setMaterials} courseId={courseId ?? undefined} />}
       {step === 3 && (
         <StepSubjectsFaqs
           subjects={subjects}
@@ -313,7 +309,7 @@ export default function Page() {
         <StepReview
           basicInfo={basicInfo}
           files={files}
-          modules={modules}
+          materials={materials}
           subjects={subjects}
           faqs={faqs}
           published={published}

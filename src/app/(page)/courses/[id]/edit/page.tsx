@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import WizardHeader from "../../create/includes/wizard-header";
 import StepBasicInfo from "../../create/includes/step-basic-info";
-import StepModules from "../../create/includes/step-modules";
+import StepMaterials from "../../create/includes/step-materials";
 import StepSubjectsFaqs from "../../create/includes/step-subjects-faqs";
 import StepReview from "../../create/includes/step-review";
 import EditWizardFooter from "./includes/edit-wizard-footer";
@@ -23,16 +23,13 @@ import {
   useDeleteFaqMutation,
 } from "@/redux/api/contentApi";
 import {
-  useGetClassesQuery,
-  useCreateClassMutation,
-  useUpdateClassMutation,
-  useDeleteClassMutation,
-  useCreateClassVideoMutation,
-  useDeleteClassVideoMutation,
-  useCreateClassMaterialMutation,
-  useDeleteClassMaterialMutation,
-  type CourseClass,
-} from "@/redux/api/classesApi";
+  useGetCourseMaterialsQuery,
+  useCreateCourseMaterialMutation,
+  useUpdateCourseMaterialMutation,
+  useDeleteCourseMaterialMutation,
+  type CourseMaterial,
+  type MaterialKind,
+} from "@/redux/api/courseMaterialsApi";
 import {
   useCreateExamMutation,
   useUpdateExamMutation,
@@ -41,18 +38,12 @@ import {
   useUpdateQuestionMutation,
   useDeleteQuestionMutation,
   usePublishExamMutation,
+  useLazyGetExamQuestionsQuery,
+  type ExamQuestion,
 } from "@/redux/api/examsApi";
 import { extractErrorMessage } from "@/lib/api-error";
-import { inferMaterialKind } from "@/lib/material-kind";
-import type {
-  BasicInfo,
-  CourseFiles,
-  CourseModule,
-  ModuleItem,
-  QuizQuestion,
-  SubjectDraft,
-  FaqDraft,
-} from "../../create/includes/types";
+import ErrorState from "@/components/error-state";
+import type { BasicInfo, CourseFiles, MaterialDraft, QuizQuestion, SubjectDraft, FaqDraft } from "../../create/includes/types";
 
 const optionLetters = ["A", "B", "C", "D"] as const;
 const isPersisted = (id: string) => /^\d+$/.test(id);
@@ -83,55 +74,54 @@ function toBasicInfo(course: Course): BasicInfo {
   };
 }
 
-function toModules(classes: CourseClass[]): CourseModule[] {
-  return classes.map((cls) => ({
-    id: String(cls.id),
-    title: cls.title,
-    items: [
-      ...cls.videos.map(
-        (v): ModuleItem => ({
-          id: String(v.id),
-          type: "video",
-          title: v.title,
-          videoUrl: v.video_url,
-          videoDuration: v.duration,
+function toMaterialDrafts(
+  materials: CourseMaterial[],
+  questionsByExam: Map<number, ExamQuestion[]>
+): MaterialDraft[] {
+  return materials.map((m): MaterialDraft => {
+    if (m.kind === "video") {
+      return { id: String(m.id), kind: "video", title: m.title, videoUrl: m.video_url };
+    }
+    if (m.kind === "pdf") {
+      return { id: String(m.id), kind: "pdf", title: m.title, file: null, driveLink: m.drive_link || "" };
+    }
+    const questions = (m.quiz != null ? questionsByExam.get(m.quiz) : undefined) ?? [];
+    return {
+      id: String(m.id),
+      kind: "mcq",
+      title: m.title,
+      quizId: m.quiz ?? undefined,
+      questions: questions.map(
+        (q): QuizQuestion => ({
+          id: String(q.id),
+          question: q.question_text,
+          options: [q.option_a, q.option_b, q.option_c, q.option_d],
+          correctIndex: (["A", "B", "C", "D"] as const).indexOf(q.correct_option),
         })
       ),
-      ...cls.class_materials.map(
-        (m): ModuleItem => ({
-          id: String(m.id),
-          type: "file",
-          title: m.title,
-          file: null,
-        })
-      ),
-      ...cls.quizzes.map(
-        (qz): ModuleItem => ({
-          id: String(qz.id),
-          type: "quiz",
-          title: qz.title,
-          questions: qz.questions.map(
-            (q): QuizQuestion => ({
-              id: String(q.id),
-              question: q.question_text,
-              options: [q.option_a, q.option_b, q.option_c, q.option_d],
-              correctIndex: (["A", "B", "C", "D"] as const).indexOf(q.correct_option),
-            })
-          ),
-        })
-      ),
-    ],
-  }));
+    };
+  });
 }
 
-type OriginalItem = { id: number; type: "video" | "file" | "quiz"; title: string; videoUrl?: string; videoDuration?: string };
-type OriginalModule = { id: number; title: string; items: OriginalItem[] };
+type OriginalMaterial = {
+  id: number;
+  kind: MaterialKind;
+  title: string;
+  videoUrl?: string;
+  driveLink?: string;
+  quizId?: number;
+};
 
 export default function Page() {
   const params = useParams<{ id: string }>();
   const courseId = Number(params.id);
 
-  const { data: course, isLoading: isLoadingCourse, isError: isCourseError } = useGetCourseQuery(courseId, {
+  const {
+    data: course,
+    isLoading: isLoadingCourse,
+    isError: isCourseError,
+    error: courseError,
+  } = useGetCourseQuery(courseId, {
     skip: !courseId,
   });
   const { data: subjectsData, isLoading: isLoadingSubjects } = useGetCourseSubjectsQuery(
@@ -139,7 +129,7 @@ export default function Page() {
     { skip: !courseId }
   );
   const { data: faqsData, isLoading: isLoadingFaqs } = useGetFaqsQuery();
-  const { data: classesData, isLoading: isLoadingClasses } = useGetClassesQuery(
+  const { data: materialsData, isLoading: isLoadingMaterials } = useGetCourseMaterialsQuery(
     { course: courseId },
     { skip: !courseId }
   );
@@ -151,13 +141,9 @@ export default function Page() {
   const [createFaq] = useCreateFaqMutation();
   const [updateFaq] = useUpdateFaqMutation();
   const [deleteFaq] = useDeleteFaqMutation();
-  const [createClass] = useCreateClassMutation();
-  const [updateClass] = useUpdateClassMutation();
-  const [deleteClass] = useDeleteClassMutation();
-  const [createClassVideo] = useCreateClassVideoMutation();
-  const [deleteClassVideo] = useDeleteClassVideoMutation();
-  const [createClassMaterial] = useCreateClassMaterialMutation();
-  const [deleteClassMaterial] = useDeleteClassMaterialMutation();
+  const [createCourseMaterial] = useCreateCourseMaterialMutation();
+  const [updateCourseMaterial] = useUpdateCourseMaterialMutation();
+  const [deleteCourseMaterial] = useDeleteCourseMaterialMutation();
   const [createExam] = useCreateExamMutation();
   const [updateExam] = useUpdateExamMutation();
   const [deleteExam] = useDeleteExamMutation();
@@ -165,11 +151,12 @@ export default function Page() {
   const [updateQuestion] = useUpdateQuestionMutation();
   const [deleteQuestion] = useDeleteQuestionMutation();
   const [publishExam] = usePublishExamMutation();
+  const [fetchExamQuestions] = useLazyGetExamQuestionsQuery();
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [basicInfo, setBasicInfo] = useState<BasicInfo | null>(null);
   const [files, setFiles] = useState<CourseFiles>(emptyFiles);
-  const [modules, setModules] = useState<CourseModule[]>([]);
+  const [materials, setMaterials] = useState<MaterialDraft[]>([]);
   const [subjects, setSubjects] = useState<SubjectDraft[]>([]);
   const [faqs, setFaqs] = useState<FaqDraft[]>([]);
 
@@ -180,13 +167,13 @@ export default function Page() {
   const initializedRef = useRef(false);
   const originalSubjectIdsRef = useRef<number[]>([]);
   const originalFaqIdsRef = useRef<number[]>([]);
-  const originalModulesRef = useRef<OriginalModule[]>([]);
+  const originalMaterialsRef = useRef<OriginalMaterial[]>([]);
   const originalQuestionIdsRef = useRef<Map<number, number[]>>(new Map());
 
-  const isLoading = isLoadingCourse || isLoadingSubjects || isLoadingFaqs || isLoadingClasses;
+  const isLoading = isLoadingCourse || isLoadingSubjects || isLoadingFaqs || isLoadingMaterials;
 
   useEffect(() => {
-    if (initializedRef.current || !course || !subjectsData || !faqsData || !classesData) return;
+    if (initializedRef.current || !course || !subjectsData || !faqsData || !materialsData) return;
     initializedRef.current = true;
 
     setBasicInfo(toBasicInfo(course));
@@ -199,24 +186,39 @@ export default function Page() {
     setFaqs(courseFaqs.map((f) => ({ id: String(f.id), question: f.question, answer: f.answer })));
     originalFaqIdsRef.current = courseFaqs.map((f) => f.id);
 
-    setModules(toModules(classesData.results));
-    originalModulesRef.current = classesData.results.map((cls) => ({
-      id: cls.id,
-      title: cls.title,
-      items: [
-        ...cls.videos.map((v): OriginalItem => ({ id: v.id, type: "video", title: v.title, videoUrl: v.video_url, videoDuration: v.duration })),
-        ...cls.class_materials.map((m): OriginalItem => ({ id: m.id, type: "file", title: m.title })),
-        ...cls.quizzes.map((qz): OriginalItem => ({ id: qz.id, type: "quiz", title: qz.title })),
-      ],
-    }));
-    const questionMap = new Map<number, number[]>();
-    for (const cls of classesData.results) {
-      for (const qz of cls.quizzes) {
-        questionMap.set(qz.id, qz.questions.map((q) => q.id));
-      }
-    }
-    originalQuestionIdsRef.current = questionMap;
-  }, [course, subjectsData, faqsData, classesData, courseId]);
+    const materialsList = materialsData.results;
+    const mcqMaterials = materialsList.filter((m) => m.kind === "mcq" && m.quiz != null);
+
+    (async () => {
+      const questionsByExam = new Map<number, ExamQuestion[]>();
+      await Promise.all(
+        mcqMaterials.map(async (m) => {
+          if (m.quiz == null) return;
+          try {
+            const questions = await fetchExamQuestions(m.quiz).unwrap();
+            questionsByExam.set(m.quiz, questions);
+          } catch {
+            questionsByExam.set(m.quiz, []);
+          }
+        })
+      );
+
+      setMaterials(toMaterialDrafts(materialsList, questionsByExam));
+      originalMaterialsRef.current = materialsList.map((m) => ({
+        id: m.id,
+        kind: m.kind,
+        title: m.title,
+        videoUrl: m.video_url || "",
+        driveLink: m.drive_link || "",
+        quizId: m.quiz ?? undefined,
+      }));
+      originalQuestionIdsRef.current = new Map(
+        mcqMaterials
+          .filter((m): m is CourseMaterial & { quiz: number } => m.quiz != null)
+          .map((m) => [m.quiz, (questionsByExam.get(m.quiz) ?? []).map((q) => q.id)])
+      );
+    })();
+  }, [course, subjectsData, faqsData, materialsData, courseId, fetchExamQuestions]);
 
   const handleSave = async () => {
     if (!basicInfo) return;
@@ -258,7 +260,9 @@ export default function Page() {
 
     const nextSubjects: SubjectDraft[] = [];
     const nextFaqs: FaqDraft[] = [];
-    const nextModules: CourseModule[] = [];
+    const nextMaterials: MaterialDraft[] = [];
+    const nextOriginalMaterials: OriginalMaterial[] = [];
+    const nextOriginalQuestionIds = new Map<number, number[]>();
 
     try {
       // --- Subjects: create / update / delete ---
@@ -309,168 +313,175 @@ export default function Page() {
         }
       }
 
-      // --- Modules (classes) + items: create / update / delete ---
-      const originalModuleById = new Map(originalModulesRef.current.map((m) => [m.id, m]));
-      const currentModuleIds = new Set(modules.filter((m) => isPersisted(m.id)).map((m) => Number(m.id)));
+      // --- Course materials: create / update / delete ---
+      const originalMaterialById = new Map(originalMaterialsRef.current.map((m) => [String(m.id), m]));
+      const currentMaterialIds = new Set(materials.filter((m) => isPersisted(m.id)).map((m) => Number(m.id)));
 
-      for (const mod of originalModulesRef.current) {
-        if (currentModuleIds.has(mod.id)) continue;
-        for (const item of mod.items) {
-          if (item.type === "video") await deleteClassVideo(item.id).unwrap();
-          else if (item.type === "file") await deleteClassMaterial(item.id).unwrap();
-          else await deleteExam(item.id).unwrap();
-        }
-        await deleteClass(mod.id).unwrap();
+      for (const om of originalMaterialsRef.current) {
+        if (currentMaterialIds.has(om.id)) continue;
+        await deleteCourseMaterial(om.id).unwrap();
+        if (om.kind === "mcq" && om.quizId != null) await deleteExam(om.quizId).unwrap();
       }
 
-      for (const mod of modules) {
-        let backendModuleId: number;
-        const originalModule = isPersisted(mod.id) ? originalModuleById.get(Number(mod.id)) : undefined;
+      for (let i = 0; i < materials.length; i++) {
+        const item = materials[i];
+        const originalItem = isPersisted(item.id) ? originalMaterialById.get(item.id) : undefined;
 
-        if (originalModule) {
-          backendModuleId = originalModule.id;
-          if (originalModule.title !== mod.title) {
-            await updateClass({ id: backendModuleId, data: { title: mod.title } }).unwrap();
-          }
-        } else {
-          const created = await createClass({ course: courseId, title: mod.title }).unwrap();
-          backendModuleId = created.id;
-        }
-
-        const originalItemById = new Map((originalModule?.items ?? []).map((i) => [i.id, i]));
-        const currentItemIds = new Set(mod.items.filter((i) => isPersisted(i.id)).map((i) => Number(i.id)));
-        for (const item of originalModule?.items ?? []) {
-          if (currentItemIds.has(item.id)) continue;
-          if (item.type === "video") await deleteClassVideo(item.id).unwrap();
-          else if (item.type === "file") await deleteClassMaterial(item.id).unwrap();
-          else await deleteExam(item.id).unwrap();
-        }
-
-        const videoItems = mod.items.filter((i) => i.type === "video");
-        const nextItems: ModuleItem[] = [];
-
-        for (const item of mod.items) {
-          const originalItem = isPersisted(item.id) ? originalItemById.get(Number(item.id)) : undefined;
-
-          if (item.type === "video") {
-            const changed =
-              !originalItem ||
-              originalItem.title !== item.title ||
-              originalItem.videoUrl !== (item.videoUrl || "") ||
-              originalItem.videoDuration !== (item.videoDuration || "");
-            if (!changed) {
-              nextItems.push(item);
-              continue;
-            }
-            if (originalItem) await deleteClassVideo(originalItem.id).unwrap();
-            const createdVideo = await createClassVideo({
-              course_class: backendModuleId,
-              title: item.title,
-              video_url: item.videoUrl || "",
-              duration: item.videoDuration || "",
-              order: videoItems.indexOf(item),
+        if (item.kind === "video") {
+          const changed =
+            !originalItem || originalItem.title !== item.title || (originalItem.videoUrl || "") !== (item.videoUrl || "");
+          let materialId: number;
+          if (!changed && originalItem) {
+            materialId = originalItem.id;
+          } else if (originalItem) {
+            const updated = await updateCourseMaterial({
+              id: originalItem.id,
+              data: { title: item.title, video_url: item.videoUrl || "", ordering: i },
             }).unwrap();
-            nextItems.push({ ...item, id: String(createdVideo.id) });
-          } else if (item.type === "file") {
-            const changed = !originalItem || originalItem.title !== item.title || item.file;
-            if (!changed) {
-              nextItems.push(item);
-              continue;
-            }
-            const materialForm = new FormData();
-            materialForm.append("course_class", String(backendModuleId));
-            materialForm.append("title", item.title);
-            materialForm.append("kind", inferMaterialKind(item.file));
-            materialForm.append("downloadable", "true");
-            if (item.file) materialForm.append("file", item.file);
-            if (originalItem) await deleteClassMaterial(originalItem.id).unwrap();
-            const createdMaterial = await createClassMaterial(materialForm).unwrap();
-            nextItems.push({ ...item, id: String(createdMaterial.id), file: null });
+            materialId = updated.id;
           } else {
-            let examId: number;
-            if (originalItem) {
-              examId = originalItem.id;
-              if (originalItem.title !== item.title) {
-                await updateExam({ id: examId, data: { title: item.title } }).unwrap();
-              }
-            } else {
-              const createdExam = await createExam({
-                course: courseId,
-                course_class: backendModuleId,
-                title: item.title,
-                duration_minutes: 30,
-              }).unwrap();
-              examId = createdExam.id;
-            }
-
-            const originalQuestionIds = originalQuestionIdsRef.current.get(Number(item.id)) ?? [];
-            const currentQuestionIds = new Set(
-              (item.questions ?? []).filter((q) => isPersisted(q.id)).map((q) => Number(q.id))
-            );
-            for (const qId of originalQuestionIds.filter((id) => !currentQuestionIds.has(id))) {
-              await deleteQuestion(qId).unwrap();
-            }
-
-            const questions = item.questions ?? [];
-            const nextQuestions: QuizQuestion[] = [];
-            for (let i = 0; i < questions.length; i++) {
-              const q = questions[i];
-              if (!q.question.trim()) continue;
-              const data = {
-                question_text: q.question,
-                option_a: q.options[0] ?? "",
-                option_b: q.options[1] ?? "",
-                option_c: q.options[2] ?? "",
-                option_d: q.options[3] ?? "",
-                correct_option: optionLetters[q.correctIndex ?? 0],
-                explanation: "",
-                order: i + 1,
-              };
-              if (isPersisted(q.id)) {
-                await updateQuestion({ id: Number(q.id), data }).unwrap();
-                nextQuestions.push(q);
-              } else {
-                const createdQuestion = await addExamQuestion({ examId, data }).unwrap();
-                nextQuestions.push({ ...q, id: String(createdQuestion.id) });
-              }
-            }
-            if (nextQuestions.length > 0) {
-              await publishExam(examId).unwrap().catch(() => undefined);
-            }
-            nextItems.push({ ...item, id: String(examId), questions: nextQuestions });
+            const created = await createCourseMaterial({
+              course: courseId,
+              title: item.title,
+              kind: "video",
+              video_url: item.videoUrl || "",
+              ordering: i,
+            }).unwrap();
+            materialId = created.id;
           }
-        }
+          nextMaterials.push({ ...item, id: String(materialId) });
+          nextOriginalMaterials.push({ id: materialId, kind: "video", title: item.title, videoUrl: item.videoUrl || "" });
+        } else if (item.kind === "pdf") {
+          const changed =
+            !originalItem ||
+            originalItem.title !== item.title ||
+            item.file ||
+            (item.driveLink || "") !== (originalItem.driveLink || "");
 
-        nextModules.push({ id: String(backendModuleId), title: mod.title, items: nextItems });
+          let materialId: number;
+          if (!changed && originalItem) {
+            materialId = originalItem.id;
+          } else if (item.file) {
+            const materialForm = new FormData();
+            materialForm.append("course", String(courseId));
+            materialForm.append("title", item.title);
+            materialForm.append("kind", "pdf");
+            materialForm.append("ordering", String(i));
+            materialForm.append("file", item.file);
+            if (originalItem) {
+              const updated = await updateCourseMaterial({ id: originalItem.id, data: materialForm }).unwrap();
+              materialId = updated.id;
+            } else {
+              const created = await createCourseMaterial(materialForm).unwrap();
+              materialId = created.id;
+            }
+          } else {
+            const data = {
+              course: courseId,
+              title: item.title,
+              kind: "pdf" as const,
+              drive_link: item.driveLink || "",
+              ordering: i,
+            };
+            if (originalItem) {
+              const updated = await updateCourseMaterial({ id: originalItem.id, data }).unwrap();
+              materialId = updated.id;
+            } else {
+              const created = await createCourseMaterial(data).unwrap();
+              materialId = created.id;
+            }
+          }
+          nextMaterials.push({ ...item, id: String(materialId), file: null });
+          nextOriginalMaterials.push({ id: materialId, kind: "pdf", title: item.title, driveLink: item.driveLink || "" });
+        } else {
+          let examId: number;
+          if (item.quizId != null) {
+            examId = item.quizId;
+          } else if (originalItem?.quizId != null) {
+            examId = originalItem.quizId;
+            if (originalItem.title !== item.title) {
+              await updateExam({ id: examId, data: { title: item.title } }).unwrap();
+            }
+          } else {
+            const createdExam = await createExam({
+              course: courseId,
+              title: item.title,
+              duration_minutes: 30,
+            }).unwrap();
+            examId = createdExam.id;
+          }
+
+          const originalQuestionIds =
+            originalItem?.quizId != null ? originalQuestionIdsRef.current.get(originalItem.quizId) ?? [] : [];
+          const currentQuestionIds = new Set(
+            (item.questions ?? []).filter((q) => isPersisted(q.id)).map((q) => Number(q.id))
+          );
+          for (const qId of originalQuestionIds.filter((id) => !currentQuestionIds.has(id))) {
+            await deleteQuestion(qId).unwrap();
+          }
+
+          const questions = item.questions ?? [];
+          const nextQuestions: QuizQuestion[] = [];
+          for (let qIndex = 0; qIndex < questions.length; qIndex++) {
+            const q = questions[qIndex];
+            if (!q.question.trim()) continue;
+            const data = {
+              question_text: q.question,
+              option_a: q.options[0] ?? "",
+              option_b: q.options[1] ?? "",
+              option_c: q.options[2] ?? "",
+              option_d: q.options[3] ?? "",
+              correct_option: optionLetters[q.correctIndex ?? 0],
+              explanation: "",
+              order: qIndex + 1,
+            };
+            if (isPersisted(q.id)) {
+              await updateQuestion({ id: Number(q.id), data }).unwrap();
+              nextQuestions.push(q);
+            } else {
+              const createdQuestion = await addExamQuestion({ examId, data }).unwrap();
+              nextQuestions.push({ ...q, id: String(createdQuestion.id) });
+            }
+          }
+          if (nextQuestions.length > 0) {
+            await publishExam(examId).unwrap().catch(() => undefined);
+          }
+
+          let materialId: number;
+          if (originalItem) {
+            materialId = originalItem.id;
+            if (originalItem.title !== item.title) {
+              await updateCourseMaterial({ id: materialId, data: { title: item.title, ordering: i } }).unwrap();
+            }
+          } else {
+            const createdMaterial = await createCourseMaterial({
+              course: courseId,
+              title: item.title,
+              kind: "mcq",
+              quiz: examId,
+              ordering: i,
+            }).unwrap();
+            materialId = createdMaterial.id;
+          }
+
+          nextMaterials.push({ ...item, id: String(materialId), questions: nextQuestions });
+          nextOriginalMaterials.push({ id: materialId, kind: "mcq", title: item.title, quizId: examId });
+          nextOriginalQuestionIds.set(examId, nextQuestions.map((q) => Number(q.id)));
+        }
       }
     } catch (err) {
-      setSaveError(`কন্টেন্ট সংরক্ষণ করা যায়নি: ${extractErrorMessage(err)}`);
+      setSaveError(`ম্যাটেরিয়াল সংরক্ষণ করা যায়নি: ${extractErrorMessage(err)}`);
       setIsSaving(false);
       return;
     }
 
     setSubjects(nextSubjects);
     setFaqs(nextFaqs);
-    setModules(nextModules);
+    setMaterials(nextMaterials);
     originalSubjectIdsRef.current = nextSubjects.map((s) => Number(s.id));
     originalFaqIdsRef.current = nextFaqs.map((f) => Number(f.id));
-    originalModulesRef.current = nextModules.map((m) => ({
-      id: Number(m.id),
-      title: m.title,
-      items: m.items.map((i) => ({
-        id: Number(i.id),
-        type: i.type,
-        title: i.title,
-        videoUrl: i.videoUrl,
-        videoDuration: i.videoDuration,
-      })),
-    }));
-    originalQuestionIdsRef.current = new Map(
-      nextModules
-        .flatMap((m) => m.items)
-        .filter((i) => i.type === "quiz")
-        .map((i) => [Number(i.id), (i.questions ?? []).map((q) => Number(q.id))])
-    );
+    originalMaterialsRef.current = nextOriginalMaterials;
+    originalQuestionIdsRef.current = nextOriginalQuestionIds;
 
     setFiles(emptyFiles);
     setIsSaving(false);
@@ -483,9 +494,10 @@ export default function Page() {
 
   if (isCourseError || !course) {
     return (
-      <p className="rounded-2xl border border-red-500/30 bg-red-500/5 p-5 text-center text-sm text-red-500">
-        কোর্সটি খুঁজে পাওয়া যায়নি। API সার্ভার সংযোগ পরীক্ষা করুন।
-      </p>
+      <ErrorState
+        message="কোর্সটি খুঁজে পাওয়া যায়নি। API সার্ভার সংযোগ পরীক্ষা করুন।"
+        error={isCourseError ? courseError : undefined}
+      />
     );
   }
 
@@ -494,8 +506,17 @@ export default function Page() {
       <WizardHeader
         step={step}
         title="কোর্স সম্পাদনা করুন"
-        subtitle="কোর্সের সব তথ্য, মডিউল, সাবজেক্ট ও FAQ সম্পাদনা করুন"
+        subtitle="কোর্সের সব তথ্য, ম্যাটেরিয়াল, সাবজেক্ট ও FAQ সম্পাদনা করুন"
         backHref={`/courses/${courseId}`}
+      />
+
+      <EditWizardFooter
+        step={step}
+        isSaving={isSaving}
+        onPrev={() => setStep((s) => (s > 1 ? ((s - 1) as 1 | 2 | 3) : s))}
+        onNext={() => setStep((s) => (s < 4 ? ((s + 1) as 2 | 3 | 4) : s))}
+        onSave={handleSave}
+        showSave={false}
       />
 
       {saveError && (
@@ -513,9 +534,19 @@ export default function Page() {
       )}
 
       {step === 1 && (
-        <StepBasicInfo value={basicInfo} onChange={setBasicInfo} files={files} onFilesChange={setFiles} />
+        <StepBasicInfo
+          value={basicInfo}
+          onChange={setBasicInfo}
+          files={files}
+          onFilesChange={setFiles}
+          existingFiles={{
+            thumbnail: course.thumbnail,
+            coverImage: course.cover_image,
+            syllabusPdf: course.syllabus_pdf,
+          }}
+        />
       )}
-      {step === 2 && <StepModules modules={modules} onChange={setModules} />}
+      {step === 2 && <StepMaterials materials={materials} onChange={setMaterials} courseId={courseId} />}
       {step === 3 && (
         <StepSubjectsFaqs
           subjects={subjects}
@@ -530,7 +561,7 @@ export default function Page() {
         <StepReview
           basicInfo={basicInfo}
           files={files}
-          modules={modules}
+          materials={materials}
           subjects={subjects}
           faqs={faqs}
           published={false}

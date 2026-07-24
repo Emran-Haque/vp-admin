@@ -1,5 +1,6 @@
 import { baseApi } from "./baseApi";
 import type { Paginated } from "./types";
+import type { Enrollment } from "./coursesApi";
 
 export type StudentProfile = {
   batch: string;
@@ -42,8 +43,10 @@ export type CreateStudentInput = {
 };
 
 export type UpdateStudentInput = Partial<
-  Pick<Student, "full_name" | "phone" | "profile_image" | "is_verified">
->;
+  Pick<Student, "email" | "full_name" | "phone" | "profile_image" | "is_verified">
+> & {
+  student_profile?: Partial<StudentProfile>;
+};
 
 export const studentsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -90,6 +93,10 @@ export const studentsApi = baseApi.injectEndpoints({
         { type: "Students", id: "LIST" },
       ],
     }),
+    getStudentEnrollments: builder.query<Paginated<Enrollment>, number>({
+      query: (id) => `admin/students/${id}/enrollments/`,
+      providesTags: (_result, _error, id) => [{ type: "Enrollments", id }],
+    }),
   }),
   overrideExisting: false,
 });
@@ -102,4 +109,5 @@ export const {
   useDeleteStudentMutation,
   useDeactivateStudentMutation,
   useReactivateStudentMutation,
+  useGetStudentEnrollmentsQuery,
 } = studentsApi;

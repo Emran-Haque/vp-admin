@@ -16,7 +16,7 @@ export default function Page() {
   const [page, setPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-  const { data, isLoading, isError } = useGetOrdersQuery({
+  const { data, isLoading, isError, error } = useGetOrdersQuery({
     search: search || undefined,
     payment_status: paymentStatus || undefined,
     order_status: orderStatus || undefined,
@@ -46,7 +46,7 @@ export default function Page() {
           setPage(1);
         }}
       />
-      <OrderTable orders={orders} isLoading={isLoading} isError={isError} onView={setSelectedOrder} />
+      <OrderTable orders={orders} isLoading={isLoading} isError={isError} error={error} onView={setSelectedOrder} />
       <Pagination
         count={data?.count ?? 0}
         shown={orders.length}

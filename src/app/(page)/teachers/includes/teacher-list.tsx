@@ -7,6 +7,7 @@ import {
   useUpdateTeacherMutation,
   type Teacher,
 } from "@/redux/api/contentApi";
+import ErrorState from "@/components/error-state";
 
 const socialIcons: Record<string, typeof Globe> = {
   facebook: Link2,
@@ -16,7 +17,7 @@ const socialIcons: Record<string, typeof Globe> = {
 };
 
 export default function TeacherList({ onEdit }: { onEdit: (teacher: Teacher) => void }) {
-  const { data, isLoading, isError } = useGetTeachersQuery();
+  const { data, isLoading, isError, error } = useGetTeachersQuery();
   const [deleteTeacher] = useDeleteTeacherMutation();
   const [updateTeacher] = useUpdateTeacherMutation();
 
@@ -25,11 +26,7 @@ export default function TeacherList({ onEdit }: { onEdit: (teacher: Teacher) => 
   }
 
   if (isError) {
-    return (
-      <p className="rounded-2xl border border-red-500/30 bg-red-500/5 p-5 text-center text-sm text-red-500">
-        শিক্ষকদের তালিকা আনতে সমস্যা হয়েছে। API সার্ভার সংযোগ পরীক্ষা করুন।
-      </p>
-    );
+    return <ErrorState message="শিক্ষকদের তালিকা আনতে সমস্যা হয়েছে। API সার্ভার সংযোগ পরীক্ষা করুন।" error={error} />;
   }
 
   const teachers = [...(data?.results ?? [])].sort((a, b) => a.ordering - b.ordering);

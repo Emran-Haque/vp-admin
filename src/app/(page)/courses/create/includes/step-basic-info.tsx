@@ -5,11 +5,18 @@ import { Upload, X, FileText, Image as ImageIcon } from "lucide-react";
 import { useGetCourseCategoriesQuery } from "@/redux/api/coursesApi";
 import type { BasicInfo, CourseFiles } from "./types";
 
+type ExistingCourseFiles = {
+  thumbnail: string | null;
+  coverImage: string | null;
+  syllabusPdf: string | null;
+};
+
 type Props = {
   value: BasicInfo;
   onChange: (value: BasicInfo) => void;
   files: CourseFiles;
   onFilesChange: (files: CourseFiles) => void;
+  existingFiles?: ExistingCourseFiles;
 };
 
 const levels = [
@@ -22,11 +29,13 @@ function ImageUploadField({
   label,
   hint,
   file,
+  existingUrl,
   onChange,
 }: {
   label: string;
   hint: string;
   file: File | null;
+  existingUrl?: string | null;
   onChange: (file: File | null) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -42,23 +51,47 @@ function ImageUploadField({
     return () => URL.revokeObjectURL(url);
   }, [file]);
 
+  const displayUrl = previewUrl ?? existingUrl ?? null;
+
   return (
     <div>
       <label className="block pb-1.5 text-base font-medium text-blue-50">{label}</label>
-      {previewUrl ? (
+      {displayUrl ? (
         <div className="relative overflow-hidden rounded-2xl border border-slate-800">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={previewUrl} alt={label} className="h-40 w-full object-cover" />
-          <button
-            type="button"
-            onClick={() => {
-              onChange(null);
-              if (inputRef.current) inputRef.current.value = "";
-            }}
-            className="absolute right-2 top-2 flex size-8 items-center justify-center rounded-lg bg-slate-900/80 text-white"
-          >
-            <X size={16} />
-          </button>
+          <img src={displayUrl} alt={label} className="h-40 w-full object-cover" />
+          {!previewUrl && (
+            <span className="absolute left-2 top-2 rounded-lg bg-slate-900/80 px-2 py-1 text-xs font-medium text-blue-50">
+              বর্তমান ছবি
+            </span>
+          )}
+          {previewUrl ? (
+            <button
+              type="button"
+              onClick={() => {
+                onChange(null);
+                if (inputRef.current) inputRef.current.value = "";
+              }}
+              className="absolute right-2 top-2 flex size-8 items-center justify-center rounded-lg bg-slate-900/80 text-white"
+            >
+              <X size={16} />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              className="absolute right-2 top-2 rounded-lg bg-slate-900/80 px-3 py-1.5 text-xs font-medium text-white"
+            >
+              পরিবর্তন করুন
+            </button>
+          )}
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/png,image/jpeg"
+            className="hidden"
+            onChange={(e) => onChange(e.target.files?.[0] ?? null)}
+          />
         </div>
       ) : (
         <label className="flex cursor-pointer flex-col items-center gap-1 rounded-2xl border-2 border-dashed border-slate-800 p-7 text-center">
@@ -82,14 +115,17 @@ function FileUploadField({
   label,
   hint,
   file,
+  existingUrl,
   onChange,
 }: {
   label: string;
   hint: string;
   file: File | null;
+  existingUrl?: string | null;
   onChange: (file: File | null) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const existingFileName = existingUrl ? decodeURIComponent(existingUrl.split("/").pop() || existingUrl) : null;
 
   return (
     <div>
@@ -109,6 +145,32 @@ function FileUploadField({
             <X size={16} />
           </button>
         </div>
+      ) : existingUrl ? (
+        <div className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-gray-800 p-4">
+          <FileText size={24} className="shrink-0 text-blue-500" />
+          <a
+            href={existingUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 truncate text-sm text-blue-50 underline"
+          >
+            {existingFileName}
+          </a>
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            className="shrink-0 rounded-lg border border-slate-800 px-3 py-1.5 text-xs font-medium text-slate-300"
+          >
+            পরিবর্তন করুন
+          </button>
+          <input
+            ref={inputRef}
+            type="file"
+            accept="application/pdf"
+            className="hidden"
+            onChange={(e) => onChange(e.target.files?.[0] ?? null)}
+          />
+        </div>
       ) : (
         <label className="flex cursor-pointer flex-col items-center gap-1 rounded-2xl border-2 border-dashed border-slate-800 p-7 text-center">
           <Upload size={32} className="text-slate-400" strokeWidth={1.5} />
@@ -127,7 +189,7 @@ function FileUploadField({
   );
 }
 
-export default function StepBasicInfo({ value, onChange, files, onFilesChange }: Props) {
+export default function StepBasicInfo({ value, onChange, files, onFilesChange, existingFiles }: Props) {
   const { data: categoriesData } = useGetCourseCategoriesQuery();
   const categories = Array.isArray(categoriesData) ? categoriesData : categoriesData?.results ?? [];
 
@@ -353,12 +415,14 @@ export default function StepBasicInfo({ value, onChange, files, onFilesChange }:
             label="থাম্বনেইল ছবি"
             hint="PNG, JPG (সর্বোচ্চ 5MB)"
             file={files.thumbnail}
+            existingUrl={existingFiles?.thumbnail}
             onChange={(f) => setFile("thumbnail", f)}
           />
           <ImageUploadField
             label="কভার ইমেজ"
             hint="PNG, JPG (সর্বোচ্চ 5MB)"
             file={files.coverImage}
+            existingUrl={existingFiles?.coverImage}
             onChange={(f) => setFile("coverImage", f)}
           />
         </div>
@@ -379,6 +443,7 @@ export default function StepBasicInfo({ value, onChange, files, onFilesChange }:
             label="সিলেবাস পিডিএফ"
             hint="PDF ফাইল"
             file={files.syllabusPdf}
+            existingUrl={existingFiles?.syllabusPdf}
             onChange={(f) => setFile("syllabusPdf", f)}
           />
 

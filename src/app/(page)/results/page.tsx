@@ -22,6 +22,7 @@ export default function Page() {
     data: attemptsData,
     isLoading,
     isError,
+    error,
   } = useGetExamAttemptsQuery({
     status: "submitted",
     course: courseFilter !== "all" ? courseFilter : undefined,
@@ -74,7 +75,7 @@ export default function Page() {
             statusFilter={statusFilter}
             onStatusFilterChange={setStatusFilter}
           />
-          <ResultsTable rows={rows} isLoading={isLoading} isError={isError} />
+          <ResultsTable rows={rows} isLoading={isLoading} isError={isError} error={error} />
           <Pagination
             count={attemptsData?.count ?? 0}
             shown={rows.length}

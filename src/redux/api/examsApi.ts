@@ -258,6 +258,7 @@ export const {
   useUpdateExamMutation,
   useDeleteExamMutation,
   useGetExamQuestionsQuery,
+  useLazyGetExamQuestionsQuery,
   useAddExamQuestionMutation,
   useUpdateQuestionMutation,
   useDeleteQuestionMutation,

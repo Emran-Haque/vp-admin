@@ -26,6 +26,7 @@ import {
   isoToLocalDateTimeInput,
 } from "@/lib/exam-datetime";
 import { extractErrorMessage } from "@/lib/api-error";
+import ErrorState from "@/components/error-state";
 import type { ExamBasicInfo, Question } from "../../create/includes/types";
 
 const optionLetters = ["A", "B", "C", "D"] as const;
@@ -35,7 +36,12 @@ export default function Page() {
   const params = useParams<{ id: string }>();
   const examId = Number(params.id);
 
-  const { data: exam, isLoading: isLoadingExam, isError: isExamError } = useGetExamQuery(examId, {
+  const {
+    data: exam,
+    isLoading: isLoadingExam,
+    isError: isExamError,
+    error: examError,
+  } = useGetExamQuery(examId, {
     skip: !examId,
   });
   const { data: questionsData, isLoading: isLoadingQuestions } = useGetExamQuestionsQuery(examId, {
@@ -182,9 +188,10 @@ export default function Page() {
 
   if (isExamError || !exam) {
     return (
-      <p className="rounded-2xl border border-red-500/30 bg-red-500/5 p-5 text-center text-sm text-red-500">
-        পরীক্ষাটি খুঁজে পাওয়া যায়নি। API সার্ভার সংযোগ পরীক্ষা করুন।
-      </p>
+      <ErrorState
+        message="পরীক্ষাটি খুঁজে পাওয়া যায়নি। API সার্ভার সংযোগ পরীক্ষা করুন।"
+        error={isExamError ? examError : undefined}
+      />
     );
   }
 
@@ -196,6 +203,15 @@ export default function Page() {
         title="পরীক্ষা সম্পাদনা করুন"
         subtitle="পরীক্ষার বিস্তারিত তথ্য ও প্রশ্নাবলি সম্পাদনা করুন"
         backHref="/mcq"
+      />
+
+      <EditWizardFooter
+        step={step}
+        isSaving={isSaving}
+        onPrev={() => setStep((s) => (s > 1 ? ((s - 1) as 1 | 2) : s))}
+        onNext={() => setStep((s) => (s < 3 ? ((s + 1) as 2 | 3) : s))}
+        onSave={handleSave}
+        showSave={false}
       />
 
       {saveError && (

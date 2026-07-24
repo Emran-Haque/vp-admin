@@ -9,6 +9,7 @@ import {
   type Exam,
 } from "@/redux/api/examsApi";
 import { usePermissions } from "@/hooks/use-permissions";
+import ErrorState from "@/components/error-state";
 
 const resultStatusStyles: Record<string, { label: string; className: string }> = {
   published: { label: "ফলাফল প্রকাশিত", className: "border-emerald-500/40 bg-emerald-500/10 text-emerald-500" },
@@ -21,7 +22,7 @@ function resultStatusOf(exam: Exam) {
 }
 
 export default function ExamList() {
-  const { data, isLoading, isError } = useGetExamsQuery();
+  const { data, isLoading, isError, error } = useGetExamsQuery();
   const [deleteExam] = useDeleteExamMutation();
   const [publishResult] = usePublishExamResultMutation();
   const { hasPermission } = usePermissions();
@@ -31,11 +32,7 @@ export default function ExamList() {
   }
 
   if (isError) {
-    return (
-      <p className="rounded-2xl border border-red-500/30 bg-red-500/5 p-5 text-center text-sm text-red-500">
-        পরীক্ষার তালিকা আনতে সমস্যা হয়েছে। API সার্ভার সংযোগ পরীক্ষা করুন।
-      </p>
-    );
+    return <ErrorState message="পরীক্ষার তালিকা আনতে সমস্যা হয়েছে। API সার্ভার সংযোগ পরীক্ষা করুন।" error={error} />;
   }
 
   const exams = data?.results ?? [];
