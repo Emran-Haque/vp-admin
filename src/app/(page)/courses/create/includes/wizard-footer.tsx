@@ -1,8 +1,9 @@
 import { ChevronRight, FileEdit, Send } from "lucide-react";
 import { usePermissions } from "@/hooks/use-permissions";
+import type { CourseWizardStep } from "./wizard-header";
 
 type Props = {
-  step: 1 | 2 | 3 | 4;
+  step: CourseWizardStep;
   published: boolean;
   isSubmitting?: boolean;
   onPrev: () => void;
@@ -46,11 +47,12 @@ export default function WizardFooter({
           খসড়া সংরক্ষণ করুন
         </button>
 
-        {step < 4 ? (
+        {step < 5 ? (
           <button
             type="button"
             onClick={onNext}
-            className="flex items-center gap-2 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 px-6 py-3 text-lg font-semibold text-white shadow-[0px_0px_40px_-10px_rgba(0,229,200,0.50)]"
+            disabled={isSubmitting}
+            className="flex items-center gap-2 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 px-6 py-3 text-lg font-semibold text-white shadow-[0px_0px_40px_-10px_rgba(0,229,200,0.50)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             পরবর্তী
             <ChevronRight size={16} />

@@ -2,9 +2,10 @@
 
 import { Save } from "lucide-react";
 import { usePermissions } from "@/hooks/use-permissions";
+import type { CourseWizardStep } from "../../../create/includes/wizard-header";
 
 type Props = {
-  step: 1 | 2 | 3 | 4;
+  step: CourseWizardStep;
   isSaving: boolean;
   onPrev: () => void;
   onNext: () => void;
@@ -27,7 +28,7 @@ export default function EditWizardFooter({ step, isSaving, onPrev, onNext, onSav
       </button>
 
       <div className="flex items-center gap-3">
-        {step < 4 && (
+        {step < 5 && (
           <button
             type="button"
             onClick={onNext}
@@ -45,7 +46,7 @@ export default function EditWizardFooter({ step, isSaving, onPrev, onNext, onSav
             className="flex items-center gap-2 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 px-6 py-3 text-lg font-semibold text-white shadow-[0px_0px_40px_-10px_rgba(0,229,200,0.50)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Save size={16} />
-            {isSaving ? "সংরক্ষণ হচ্ছে…" : "পরিবর্তন সংরক্ষণ করুন"}
+            {isSaving ? "সংরক্ষণ হচ্ছে..." : "পরিবর্তন সংরক্ষণ করুন"}
           </button>
         )}
       </div>

@@ -7,8 +7,10 @@ import WizardHeader from "../../create/includes/wizard-header";
 import StepBasicInfo from "../../create/includes/step-basic-info";
 import StepMaterials from "../../create/includes/step-materials";
 import StepSubjectsFaqs from "../../create/includes/step-subjects-faqs";
+import StepAssignments from "../../create/includes/step-assignments";
 import StepReview from "../../create/includes/step-review";
 import EditWizardFooter from "./includes/edit-wizard-footer";
+import type { CourseWizardStep } from "../../create/includes/wizard-header";
 import { useGetCourseQuery, useUpdateCourseMutation, type Course } from "@/redux/api/coursesApi";
 import {
   useGetCourseSubjectsQuery,
@@ -153,7 +155,7 @@ export default function Page() {
   const [publishExam] = usePublishExamMutation();
   const [fetchExamQuestions] = useLazyGetExamQuestionsQuery();
 
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [step, setStep] = useState<CourseWizardStep>(1);
   const [basicInfo, setBasicInfo] = useState<BasicInfo | null>(null);
   const [files, setFiles] = useState<CourseFiles>(emptyFiles);
   const [materials, setMaterials] = useState<MaterialDraft[]>([]);
@@ -513,8 +515,8 @@ export default function Page() {
       <EditWizardFooter
         step={step}
         isSaving={isSaving}
-        onPrev={() => setStep((s) => (s > 1 ? ((s - 1) as 1 | 2 | 3) : s))}
-        onNext={() => setStep((s) => (s < 4 ? ((s + 1) as 2 | 3 | 4) : s))}
+        onPrev={() => setStep((s) => (s > 1 ? ((s - 1) as CourseWizardStep) : s))}
+        onNext={() => setStep((s) => (s < 5 ? ((s + 1) as CourseWizardStep) : s))}
         onSave={handleSave}
         showSave={false}
       />
@@ -557,7 +559,8 @@ export default function Page() {
           onTeacherIdsChange={(teacherIds) => setBasicInfo({ ...basicInfo, teacherIds })}
         />
       )}
-      {step === 4 && (
+      {step === 4 && <StepAssignments courseId={courseId} />}
+      {step === 5 && (
         <StepReview
           basicInfo={basicInfo}
           files={files}
@@ -571,8 +574,8 @@ export default function Page() {
       <EditWizardFooter
         step={step}
         isSaving={isSaving}
-        onPrev={() => setStep((s) => (s > 1 ? ((s - 1) as 1 | 2 | 3) : s))}
-        onNext={() => setStep((s) => (s < 4 ? ((s + 1) as 2 | 3 | 4) : s))}
+        onPrev={() => setStep((s) => (s > 1 ? ((s - 1) as CourseWizardStep) : s))}
+        onNext={() => setStep((s) => (s < 5 ? ((s + 1) as CourseWizardStep) : s))}
         onSave={handleSave}
       />
     </div>

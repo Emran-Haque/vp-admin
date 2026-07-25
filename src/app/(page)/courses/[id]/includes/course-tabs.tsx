@@ -1,18 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { Video, Radio, FileText, ClipboardCheck, type LucideIcon } from "lucide-react";
+import { Video, Radio, FileText, ClipboardCheck, ClipboardList, type LucideIcon } from "lucide-react";
 import RecordingsTab from "./recordings-tab";
 import LiveClassTab from "./live-class-tab";
 import ResourcesTab from "./resources-tab";
 import McqTab from "./mcq-tab";
+import AssignmentsPanel from "../../includes/assignments-panel";
 
-type TabKey = "recordings" | "live" | "resources" | "mcq";
+type TabKey = "recordings" | "live" | "resources" | "assignments" | "mcq";
 
 const tabs: { key: TabKey; label: string; icon: LucideIcon }[] = [
   { key: "recordings", label: "ক্লাস রেকর্ডিং", icon: Video },
   { key: "live", label: "লাইভ ক্লাস", icon: Radio },
   { key: "resources", label: "রিসোর্স", icon: FileText },
+  { key: "assignments", label: "Assignments", icon: ClipboardList },
   { key: "mcq", label: "MCQ পরীক্ষা", icon: ClipboardCheck },
 ];
 
@@ -46,6 +48,7 @@ export default function CourseTabs({ courseId }: { courseId: number }) {
         {activeTab === "recordings" && <RecordingsTab courseId={courseId} />}
         {activeTab === "live" && <LiveClassTab courseId={courseId} />}
         {activeTab === "resources" && <ResourcesTab courseId={courseId} />}
+        {activeTab === "assignments" && <AssignmentsPanel courseId={courseId} />}
         {activeTab === "mcq" && <McqTab courseId={courseId} />}
       </div>
     </section>

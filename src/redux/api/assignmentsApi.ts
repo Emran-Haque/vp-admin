@@ -12,7 +12,11 @@ export type AssignmentAttachment = {
 export type Assignment = {
   id: number;
   course: number;
-  subject: string;
+  course_title?: string;
+  course_class: number | null;
+  course_class_title?: string;
+  subject: number | null;
+  subject_name?: string;
   title: string;
   description: string;
   due_date: string;
@@ -23,7 +27,13 @@ export type Assignment = {
   created_at: string;
 };
 
-export type AssignmentListParams = { course?: number; status?: string; page?: number };
+export type AssignmentListParams = {
+  course?: number;
+  course_class?: number;
+  subject?: number;
+  status?: string;
+  page?: number;
+};
 
 export type CreateAssignmentInput = Partial<
   Omit<Assignment, "id" | "created_by" | "attachments" | "created_at">
@@ -37,7 +47,13 @@ export type UpdateAssignmentInput = Partial<CreateAssignmentInput>;
 export type Submission = {
   id: number;
   assignment: number;
+  assignment_title?: string;
+  course?: number;
+  course_class?: number | null;
+  course_class_title?: string;
   student: number;
+  student_name?: string;
+  student_email?: string;
   submission_type: string;
   file: string | null;
   drive_link: string;
@@ -52,6 +68,8 @@ export type Submission = {
 
 export type SubmissionListParams = {
   assignment?: number;
+  course?: number;
+  course_class?: number;
   status?: string;
   student?: number;
   page?: number;

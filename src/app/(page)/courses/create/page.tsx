@@ -6,8 +6,10 @@ import WizardHeader from "./includes/wizard-header";
 import StepBasicInfo from "./includes/step-basic-info";
 import StepMaterials from "./includes/step-materials";
 import StepSubjectsFaqs from "./includes/step-subjects-faqs";
+import StepAssignments from "./includes/step-assignments";
 import StepReview from "./includes/step-review";
 import WizardFooter from "./includes/wizard-footer";
+import type { CourseWizardStep } from "./includes/wizard-header";
 import { useCreateCourseMutation, useUpdateCourseMutation } from "@/redux/api/coursesApi";
 import { useCreateCourseSubjectMutation } from "@/redux/api/courseSubjectsApi";
 import { useCreateFaqMutation } from "@/redux/api/contentApi";
@@ -51,7 +53,7 @@ const emptyFiles: CourseFiles = {
 };
 
 export default function Page() {
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [step, setStep] = useState<CourseWizardStep>(1);
   const [basicInfo, setBasicInfo] = useState<BasicInfo>(emptyBasicInfo);
   const [files, setFiles] = useState<CourseFiles>(emptyFiles);
   const [materials, setMaterials] = useState<MaterialDraft[]>([]);
@@ -83,7 +85,7 @@ export default function Page() {
   const [addExamQuestion] = useAddExamQuestionMutation();
   const [publishExam] = usePublishExamMutation();
 
-  const handleSubmit = async (isPublished: boolean) => {
+  const handleSubmit = async (isPublished: boolean): Promise<boolean> => {
     setIsSubmitting(true);
     setSubmitError(null);
     setDraftMessage(null);
@@ -123,7 +125,7 @@ export default function Page() {
       console.error("Failed to save course:", err);
       setSubmitError(`কোর্স সংরক্ষণ করা যায়নি: ${extractErrorMessage(err)}`);
       setIsSubmitting(false);
-      return;
+      return false;
     }
 
     const newSubjects = subjects.filter((s) => !persistedSubjectIds.includes(s.id));
@@ -140,7 +142,7 @@ export default function Page() {
         console.error(`Failed to add subject "${s.name}":`, err);
         setSubmitError(`সাবজেক্ট "${s.name}" যোগ করা যায়নি: ${extractErrorMessage(err)}`);
         setIsSubmitting(false);
-        return;
+        return false;
       }
     }
 
@@ -161,7 +163,7 @@ export default function Page() {
         console.error(`Failed to add FAQ "${f.question}":`, err);
         setSubmitError(`FAQ "${f.question}" যোগ করা যায়নি: ${extractErrorMessage(err)}`);
         setIsSubmitting(false);
-        return;
+        return false;
       }
     }
 
@@ -255,7 +257,7 @@ export default function Page() {
         console.error(`Failed to add material "${item.title}":`, err);
         setSubmitError(`ম্যাটেরিয়াল "${item.title}" যোগ করা যায়নি: ${extractErrorMessage(err)}`);
         setIsSubmitting(false);
-        return;
+        return false;
       }
     }
 
@@ -265,6 +267,15 @@ export default function Page() {
     } else {
       setDraftMessage(`"${basicInfo.name || "কোর্স"}" খসড়া হিসেবে সংরক্ষণ করা হয়েছে।`);
     }
+    return true;
+  };
+
+  const handleNext = async () => {
+    if (step === 3) {
+      const saved = await handleSubmit(false);
+      if (!saved) return;
+    }
+    setStep((s) => (s < 5 ? ((s + 1) as CourseWizardStep) : s));
   };
 
   return (
@@ -305,7 +316,8 @@ export default function Page() {
           onTeacherIdsChange={(teacherIds) => setBasicInfo({ ...basicInfo, teacherIds })}
         />
       )}
-      {step === 4 && (
+      {step === 4 && <StepAssignments courseId={courseId ?? undefined} />}
+      {step === 5 && (
         <StepReview
           basicInfo={basicInfo}
           files={files}
@@ -320,8 +332,8 @@ export default function Page() {
         step={step}
         published={published}
         isSubmitting={isSubmitting}
-        onPrev={() => setStep((s) => (s > 1 ? ((s - 1) as 1 | 2 | 3) : s))}
-        onNext={() => setStep((s) => (s < 4 ? ((s + 1) as 2 | 3 | 4) : s))}
+        onPrev={() => setStep((s) => (s > 1 ? ((s - 1) as CourseWizardStep) : s))}
+        onNext={handleNext}
         onSaveDraft={() => handleSubmit(false)}
         onPublish={() => handleSubmit(true)}
       />

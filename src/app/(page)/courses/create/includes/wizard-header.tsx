@@ -5,11 +5,14 @@ const steps = [
   { step: 1, label: "মৌলিক তথ্য" },
   { step: 2, label: "কোর্স ম্যাটেরিয়াল" },
   { step: 3, label: "সাবজেক্ট ও FAQ" },
-  { step: 4, label: "রিভিউ ও প্রকাশ" },
+  { step: 4, label: "Assignments" },
+  { step: 5, label: "রিভিউ ও প্রকাশ" },
 ] as const;
 
+export type CourseWizardStep = 1 | 2 | 3 | 4 | 5;
+
 type Props = {
-  step: 1 | 2 | 3 | 4;
+  step: CourseWizardStep;
   title?: string;
   subtitle?: string;
   backHref?: string;
@@ -18,7 +21,7 @@ type Props = {
 export default function WizardHeader({
   step,
   title = "নতুন কোর্স তৈরি করুন",
-  subtitle = "ভিডিও, ফাইল ও কুইজসহ পূর্ণাঙ্গ কোর্স ৩ ধাপে সেট আপ করুন",
+  subtitle = "ভিডিও, ফাইল, কুইজ ও অ্যাসাইনমেন্টসহ পূর্ণাঙ্গ কোর্স সেট আপ করুন",
   backHref = "/courses",
 }: Props) {
   return (
@@ -43,11 +46,11 @@ export default function WizardHeader({
         </div>
       </div>
 
-      <div className="flex items-center gap-2 p-7">
+      <div className="flex flex-wrap items-center gap-2 p-7">
         {steps.map(({ step: s, label }, index) => {
           const isActive = s === step;
           return (
-            <div key={s} className="flex flex-1 items-center gap-2">
+            <div key={s} className="flex min-w-[150px] flex-1 items-center gap-2">
               <div
                 className={`flex flex-1 items-center gap-2 rounded-xl border px-3.5 py-2 ${
                   isActive ? "border-blue-500 bg-white/10" : "border-slate-800 bg-slate-900"
@@ -60,11 +63,11 @@ export default function WizardHeader({
                 >
                   {s}
                 </span>
-                <span className={`text-base font-semibold ${isActive ? "text-white" : "text-slate-400"}`}>
+                <span className={`text-sm font-semibold ${isActive ? "text-white" : "text-slate-400"}`}>
                   {label}
                 </span>
               </div>
-              {index < steps.length - 1 && <ChevronRight size={16} className="shrink-0 text-slate-400" />}
+              {index < steps.length - 1 && <ChevronRight size={16} className="hidden shrink-0 text-slate-400 xl:block" />}
             </div>
           );
         })}
