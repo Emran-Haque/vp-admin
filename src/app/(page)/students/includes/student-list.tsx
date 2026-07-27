@@ -7,32 +7,32 @@ import {
   useDeactivateStudentMutation,
   useReactivateStudentMutation,
 } from "@/redux/api/studentsApi";
+import { useGetCourseEnrollmentsQuery } from "@/redux/api/coursesApi";
 import { usePermissions } from "@/hooks/use-permissions";
 import { statusOf, studentStatusStyles } from "@/lib/student-status";
 import type { StatusFilter } from "./toolbar";
+import { STATUS_PARAMS } from "./status-params";
 import StudentDetailModal from "./student-detail-modal";
 import { useState } from "react";
 import ErrorState from "@/components/error-state";
 
-const STATUS_PARAMS: Record<Exclude<StatusFilter, "">, { is_active?: boolean; is_verified?: boolean }> = {
-  active: { is_active: true, is_verified: true },
-  inactive: { is_active: false },
-  pending: { is_active: true, is_verified: false },
-};
-
 export default function StudentList({
   search,
-  batch,
+  course,
   status,
 }: {
   search: string;
-  batch: string;
+  course: string;
   status: StatusFilter;
 }) {
   const { data, isLoading, isError, error } = useGetStudentsQuery({
     search: search || undefined,
     ...(status ? STATUS_PARAMS[status] : {}),
   });
+  const { data: courseEnrollments } = useGetCourseEnrollmentsQuery(
+    { id: Number(course) },
+    { skip: !course }
+  );
   const [deleteStudent] = useDeleteStudentMutation();
   const [deactivateStudent] = useDeactivateStudentMutation();
   const [reactivateStudent] = useReactivateStudentMutation();
@@ -49,8 +49,12 @@ export default function StudentList({
     );
   }
 
+  const enrolledStudentIds = course
+    ? new Set((courseEnrollments?.results ?? []).map((e) => e.student))
+    : null;
+
   const students = (data?.results ?? []).filter(
-    (student) => !batch || student.student_profile?.batch === batch
+    (student) => !enrolledStudentIds || enrolledStudentIds.has(student.id)
   );
 
   return (

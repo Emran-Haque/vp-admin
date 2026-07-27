@@ -16,11 +16,14 @@ const STATUS_OPTIONS: Option[] = [
 type Props = {
   search: string;
   onSearchChange: (value: string) => void;
-  batch: string;
-  onBatchChange: (value: string) => void;
-  batchOptions: string[];
+  course: string;
+  onCourseChange: (value: string) => void;
+  courseOptions: Option[];
   status: StatusFilter;
   onStatusChange: (value: StatusFilter) => void;
+  canExport: boolean;
+  onExport: () => void;
+  isExporting: boolean;
 };
 
 function FilterDropdown({
@@ -96,11 +99,14 @@ function FilterDropdown({
 export default function Toolbar({
   search,
   onSearchChange,
-  batch,
-  onBatchChange,
-  batchOptions,
+  course,
+  onCourseChange,
+  courseOptions,
   status,
   onStatusChange,
+  canExport,
+  onExport,
+  isExporting,
 }: Props) {
   return (
     <section className="flex flex-wrap items-center gap-4 rounded-3xl border border-slate-800 bg-slate-900 p-6">
@@ -118,21 +124,26 @@ export default function Toolbar({
       <SlidersHorizontal size={20} className="shrink-0 text-slate-400" />
 
       <FilterDropdown
-        label="সব ব্যাচ"
-        value={batch}
-        onChange={onBatchChange}
-        options={batchOptions.map((b) => ({ value: b, label: b }))}
+        label="সব কোর্স"
+        value={course}
+        onChange={onCourseChange}
+        options={courseOptions}
       />
 
       <FilterDropdown label="স্ট্যাটাস" value={status} onChange={(v) => onStatusChange(v as StatusFilter)} options={STATUS_OPTIONS} />
 
-      <button
-        type="button"
-        className="flex items-center gap-2 rounded-2xl border border-slate-800 px-4 py-2 text-base font-semibold text-blue-50"
-      >
-        <Download size={16} />
-        এক্সপোর্ট
-      </button>
+      {canExport && (
+        <button
+          type="button"
+          onClick={onExport}
+          disabled={!course || isExporting}
+          title={!course ? "এক্সপোর্ট করতে একটি কোর্স নির্বাচন করুন" : undefined}
+          className="flex items-center gap-2 rounded-2xl border border-slate-800 px-4 py-2 text-base font-semibold text-blue-50 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <Download size={16} />
+          {isExporting ? "এক্সপোর্ট হচ্ছে…" : "এক্সপোর্ট"}
+        </button>
+      )}
     </section>
   );
 }
