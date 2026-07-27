@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Upload, X, FileText, Image as ImageIcon } from "lucide-react";
 import { useGetCourseCategoriesQuery } from "@/redux/api/coursesApi";
 import type { BasicInfo, CourseFiles } from "./types";
@@ -39,17 +39,12 @@ function ImageUploadField({
   onChange: (file: File | null) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const previewUrl = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
 
   useEffect(() => {
-    if (!file) {
-      setPreviewUrl(null);
-      return;
-    }
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
+    if (!previewUrl) return;
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [previewUrl]);
 
   const displayUrl = previewUrl ?? existingUrl ?? null;
 
@@ -401,6 +396,60 @@ export default function StepBasicInfo({ value, onChange, files, onFilesChange, e
               className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 focus:outline-none"
             />
           </div>
+        </div>
+      </section>
+
+      <section className="rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-bold leading-8 text-blue-50">Telegram Assignment Group</h2>
+            <p className="mt-1 text-sm text-slate-400">
+              Save the invite link for students. The bot will detect and save the group ID after you send the connect command.
+            </p>
+          </div>
+          {value.telegramGroupChatId ? (
+            <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-500">
+              Connected
+            </span>
+          ) : (
+            <span className="rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-500">
+              Not connected
+            </span>
+          )}
+        </div>
+
+        <div className="pt-6">
+          <label className="block pb-1.5 text-base font-medium text-blue-50">Telegram group invite link</label>
+          <input
+            type="url"
+            value={value.telegramGroupLink}
+            onChange={(e) => set("telegramGroupLink", e.target.value)}
+            placeholder="https://t.me/+your-course-group"
+            className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 placeholder:text-slate-400 focus:outline-none"
+          />
+        </div>
+
+        <div className="mt-5 rounded-2xl border border-slate-800 bg-gray-900/50 p-4">
+          <p className="text-sm font-semibold text-blue-50">Group connection command</p>
+          {value.telegramGroupConnectCode ? (
+            <>
+              <code className="mt-2 block rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-emerald-400">
+                /connect_course {value.telegramGroupConnectCode}
+              </code>
+              <p className="mt-2 text-xs text-slate-400">
+                Add @VaiyaderPathshala_bot to the Telegram group, then send this command inside that group.
+              </p>
+            </>
+          ) : (
+            <p className="mt-2 text-sm text-slate-400">
+              Save the course draft first to generate the connect command.
+            </p>
+          )}
+          {value.telegramGroupChatId ? (
+            <p className="mt-3 text-xs text-slate-400">
+              Connected group: {value.telegramGroupTitle || "Telegram group"} · ID {value.telegramGroupChatId}
+            </p>
+          ) : null}
         </div>
       </section>
 

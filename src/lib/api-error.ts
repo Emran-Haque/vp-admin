@@ -1,12 +1,20 @@
 export function extractErrorMessage(error: unknown): string {
   if (typeof error === "object" && error !== null && "status" in error) {
-    const err = error as { status: unknown; data?: unknown; error?: unknown };
+    const err = error as {
+      status: unknown;
+      data?: unknown;
+      error?: unknown;
+      originalStatus?: unknown;
+    };
 
     if (err.status === "FETCH_ERROR" || err.status === "TIMEOUT_ERROR" || err.status === "CUSTOM_ERROR") {
-      return typeof err.error === "string" ? err.error : "সার্ভারে সংযোগ করা যায়নি";
+      return typeof err.error === "string" ? err.error : "Could not connect to the server.";
     }
+
     if (err.status === "PARSING_ERROR") {
-      return typeof err.error === "string" ? err.error : "সার্ভারের প্রতিক্রিয়া পার্স করা যায়নি";
+      return typeof err.originalStatus === "number"
+        ? `Backend returned a non-JSON response (${err.originalStatus}). Please make sure the latest backend code is deployed and migrations are run.`
+        : "Backend returned a non-JSON response. Please make sure the latest backend code is deployed.";
     }
 
     if (typeof err.status === "number") {
@@ -27,9 +35,11 @@ export function extractErrorMessage(error: unknown): string {
       return `HTTP ${err.status}`;
     }
   }
+
   if (typeof error === "object" && error !== null && "message" in error) {
     const message = (error as { message?: unknown }).message;
     if (typeof message === "string") return message;
   }
-  return "অজানা ত্রুটি";
+
+  return "Unknown error";
 }

@@ -10,7 +10,7 @@ import StepAssignments from "./includes/step-assignments";
 import StepReview from "./includes/step-review";
 import WizardFooter from "./includes/wizard-footer";
 import type { CourseWizardStep } from "./includes/wizard-header";
-import { useCreateCourseMutation, useUpdateCourseMutation } from "@/redux/api/coursesApi";
+import { useCreateCourseMutation, useUpdateCourseMutation, type Course } from "@/redux/api/coursesApi";
 import { useCreateCourseSubjectMutation } from "@/redux/api/courseSubjectsApi";
 import { useCreateFaqMutation } from "@/redux/api/contentApi";
 import { useCreateCourseMaterialMutation } from "@/redux/api/courseMaterialsApi";
@@ -41,6 +41,11 @@ const emptyBasicInfo: BasicInfo = {
   totalClasses: "",
   totalQuizzes: "",
   totalAssignments: "",
+  telegramGroupLink: "",
+  telegramGroupChatId: null,
+  telegramGroupTitle: "",
+  telegramGroupConnectCode: "",
+  telegramGroupConnectedAt: null,
   promoVideoUrl: "",
   syllabusDriveLink: "",
   teacherIds: [],
@@ -108,6 +113,7 @@ export default function Page() {
     formData.append("total_classes", basicInfo.totalClasses || "0");
     formData.append("total_quizzes", basicInfo.totalQuizzes || "0");
     formData.append("total_assignments", basicInfo.totalAssignments || "0");
+    formData.append("telegram_group_link", basicInfo.telegramGroupLink || "");
     if (basicInfo.promoVideoUrl) formData.append("promo_video_url", basicInfo.promoVideoUrl);
     if (basicInfo.syllabusDriveLink) formData.append("syllabus_drive_link", basicInfo.syllabusDriveLink);
     for (const teacherId of basicInfo.teacherIds) formData.append("teachers", teacherId);
@@ -115,12 +121,20 @@ export default function Page() {
     if (files.coverImage) formData.append("cover_image", files.coverImage);
     if (files.syllabusPdf) formData.append("syllabus_pdf", files.syllabusPdf);
 
-    let course;
+    let course: Course;
     try {
       course = courseId
         ? await updateCourse({ id: courseId, data: formData }).unwrap()
         : await createCourse(formData).unwrap();
       setCourseId(course.id);
+      setBasicInfo((prev) => ({
+        ...prev,
+        telegramGroupLink: course.telegram_group_link || prev.telegramGroupLink,
+        telegramGroupChatId: course.telegram_group_chat_id,
+        telegramGroupTitle: course.telegram_group_title || "",
+        telegramGroupConnectCode: course.telegram_group_connect_code || "",
+        telegramGroupConnectedAt: course.telegram_group_connected_at,
+      }));
     } catch (err) {
       console.error("Failed to save course:", err);
       setSubmitError(`কোর্স সংরক্ষণ করা যায়নি: ${extractErrorMessage(err)}`);

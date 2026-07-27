@@ -70,6 +70,11 @@ function toBasicInfo(course: Course): BasicInfo {
     totalClasses: String(course.total_classes),
     totalQuizzes: String(course.total_quizzes),
     totalAssignments: String(course.total_assignments),
+    telegramGroupLink: course.telegram_group_link || "",
+    telegramGroupChatId: course.telegram_group_chat_id,
+    telegramGroupTitle: course.telegram_group_title || "",
+    telegramGroupConnectCode: course.telegram_group_connect_code || "",
+    telegramGroupConnectedAt: course.telegram_group_connected_at,
     promoVideoUrl: course.promo_video_url,
     syllabusDriveLink: course.syllabus_drive_link,
     teacherIds: course.teachers.map(String),
@@ -245,6 +250,7 @@ export default function Page() {
     formData.append("total_classes", basicInfo.totalClasses || "0");
     formData.append("total_quizzes", basicInfo.totalQuizzes || "0");
     formData.append("total_assignments", basicInfo.totalAssignments || "0");
+    formData.append("telegram_group_link", basicInfo.telegramGroupLink || "");
     if (basicInfo.promoVideoUrl) formData.append("promo_video_url", basicInfo.promoVideoUrl);
     if (basicInfo.syllabusDriveLink) formData.append("syllabus_drive_link", basicInfo.syllabusDriveLink);
     for (const teacherId of basicInfo.teacherIds) formData.append("teachers", teacherId);
@@ -253,7 +259,15 @@ export default function Page() {
     if (files.syllabusPdf) formData.append("syllabus_pdf", files.syllabusPdf);
 
     try {
-      await updateCourse({ id: courseId, data: formData }).unwrap();
+      const updatedCourse = await updateCourse({ id: courseId, data: formData }).unwrap();
+      setBasicInfo((prev) => prev ? {
+        ...prev,
+        telegramGroupLink: updatedCourse.telegram_group_link || prev.telegramGroupLink,
+        telegramGroupChatId: updatedCourse.telegram_group_chat_id,
+        telegramGroupTitle: updatedCourse.telegram_group_title || "",
+        telegramGroupConnectCode: updatedCourse.telegram_group_connect_code || "",
+        telegramGroupConnectedAt: updatedCourse.telegram_group_connected_at,
+      } : prev);
     } catch (err) {
       setSaveError(`কোর্স সংরক্ষণ করা যায়নি: ${extractErrorMessage(err)}`);
       setIsSaving(false);

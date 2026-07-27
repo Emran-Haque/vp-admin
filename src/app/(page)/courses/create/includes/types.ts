@@ -35,6 +35,11 @@ export type BasicInfo = {
   totalClasses: string;
   totalQuizzes: string;
   totalAssignments: string;
+  telegramGroupLink: string;
+  telegramGroupChatId: number | null;
+  telegramGroupTitle: string;
+  telegramGroupConnectCode: string;
+  telegramGroupConnectedAt: string | null;
   promoVideoUrl: string;
   syllabusDriveLink: string;
   teacherIds: string[];

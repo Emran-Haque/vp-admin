@@ -9,6 +9,7 @@ import {
   Link as LinkIcon,
   Plus,
   Save,
+  Send,
   Trash2,
   X,
 } from "lucide-react";
@@ -17,7 +18,9 @@ import {
   useDeleteAssignmentMutation,
   useEvaluateSubmissionMutation,
   useGetAssignmentsQuery,
+  useGetAssignmentTelegramStatusQuery,
   useGetSubmissionsQuery,
+  usePostAssignmentToTelegramMutation,
   type Assignment,
   type Submission,
 } from "@/redux/api/assignmentsApi";
@@ -66,6 +69,7 @@ type AssignmentsPanelProps = {
 export default function AssignmentsPanel({ courseId, compact = false }: AssignmentsPanelProps) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
+  const [panelMessage, setPanelMessage] = useState<string | null>(null);
   const { data, isLoading } = useGetAssignmentsQuery({ course: courseId });
   const [deleteAssignment] = useDeleteAssignmentMutation();
   const { hasPermission } = usePermissions();
@@ -94,6 +98,11 @@ export default function AssignmentsPanel({ courseId, compact = false }: Assignme
       </div>
 
       <div className="mt-5">
+        {panelMessage ? (
+          <p className="mb-3 rounded-xl border border-blue-500/30 bg-blue-500/10 p-3 text-xs text-blue-200">
+            {panelMessage}
+          </p>
+        ) : null}
         {isLoading ? (
           <p className="py-10 text-center text-sm text-slate-400">Loading assignments...</p>
         ) : assignments.length === 0 ? (
@@ -138,6 +147,12 @@ export default function AssignmentsPanel({ courseId, compact = false }: Assignme
 
                   <div className="flex items-center gap-2">
                     {hasPermission("can_manage_assignments") && (
+                      <AssignmentTelegramButton
+                        assignmentId={assignment.id}
+                        onMessage={setPanelMessage}
+                      />
+                    )}
+                    {hasPermission("can_manage_assignments") && (
                       <button
                         type="button"
                         onClick={() => setSelectedAssignment(assignment)}
@@ -171,6 +186,46 @@ export default function AssignmentsPanel({ courseId, compact = false }: Assignme
         <AssignmentSubmissionsModal assignment={selectedAssignment} onClose={() => setSelectedAssignment(null)} />
       )}
     </div>
+  );
+}
+
+function AssignmentTelegramButton({
+  assignmentId,
+  onMessage,
+}: {
+  assignmentId: number;
+  onMessage: (message: string | null) => void;
+}) {
+  const { data: status } = useGetAssignmentTelegramStatusQuery(assignmentId);
+  const [postToTelegram, { isLoading }] = usePostAssignmentToTelegramMutation();
+
+  const handlePost = async () => {
+    onMessage(null);
+    try {
+      const result = await postToTelegram({
+        id: assignmentId,
+        force_repost: Boolean(status?.is_posted),
+      }).unwrap();
+      onMessage(
+        result.posted
+          ? "Assignment posted to Telegram successfully."
+          : "This assignment was already posted to Telegram."
+      );
+    } catch (err) {
+      onMessage(extractErrorMessage(err));
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handlePost}
+      disabled={isLoading}
+      className="flex items-center gap-1.5 rounded-xl border border-slate-800 px-3 py-2 text-xs font-semibold text-blue-50 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      <Send size={14} />
+      {isLoading ? "Posting..." : status?.is_posted ? "Repost" : "Post to Telegram"}
+    </button>
   );
 }
 
@@ -448,6 +503,11 @@ function SubmissionCard({ submission }: { submission: Submission }) {
           {statusLabels[submission.status] ?? submission.status}
         </span>
       </div>
+
+      <p className="mt-2 text-xs text-slate-400">
+        Source: <span className="font-semibold text-blue-50">{submission.source === "telegram" ? "Telegram" : "Website"}</span>
+        {submission.original_filename ? ` • ${submission.original_filename}` : ""}
+      </p>
 
       <div className="mt-3 flex flex-wrap gap-2">
         {submission.file && (

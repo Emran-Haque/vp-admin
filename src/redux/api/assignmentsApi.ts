@@ -27,6 +27,25 @@ export type Assignment = {
   created_at: string;
 };
 
+export type AssignmentTelegramStatus = {
+  is_posted: boolean;
+  telegram_message_id?: number | null;
+  group_chat_id?: number | null;
+  group_title?: string;
+  posted_at?: string | null;
+  last_error?: string;
+};
+
+export type AssignmentTelegramPostResult = {
+  assignment: number;
+  posted: boolean;
+  telegram_message_id: number | null;
+  group_chat_id: number;
+  group_title: string;
+  posted_at: string | null;
+  is_active: boolean;
+};
+
 export type AssignmentListParams = {
   course?: number;
   course_class?: number;
@@ -58,6 +77,11 @@ export type Submission = {
   file: string | null;
   drive_link: string;
   text_answer: string;
+  source: "website" | "telegram";
+  telegram_message_id?: number | null;
+  original_filename?: string;
+  mime_type?: string;
+  file_size?: number | null;
   submitted_at: string;
   status: "submitted" | "evaluated" | "late" | "rejected";
   marks_obtained: string | null;
@@ -112,6 +136,24 @@ export const assignmentsApi = baseApi.injectEndpoints({
       query: (id) => ({ url: `admin/assignments/${id}/`, method: "DELETE" }),
       invalidatesTags: [{ type: "Assignments", id: "LIST" }],
     }),
+    getAssignmentTelegramStatus: builder.query<AssignmentTelegramStatus, number>({
+      query: (id) => `admin/assignments/${id}/telegram-status/`,
+      providesTags: (_result, _error, id) => [{ type: "Assignments", id: `telegram-${id}` }],
+    }),
+    postAssignmentToTelegram: builder.mutation<
+      AssignmentTelegramPostResult,
+      { id: number; force_repost?: boolean }
+    >({
+      query: ({ id, force_repost }) => ({
+        url: `admin/assignments/${id}/post-to-telegram/`,
+        method: "POST",
+        body: { force_repost: Boolean(force_repost) },
+      }),
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: "Assignments", id: `telegram-${id}` },
+        { type: "Assignments", id: "LIST" },
+      ],
+    }),
     getSubmissions: builder.query<Paginated<Submission>, SubmissionListParams | void>({
       query: (params) => ({ url: "admin/submissions/", params: params ?? undefined }),
       providesTags: (result) =>
@@ -146,6 +188,8 @@ export const {
   useCreateAssignmentMutation,
   useUpdateAssignmentMutation,
   useDeleteAssignmentMutation,
+  useGetAssignmentTelegramStatusQuery,
+  usePostAssignmentToTelegramMutation,
   useGetSubmissionsQuery,
   useEvaluateSubmissionMutation,
 } = assignmentsApi;

@@ -27,6 +27,11 @@ export type Course = {
   total_classes: number;
   total_quizzes: number;
   total_assignments: number;
+  telegram_group_link: string;
+  telegram_group_chat_id: number | null;
+  telegram_group_title: string;
+  telegram_group_connect_code: string | null;
+  telegram_group_connected_at: string | null;
   teachers: number[];
 };
 
