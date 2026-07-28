@@ -7,13 +7,14 @@ import {
   useDeactivateStudentMutation,
   useReactivateStudentMutation,
 } from "@/redux/api/studentsApi";
-import { useGetCourseEnrollmentsQuery } from "@/redux/api/coursesApi";
+import { useGetCourseEnrollmentsQuery, useGetCoursesQuery, coursesApi } from "@/redux/api/coursesApi";
+import { useAppDispatch } from "@/redux/hooks";
 import { usePermissions } from "@/hooks/use-permissions";
 import { statusOf, studentStatusStyles } from "@/lib/student-status";
-import type { StatusFilter } from "./toolbar";
+import { NOT_ENROLLED_VALUE, type StatusFilter } from "./toolbar";
 import { STATUS_PARAMS } from "./status-params";
 import StudentDetailModal from "./student-detail-modal";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ErrorState from "@/components/error-state";
 
 export default function StudentList({
@@ -31,15 +32,47 @@ export default function StudentList({
   });
   const { data: courseEnrollments } = useGetCourseEnrollmentsQuery(
     { id: Number(course) },
-    { skip: !course }
+    { skip: !course || course === NOT_ENROLLED_VALUE }
   );
+
+  const dispatch = useAppDispatch();
+  const { data: allCourses } = useGetCoursesQuery(undefined, { skip: course !== NOT_ENROLLED_VALUE });
+  const [notEnrolledResult, setNotEnrolledResult] = useState<{ course: string; ids: Set<number> } | null>(null);
+
+  useEffect(() => {
+    if (course !== NOT_ENROLLED_VALUE || !allCourses) return;
+    let cancelled = false;
+    (async () => {
+      const ids = new Set<number>();
+      for (const c of allCourses.results) {
+        let page = 1;
+        while (true) {
+          const result = await dispatch(
+            coursesApi.endpoints.getCourseEnrollments.initiate({ id: c.id, page })
+          ).unwrap();
+          result.results.forEach((e) => ids.add(e.student));
+          if (!result.next) break;
+          page += 1;
+        }
+      }
+      if (!cancelled) setNotEnrolledResult({ course, ids });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [course, allCourses, dispatch]);
+
+  const enrolledAnywhereIds = notEnrolledResult?.course === course ? notEnrolledResult.ids : null;
+
   const [deleteStudent] = useDeleteStudentMutation();
   const [deactivateStudent] = useDeactivateStudentMutation();
   const [reactivateStudent] = useReactivateStudentMutation();
   const { hasPermission } = usePermissions();
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
 
-  if (isLoading) {
+  const notEnrolledLoading = course === NOT_ENROLLED_VALUE && enrolledAnywhereIds === null;
+
+  if (isLoading || notEnrolledLoading) {
     return <p className="text-center text-sm text-slate-400">শিক্ষার্থীদের তালিকা লোড হচ্ছে…</p>;
   }
 
@@ -49,13 +82,15 @@ export default function StudentList({
     );
   }
 
-  const enrolledStudentIds = course
-    ? new Set((courseEnrollments?.results ?? []).map((e) => e.student))
-    : null;
+  const enrolledStudentIds =
+    course && course !== NOT_ENROLLED_VALUE
+      ? new Set((courseEnrollments?.results ?? []).map((e) => e.student))
+      : null;
 
-  const students = (data?.results ?? []).filter(
-    (student) => !enrolledStudentIds || enrolledStudentIds.has(student.id)
-  );
+  const students = (data?.results ?? []).filter((student) => {
+    if (course === NOT_ENROLLED_VALUE) return !enrolledAnywhereIds?.has(student.id);
+    return !enrolledStudentIds || enrolledStudentIds.has(student.id);
+  });
 
   return (
     <section className="flex flex-col gap-6">

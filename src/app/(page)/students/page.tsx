@@ -3,7 +3,7 @@
 import { useState } from "react";
 import OverviewBanner from "./includes/overview-banner";
 import Stats from "./includes/stats";
-import Toolbar, { type StatusFilter } from "./includes/toolbar";
+import Toolbar, { type StatusFilter, NOT_ENROLLED_VALUE } from "./includes/toolbar";
 import StudentList from "./includes/student-list";
 import AddStudentModal from "./includes/add-student-modal";
 import { useGetCoursesQuery, coursesApi, type Enrollment } from "@/redux/api/coursesApi";
@@ -24,44 +24,72 @@ export default function Page() {
   const { hasPermission } = usePermissions();
 
   const { data: courses } = useGetCoursesQuery();
-  const courseOptions = (courses?.results ?? []).map((c) => ({
-    value: String(c.id),
-    label: c.title,
-  }));
+  const courseOptions = [
+    { value: NOT_ENROLLED_VALUE, label: "কোনো কোর্সে ভর্তি হয়নি" },
+    ...(courses?.results ?? []).map((c) => ({
+      value: String(c.id),
+      label: c.title,
+    })),
+  ];
+
+  const fetchAllStudents = async (): Promise<Student[]> => {
+    const students: Student[] = [];
+    let page = 1;
+    while (true) {
+      const result = await dispatch(
+        studentsApi.endpoints.getStudents.initiate({
+          search: search || undefined,
+          page,
+          ...(status ? STATUS_PARAMS[status] : {}),
+        })
+      ).unwrap();
+      students.push(...result.results);
+      if (!result.next) break;
+      page += 1;
+    }
+    return students;
+  };
+
+  const fetchAllCourseEnrollments = async (courseId: number): Promise<Enrollment[]> => {
+    const enrollments: Enrollment[] = [];
+    let page = 1;
+    while (true) {
+      const result = await dispatch(
+        coursesApi.endpoints.getCourseEnrollments.initiate({ id: courseId, page })
+      ).unwrap();
+      enrollments.push(...result.results);
+      if (!result.next) break;
+      page += 1;
+    }
+    return enrollments;
+  };
 
   const handleExport = async () => {
-    const courseId = Number(course);
-    if (!courseId) return;
-    const courseName = courses?.results.find((c) => c.id === courseId)?.title ?? "";
+    if (!course) return;
 
     setExporting(true);
     try {
-      const enrollments: Enrollment[] = [];
-      let enrollmentPage = 1;
-      while (true) {
-        const result = await dispatch(
-          coursesApi.endpoints.getCourseEnrollments.initiate({ id: courseId, page: enrollmentPage })
-        ).unwrap();
-        enrollments.push(...result.results);
-        if (!result.next) break;
-        enrollmentPage += 1;
+      if (course === NOT_ENROLLED_VALUE) {
+        const enrolledIds = new Set<number>();
+        for (const c of courses?.results ?? []) {
+          (await fetchAllCourseEnrollments(c.id)).forEach((e) => enrolledIds.add(e.student));
+        }
+        const students = await fetchAllStudents();
+        const notEnrolledStudents = students.filter((s) => !enrolledIds.has(s.id));
+
+        await exportStudentsPdf({
+          students: notEnrolledStudents,
+          enrollmentByStudent: new Map(),
+          courseName: "কোনো কোর্সে ভর্তি হয়নি",
+          showEnrollmentDate: false,
+        });
+        return;
       }
 
-      const students: Student[] = [];
-      let studentPage = 1;
-      while (true) {
-        const result = await dispatch(
-          studentsApi.endpoints.getStudents.initiate({
-            search: search || undefined,
-            page: studentPage,
-            ...(status ? STATUS_PARAMS[status] : {}),
-          })
-        ).unwrap();
-        students.push(...result.results);
-        if (!result.next) break;
-        studentPage += 1;
-      }
+      const courseId = Number(course);
+      const courseName = courses?.results.find((c) => c.id === courseId)?.title ?? "";
 
+      const [enrollments, students] = await Promise.all([fetchAllCourseEnrollments(courseId), fetchAllStudents()]);
       const enrollmentByStudent = new Map(enrollments.map((e) => [e.student, e]));
       const enrolledStudents = students.filter((s) => enrollmentByStudent.has(s.id));
 

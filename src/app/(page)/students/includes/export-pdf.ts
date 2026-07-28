@@ -51,10 +51,12 @@ function buildReportHtml({
   students,
   enrollmentByStudent,
   courseName,
+  showEnrollmentDate,
 }: {
   students: Student[];
   enrollmentByStudent: Map<number, Enrollment>;
   courseName: string;
+  showEnrollmentDate: boolean;
 }) {
   const rowsHtml = students
     .map((student, index) => {
@@ -63,7 +65,7 @@ function buildReportHtml({
         student.full_name,
         student.phone || "-",
         student.email,
-        enrollment ? formatDate(enrollment.enrolled_at) : "-",
+        ...(showEnrollmentDate ? [enrollment ? formatDate(enrollment.enrolled_at) : "-"] : []),
         formatDate(student.created_at),
       ];
       const rowBg = index % 2 === 1 ? "#f5f7fa" : "#ffffff";
@@ -82,7 +84,7 @@ function buildReportHtml({
             <th style="padding:6px 8px; text-align:left;">নাম</th>
             <th style="padding:6px 8px; text-align:left;">ফোন</th>
             <th style="padding:6px 8px; text-align:left;">ইমেইল</th>
-            <th style="padding:6px 8px; text-align:left;">কোর্সে ভর্তির তারিখ</th>
+            ${showEnrollmentDate ? '<th style="padding:6px 8px; text-align:left;">কোর্সে ভর্তির তারিখ</th>' : ""}
             <th style="padding:6px 8px; text-align:left;">প্ল্যাটফর্মে যোগদানের তারিখ</th>
           </tr>
         </thead>
@@ -96,15 +98,22 @@ export async function exportStudentsPdf(params: {
   students: Student[];
   enrollmentByStudent: Map<number, Enrollment>;
   courseName: string;
+  showEnrollmentDate?: boolean;
 }) {
   await loadBengaliFont();
+  const showEnrollmentDate = params.showEnrollmentDate ?? true;
 
   const container = document.createElement("div");
   container.style.position = "fixed";
   container.style.left = "-10000px";
   container.style.top = "0";
   container.style.width = `${CONTAINER_WIDTH}px`;
-  container.innerHTML = buildReportHtml(params);
+  container.innerHTML = buildReportHtml({
+    students: params.students,
+    enrollmentByStudent: params.enrollmentByStudent,
+    courseName: params.courseName,
+    showEnrollmentDate,
+  });
   document.body.appendChild(container);
 
   try {

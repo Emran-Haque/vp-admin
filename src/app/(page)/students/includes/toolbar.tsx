@@ -5,6 +5,8 @@ import { Search, SlidersHorizontal, ChevronDown, Download } from "lucide-react";
 
 export type StatusFilter = "" | "active" | "inactive" | "pending";
 
+export const NOT_ENROLLED_VALUE = "__not_enrolled__";
+
 type Option = { value: string; label: string };
 
 const STATUS_OPTIONS: Option[] = [
