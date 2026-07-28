@@ -1,35 +1,53 @@
 import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
+import html2canvas from "html2canvas";
 import type { Student } from "@/redux/api/studentsApi";
 import type { Enrollment } from "@/redux/api/coursesApi";
 
+// jsPDF's own font embedding (addFont) — and even doc.html()'s "text" mode,
+// which still routes glyphs through that same engine — does not shape
+// complex scripts, so Bengali conjuncts/matras render corrupted or blank.
+// We rasterize the DOM with html2canvas ourselves (using the browser's own,
+// correct text shaping) and place the result as plain images via
+// doc.addImage(), never touching jsPDF's text engine.
+const BENGALI_FONT_FAMILY = "NotoSansBengaliExport";
 const BENGALI_FONT_URL = "/fonts/NotoSansBengali-Regular.ttf";
-const BENGALI_FONT_NAME = "NotoSansBengali";
+const CONTAINER_WIDTH = 760;
 
-let fontBase64Promise: Promise<string> | null = null;
+const PAGE_WIDTH_PT = 595.28; // A4 portrait
+const PAGE_HEIGHT_PT = 841.89;
+const MARGIN_PT = 24;
+const USABLE_WIDTH_PT = PAGE_WIDTH_PT - MARGIN_PT * 2;
+const USABLE_HEIGHT_PT = PAGE_HEIGHT_PT - MARGIN_PT * 2;
 
-function loadBengaliFontBase64(): Promise<string> {
-  if (!fontBase64Promise) {
-    fontBase64Promise = fetch(BENGALI_FONT_URL)
+let bengaliFontLoaded: Promise<void> | null = null;
+
+function loadBengaliFont(): Promise<void> {
+  if (!bengaliFontLoaded) {
+    bengaliFontLoaded = fetch(BENGALI_FONT_URL)
       .then((res) => res.arrayBuffer())
-      .then((buffer) => {
-        const bytes = new Uint8Array(buffer);
-        let binary = "";
-        const chunkSize = 0x8000;
-        for (let i = 0; i < bytes.length; i += chunkSize) {
-          binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
-        }
-        return btoa(binary);
+      .then(async (buffer) => {
+        const fontFace = new FontFace(BENGALI_FONT_FAMILY, buffer);
+        await fontFace.load();
+        document.fonts.add(fontFace);
       });
   }
-  return fontBase64Promise;
+  return bengaliFontLoaded;
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString("bn-BD", { year: "numeric", month: "long", day: "numeric" });
 }
 
-export async function exportStudentsPdf({
+function buildReportHtml({
   students,
   enrollmentByStudent,
   courseName,
@@ -38,36 +56,94 @@ export async function exportStudentsPdf({
   enrollmentByStudent: Map<number, Enrollment>;
   courseName: string;
 }) {
-  const fontBase64 = await loadBengaliFontBase64();
+  const rowsHtml = students
+    .map((student, index) => {
+      const enrollment = enrollmentByStudent.get(student.id);
+      const cells = [
+        student.full_name,
+        student.phone || "-",
+        student.email,
+        enrollment ? formatDate(enrollment.enrolled_at) : "-",
+        formatDate(student.created_at),
+      ];
+      const rowBg = index % 2 === 1 ? "#f5f7fa" : "#ffffff";
+      return `<tr style="background:${rowBg};">${cells
+        .map((cell) => `<td style="border:1px solid #cbd5e1;padding:6px 8px;">${escapeHtml(cell)}</td>`)
+        .join("")}</tr>`;
+    })
+    .join("");
 
-  const doc = new jsPDF();
-  doc.addFileToVFS(`${BENGALI_FONT_NAME}.ttf`, fontBase64);
-  doc.addFont(`${BENGALI_FONT_NAME}.ttf`, BENGALI_FONT_NAME, "normal");
-  doc.setFont(BENGALI_FONT_NAME);
+  return `
+    <div style="font-family:'${BENGALI_FONT_FAMILY}', sans-serif; color:#0f172a; background:#ffffff; padding:16px; width:${CONTAINER_WIDTH - 32}px;">
+      <h2 style="margin:0 0 12px; font-size:16px;">শিক্ষার্থী তালিকা — ${escapeHtml(courseName)}</h2>
+      <table style="width:100%; border-collapse:collapse; font-size:11px;">
+        <thead>
+          <tr style="background:#1e293b; color:#ffffff;">
+            <th style="padding:6px 8px; text-align:left;">নাম</th>
+            <th style="padding:6px 8px; text-align:left;">ফোন</th>
+            <th style="padding:6px 8px; text-align:left;">ইমেইল</th>
+            <th style="padding:6px 8px; text-align:left;">কোর্সে ভর্তির তারিখ</th>
+            <th style="padding:6px 8px; text-align:left;">প্ল্যাটফর্মে যোগদানের তারিখ</th>
+          </tr>
+        </thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+    </div>
+  `;
+}
 
-  doc.setFontSize(14);
-  doc.text(`শিক্ষার্থী তালিকা — ${courseName}`, 14, 15);
+export async function exportStudentsPdf(params: {
+  students: Student[];
+  enrollmentByStudent: Map<number, Enrollment>;
+  courseName: string;
+}) {
+  await loadBengaliFont();
 
-  const rows = students.map((student) => {
-    const enrollment = enrollmentByStudent.get(student.id);
-    return [
-      student.full_name,
-      student.phone || "-",
-      student.email,
-      enrollment ? formatDate(enrollment.enrolled_at) : "-",
-      formatDate(student.created_at),
-    ];
-  });
+  const container = document.createElement("div");
+  container.style.position = "fixed";
+  container.style.left = "-10000px";
+  container.style.top = "0";
+  container.style.width = `${CONTAINER_WIDTH}px`;
+  container.innerHTML = buildReportHtml(params);
+  document.body.appendChild(container);
 
-  autoTable(doc, {
-    startY: 22,
-    head: [["নাম", "ফোন", "ইমেইল", "কোর্সে ভর্তির তারিখ", "প্ল্যাটফর্মে যোগদানের তারিখ"]],
-    body: rows,
-    styles: { font: BENGALI_FONT_NAME, fontSize: 9, cellPadding: 3 },
-    headStyles: { font: BENGALI_FONT_NAME, fillColor: [30, 41, 59], textColor: [255, 255, 255] },
-    alternateRowStyles: { fillColor: [245, 247, 250] },
-  });
+  try {
+    const canvas = await html2canvas(container, { scale: 2, backgroundColor: "#ffffff" });
 
-  const datePart = new Date().toISOString().slice(0, 10);
-  doc.save(`students-${courseName.replace(/\s+/g, "-")}-${datePart}.pdf`);
+    const ptPerPx = USABLE_WIDTH_PT / canvas.width;
+    const pageHeightPx = USABLE_HEIGHT_PT / ptPerPx;
+
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    let renderedPx = 0;
+    let isFirstPage = true;
+
+    while (renderedPx < canvas.height) {
+      const sliceHeightPx = Math.min(pageHeightPx, canvas.height - renderedPx);
+
+      const sliceCanvas = document.createElement("canvas");
+      sliceCanvas.width = canvas.width;
+      sliceCanvas.height = sliceHeightPx;
+      const ctx = sliceCanvas.getContext("2d")!;
+      ctx.drawImage(canvas, 0, renderedPx, canvas.width, sliceHeightPx, 0, 0, canvas.width, sliceHeightPx);
+
+      if (!isFirstPage) doc.addPage();
+      doc.addImage(
+        sliceCanvas.toDataURL("image/png"),
+        "PNG",
+        MARGIN_PT,
+        MARGIN_PT,
+        USABLE_WIDTH_PT,
+        sliceHeightPx * ptPerPx
+      );
+
+      renderedPx += sliceHeightPx;
+      isFirstPage = false;
+    }
+
+    const datePart = new Date().toISOString().slice(0, 10);
+    const safeCourseName = params.courseName.replace(/\s+/g, "-");
+    doc.save(`students-${safeCourseName}-${datePart}.pdf`);
+  } finally {
+    document.body.removeChild(container);
+  }
 }
