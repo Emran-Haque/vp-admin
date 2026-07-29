@@ -397,6 +397,25 @@ export default function StepBasicInfo({ value, onChange, files, onFilesChange, e
             />
           </div>
         </div>
+
+        <div className="pt-6">
+          <label className="block pb-1.5 text-base font-medium text-blue-50">
+            নিষ্ক্রিয়তা রিমাইন্ডার (SMS)
+          </label>
+          <select
+            value={value.inactivityReminderDays}
+            onChange={(e) => set("inactivityReminderDays", e.target.value)}
+            className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 focus:outline-none"
+          >
+            <option value="0">বন্ধ</option>
+            <option value="1">১ দিন নিষ্ক্রিয় থাকলে</option>
+            <option value="2">২ দিন নিষ্ক্রিয় থাকলে</option>
+            <option value="3">৩ দিন নিষ্ক্রিয় থাকলে</option>
+          </select>
+          <p className="pt-1.5 text-sm text-slate-400">
+            শিক্ষার্থী এই কয়দিন কোর্সে না ঢুকলে স্বয়ংক্রিয়ভাবে SMS রিমাইন্ডার পাবে।
+          </p>
+        </div>
       </section>
 
       <section className="rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">

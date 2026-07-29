@@ -41,6 +41,7 @@ const emptyBasicInfo: BasicInfo = {
   totalClasses: "",
   totalQuizzes: "",
   totalAssignments: "",
+  inactivityReminderDays: "0",
   telegramGroupLink: "",
   telegramGroupChatId: null,
   telegramGroupTitle: "",
@@ -111,6 +112,7 @@ export default function Page() {
     if (basicInfo.batchStartDate) formData.append("batch_start_date", basicInfo.batchStartDate);
     if (basicInfo.classStartDate) formData.append("class_start_date", basicInfo.classStartDate);
     formData.append("total_classes", basicInfo.totalClasses || "0");
+    formData.append("inactivity_reminder_days", basicInfo.inactivityReminderDays || "0");
     formData.append("total_quizzes", basicInfo.totalQuizzes || "0");
     formData.append("total_assignments", basicInfo.totalAssignments || "0");
     formData.append("telegram_group_link", basicInfo.telegramGroupLink || "");

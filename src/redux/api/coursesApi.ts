@@ -27,6 +27,7 @@ export type Course = {
   total_classes: number;
   total_quizzes: number;
   total_assignments: number;
+  inactivity_reminder_days: number | null;
   telegram_group_link: string;
   telegram_group_chat_id: number | null;
   telegram_group_title: string;

@@ -70,6 +70,9 @@ function toBasicInfo(course: Course): BasicInfo {
     totalClasses: String(course.total_classes),
     totalQuizzes: String(course.total_quizzes),
     totalAssignments: String(course.total_assignments),
+    inactivityReminderDays: course.inactivity_reminder_days
+      ? String(course.inactivity_reminder_days)
+      : "0",
     telegramGroupLink: course.telegram_group_link || "",
     telegramGroupChatId: course.telegram_group_chat_id,
     telegramGroupTitle: course.telegram_group_title || "",
@@ -250,6 +253,7 @@ export default function Page() {
     formData.append("total_classes", basicInfo.totalClasses || "0");
     formData.append("total_quizzes", basicInfo.totalQuizzes || "0");
     formData.append("total_assignments", basicInfo.totalAssignments || "0");
+    formData.append("inactivity_reminder_days", basicInfo.inactivityReminderDays || "0");
     formData.append("telegram_group_link", basicInfo.telegramGroupLink || "");
     if (basicInfo.promoVideoUrl) formData.append("promo_video_url", basicInfo.promoVideoUrl);
     if (basicInfo.syllabusDriveLink) formData.append("syllabus_drive_link", basicInfo.syllabusDriveLink);

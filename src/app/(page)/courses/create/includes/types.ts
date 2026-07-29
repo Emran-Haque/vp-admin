@@ -35,6 +35,8 @@ export type BasicInfo = {
   totalClasses: string;
   totalQuizzes: string;
   totalAssignments: string;
+  /** SMS inactivity-reminder window in days: "0" = off, "1"/"2"/"3". */
+  inactivityReminderDays: string;
   telegramGroupLink: string;
   telegramGroupChatId: number | null;
   telegramGroupTitle: string;
