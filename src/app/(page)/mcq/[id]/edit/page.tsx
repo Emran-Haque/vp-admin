@@ -17,6 +17,7 @@ import {
   useAddExamQuestionMutation,
   useUpdateQuestionMutation,
   useDeleteQuestionMutation,
+  useGetExamAttemptsQuery,
 } from "@/redux/api/examsApi";
 import { useGetCourseSubjectsQuery } from "@/redux/api/courseSubjectsApi";
 import {
@@ -47,6 +48,10 @@ export default function Page() {
   const { data: questionsData, isLoading: isLoadingQuestions } = useGetExamQuestionsQuery(examId, {
     skip: !examId,
   });
+  const { data: attemptsData } = useGetExamAttemptsQuery(
+    { exam: examId },
+    { skip: !examId || !exam || exam.status !== "published" }
+  );
   const { data: courseSubjectsData } = useGetCourseSubjectsQuery(
     { course: exam?.course },
     { skip: !exam?.course }
@@ -66,6 +71,7 @@ export default function Page() {
 
   const initializedRef = useRef(false);
   const originalQuestionIdsRef = useRef<Set<number>>(new Set());
+  const originalCorrectOptionsRef = useRef<Map<number, string>>(new Map());
 
   useEffect(() => {
     if (initializedRef.current || !exam || !questionsData) return;
@@ -99,10 +105,47 @@ export default function Page() {
     }));
     setQuestions(loadedQuestions);
     originalQuestionIdsRef.current = new Set(questionsData.map((q) => q.id));
+    originalCorrectOptionsRef.current = new Map(
+      questionsData.map((q) => [q.id, q.correct_option])
+    );
   }, [exam, questionsData, courseSubjectsData]);
+
+  const hasResultImpactingChanges = () => {
+    if (!basicInfo || !exam) return false;
+    if (Number(basicInfo.negativeMark || 0) !== Number(exam.negative_mark_per_wrong || 0)) {
+      return true;
+    }
+
+    const currentQuestionIds = new Set(
+      questions.filter((q) => isPersisted(q.id)).map((q) => Number(q.id))
+    );
+    const hasRemovedQuestion = [...originalQuestionIdsRef.current].some(
+      (id) => !currentQuestionIds.has(id)
+    );
+    const hasAddedQuestion = questions.some((q) => !isPersisted(q.id) && q.text.trim());
+    const hasCorrectAnswerChange = questions.some((q) => {
+      if (!isPersisted(q.id)) return false;
+      const id = Number(q.id);
+      return originalCorrectOptionsRef.current.get(id) !== optionLetters[q.correctIndex ?? 0];
+    });
+
+    return hasRemovedQuestion || hasAddedQuestion || hasCorrectAnswerChange;
+  };
 
   const handleSave = async () => {
     if (!basicInfo) return;
+    const shouldWarnAboutRegrade =
+      exam?.status === "published" && hasResultImpactingChanges();
+    if (shouldWarnAboutRegrade) {
+      const attemptCount = attemptsData?.count;
+      const confirmed = confirm(
+        attemptCount && attemptCount > 0
+          ? `This exam already has ${attemptCount} submitted/started attempt(s). Saving these changes will recalculate stored results and leaderboard. Continue?`
+          : "This published exam may already have attempts. Saving these changes will recalculate stored results and leaderboard. Continue?"
+      );
+      if (!confirmed) return;
+    }
+
     setIsSaving(true);
     setSaveError(null);
     setSaveMessage(null);
@@ -149,25 +192,32 @@ export default function Page() {
       }
     }
 
+    const savedQuestionIds = new Set<number>();
+    const savedCorrectOptions = new Map<number, string>();
+
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
       if (!q.text.trim()) continue;
+      const correctOption = optionLetters[q.correctIndex ?? 0];
       const data = {
         question_text: q.text,
         option_a: q.options[0] ?? "",
         option_b: q.options[1] ?? "",
         option_c: q.options[2] ?? "",
         option_d: q.options[3] ?? "",
-        correct_option: optionLetters[q.correctIndex ?? 0],
+        correct_option: correctOption,
         explanation: q.explanation,
         order: i + 1,
       };
       try {
         if (isPersisted(q.id)) {
           await updateQuestion({ id: Number(q.id), data }).unwrap();
+          savedQuestionIds.add(Number(q.id));
+          savedCorrectOptions.set(Number(q.id), correctOption);
         } else {
           const created = await addExamQuestion({ examId, data }).unwrap();
-          originalQuestionIdsRef.current.add(created.id);
+          savedQuestionIds.add(created.id);
+          savedCorrectOptions.set(created.id, correctOption);
           setQuestions((prev) => prev.map((item) => (item.id === q.id ? { ...item, id: String(created.id) } : item)));
         }
       } catch (err) {
@@ -177,8 +227,13 @@ export default function Page() {
       }
     }
 
-    originalQuestionIdsRef.current = new Set(currentQuestionIds);
+    originalQuestionIdsRef.current = savedQuestionIds;
+    originalCorrectOptionsRef.current = savedCorrectOptions;
     setIsSaving(false);
+    if (shouldWarnAboutRegrade) {
+      setSaveMessage("Changes saved. Submitted results and leaderboard were recalculated.");
+      return;
+    }
     setSaveMessage("পরিবর্তন সংরক্ষণ করা হয়েছে।");
   };
 

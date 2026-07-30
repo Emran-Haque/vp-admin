@@ -39,19 +39,19 @@ const statusStyles: Record<string, string> = {
 };
 
 const statusLabels: Record<string, string> = {
-  active: "Active",
-  closed: "Closed",
-  evaluated: "Evaluated",
-  submitted: "Submitted",
-  late: "Late",
-  rejected: "Rejected",
+  active: "চলমান",
+  closed: "বন্ধ",
+  evaluated: "মূল্যায়িত",
+  submitted: "জমা হয়েছে",
+  late: "দেরিতে জমা",
+  rejected: "বাতিল",
 };
 
 function formatDateTime(value: string) {
-  if (!value) return "No deadline";
+  if (!value) return "শেষ তারিখ নেই";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString("en-US", {
+  return date.toLocaleString("bn-BD", {
     dateStyle: "medium",
     timeStyle: "short",
   });
@@ -80,9 +80,9 @@ export default function AssignmentsPanel({ courseId, compact = false }: Assignme
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="text-base font-semibold text-blue-50">Assignments</h3>
+          <h3 className="text-base font-semibold text-blue-50">অ্যাসাইনমেন্ট</h3>
           <p className="mt-1 text-xs text-slate-400">
-            {assignments.length} assignment{assignments.length === 1 ? "" : "s"} added for this course
+            এই কোর্সে {assignments.length}টি অ্যাসাইনমেন্ট যোগ করা হয়েছে
           </p>
         </div>
         {hasPermission("can_manage_assignments") && (
@@ -92,7 +92,7 @@ export default function AssignmentsPanel({ courseId, compact = false }: Assignme
             className="flex items-center gap-1.5 rounded-xl bg-blue-500 px-3.5 py-2 text-sm font-semibold text-white"
           >
             <Plus size={16} />
-            Add Assignment
+            অ্যাসাইনমেন্ট যোগ করুন
           </button>
         )}
       </div>
@@ -104,13 +104,13 @@ export default function AssignmentsPanel({ courseId, compact = false }: Assignme
           </p>
         ) : null}
         {isLoading ? (
-          <p className="py-10 text-center text-sm text-slate-400">Loading assignments...</p>
+          <p className="py-10 text-center text-sm text-slate-400">অ্যাসাইনমেন্ট লোড হচ্ছে...</p>
         ) : assignments.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-slate-800 p-7 text-center">
             <ClipboardList size={28} className="mx-auto text-slate-500" />
-            <p className="mt-3 text-sm font-semibold text-blue-50">No assignments yet</p>
+            <p className="mt-3 text-sm font-semibold text-blue-50">এখনো কোনো অ্যাসাইনমেন্ট নেই</p>
             <p className="mt-1 text-xs text-slate-400">
-              Add class based assignments here so students can view and submit them.
+              এখানে ক্লাসভিত্তিক অ্যাসাইনমেন্ট যোগ করুন, যাতে শিক্ষার্থীরা দেখতে ও জমা দিতে পারে।
             </p>
           </div>
         ) : (
@@ -133,12 +133,12 @@ export default function AssignmentsPanel({ courseId, compact = false }: Assignme
                       </span>
                     </div>
                     <p className="mt-1 text-xs text-slate-400">
-                      {assignment.course_class_title || "All classes"}
+                      {assignment.course_class_title || "সব ক্লাস"}
                       {assignment.subject_name ? ` • ${assignment.subject_name}` : ""}
                       {" • "}
-                      Due {formatDateTime(assignment.due_date)}
+                      শেষ তারিখ {formatDateTime(assignment.due_date)}
                       {" • "}
-                      {assignment.max_marks} marks
+                      {assignment.max_marks} নম্বর
                     </p>
                     {assignment.description && (
                       <p className="mt-2 line-clamp-2 text-xs text-slate-400">{assignment.description}</p>
@@ -159,14 +159,14 @@ export default function AssignmentsPanel({ courseId, compact = false }: Assignme
                         className="flex items-center gap-1.5 rounded-xl border border-slate-800 px-3 py-2 text-xs font-semibold text-blue-50 hover:bg-white/5"
                       >
                         <Eye size={14} />
-                        Submissions
+                        জমা দেখা
                       </button>
                     )}
                     {hasPermission("can_manage_assignments") && (
                       <button
                         type="button"
                         onClick={() => {
-                          if (confirm(`Delete "${assignment.title}"?`)) deleteAssignment(assignment.id);
+                          if (confirm(`"${assignment.title}" অ্যাসাইনমেন্টটি মুছে ফেলতে চান?`)) deleteAssignment(assignment.id);
                         }}
                         className="flex size-9 items-center justify-center rounded-xl border border-red-600/40 bg-red-600/10 text-red-600"
                       >
@@ -208,8 +208,8 @@ function AssignmentTelegramButton({
       }).unwrap();
       onMessage(
         result.posted
-          ? "Assignment posted to Telegram successfully."
-          : "This assignment was already posted to Telegram."
+          ? "অ্যাসাইনমেন্টটি সফলভাবে Telegram-এ পোস্ট হয়েছে।"
+          : "এই অ্যাসাইনমেন্টটি আগে থেকেই Telegram-এ পোস্ট করা আছে।"
       );
     } catch (err) {
       onMessage(extractErrorMessage(err));
@@ -224,7 +224,7 @@ function AssignmentTelegramButton({
       className="flex items-center gap-1.5 rounded-xl border border-slate-800 px-3 py-2 text-xs font-semibold text-blue-50 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
     >
       <Send size={14} />
-      {isLoading ? "Posting..." : status?.is_posted ? "Repost" : "Post to Telegram"}
+      {isLoading ? "পোস্ট হচ্ছে..." : status?.is_posted ? "আবার পোস্ট" : "Telegram-এ পোস্ট"}
     </button>
   );
 }
@@ -276,7 +276,7 @@ function AddAssignmentModal({ courseId, onClose }: { courseId: number; onClose: 
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-800/95 p-4">
       <div className="max-h-[92vh] w-full max-w-[640px] overflow-y-auto rounded-[20px] border border-white/5 bg-gray-900/75 p-7 shadow-[0px_15px_30px_0px_rgba(59,130,246,0.46)]">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-slate-50">Add Assignment</h2>
+          <h2 className="text-base font-bold text-slate-50">অ্যাসাইনমেন্ট যোগ করুন</h2>
           <button
             type="button"
             onClick={onClose}
@@ -295,30 +295,30 @@ function AddAssignmentModal({ courseId, onClose }: { courseId: number; onClose: 
           )}
 
           <div>
-            <label className="block pb-1.5 text-xs font-semibold text-slate-400">Assignment title</label>
+            <label className="block pb-1.5 text-xs font-semibold text-slate-400">অ্যাসাইনমেন্টের শিরোনাম</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Example: Chapter 1 Assignment"
+              placeholder="যেমন: অধ্যায় ১ অ্যাসাইনমেন্ট"
               className="w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 placeholder:text-slate-200/50 focus:outline-none"
             />
           </div>
 
           <div>
-            <label className="block pb-1.5 text-xs font-semibold text-slate-400">Description</label>
+            <label className="block pb-1.5 text-xs font-semibold text-slate-400">বর্ণনা</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
-              placeholder="Write assignment instructions"
+              placeholder="অ্যাসাইনমেন্টের নির্দেশনা লিখুন"
               className="w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 placeholder:text-slate-200/50 focus:outline-none"
             />
           </div>
 
           <div className="grid gap-3.5 sm:grid-cols-2">
             <div>
-              <label className="block pb-1.5 text-xs font-semibold text-slate-400">Class</label>
+              <label className="block pb-1.5 text-xs font-semibold text-slate-400">ক্লাস</label>
               <select
                 value={courseClassId}
                 onChange={(e) => {
@@ -328,7 +328,7 @@ function AddAssignmentModal({ courseId, onClose }: { courseId: number; onClose: 
                 className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
               >
                 <option value="" className="bg-slate-800 text-slate-200">
-                  All classes / no class
+                  সব ক্লাস / কোনো ক্লাস নয়
                 </option>
                 {classes.map((item) => (
                   <option key={item.id} value={item.id} className="bg-slate-800 text-slate-200">
@@ -339,14 +339,14 @@ function AddAssignmentModal({ courseId, onClose }: { courseId: number; onClose: 
             </div>
 
             <div>
-              <label className="block pb-1.5 text-xs font-semibold text-slate-400">Subject</label>
+              <label className="block pb-1.5 text-xs font-semibold text-slate-400">বিষয়</label>
               <select
                 value={subjectId}
                 onChange={(e) => setSubjectId(e.target.value)}
                 className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
               >
                 <option value="" className="bg-slate-800 text-slate-200">
-                  No subject
+                  কোনো বিষয় নয়
                 </option>
                 {subjectOptions.map((subject) => (
                   <option key={subject.id} value={subject.id} className="bg-slate-800 text-slate-200">
@@ -359,7 +359,7 @@ function AddAssignmentModal({ courseId, onClose }: { courseId: number; onClose: 
 
           <div className="grid gap-3.5 sm:grid-cols-3">
             <div>
-              <label className="block pb-1.5 text-xs font-semibold text-slate-400">Due date</label>
+              <label className="block pb-1.5 text-xs font-semibold text-slate-400">শেষ তারিখ</label>
               <input
                 type="datetime-local"
                 value={dueDate}
@@ -368,7 +368,7 @@ function AddAssignmentModal({ courseId, onClose }: { courseId: number; onClose: 
               />
             </div>
             <div>
-              <label className="block pb-1.5 text-xs font-semibold text-slate-400">Marks</label>
+              <label className="block pb-1.5 text-xs font-semibold text-slate-400">নম্বর</label>
               <input
                 type="number"
                 min="0"
@@ -378,20 +378,20 @@ function AddAssignmentModal({ courseId, onClose }: { courseId: number; onClose: 
               />
             </div>
             <div>
-              <label className="block pb-1.5 text-xs font-semibold text-slate-400">Status</label>
+              <label className="block pb-1.5 text-xs font-semibold text-slate-400">স্ট্যাটাস</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as Assignment["status"])}
                 className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
               >
                 <option value="active" className="bg-slate-800 text-slate-200">
-                  Active
+                  চলমান
                 </option>
                 <option value="closed" className="bg-slate-800 text-slate-200">
-                  Closed
+                  বন্ধ
                 </option>
                 <option value="evaluated" className="bg-slate-800 text-slate-200">
-                  Evaluated
+                  মূল্যায়িত
                 </option>
               </select>
             </div>
@@ -403,7 +403,7 @@ function AddAssignmentModal({ courseId, onClose }: { courseId: number; onClose: 
               onClick={onClose}
               className="cursor-pointer rounded-[10px] border border-slate-400/20 bg-slate-400/5 px-4 py-2 text-xs font-bold text-slate-400"
             >
-              Cancel
+              বাতিল
             </button>
             <button
               type="button"
@@ -412,7 +412,7 @@ function AddAssignmentModal({ courseId, onClose }: { courseId: number; onClose: 
               className="flex cursor-pointer items-center gap-1.5 rounded-[10px] bg-gradient-to-br from-blue-500 to-blue-600 px-4 py-2 text-xs font-bold text-white shadow-[0px_4px_12px_0px_rgba(0,200,150,0.19)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Save size={14} />
-              {isLoading ? "Saving..." : "Save Assignment"}
+              {isLoading ? "সংরক্ষণ হচ্ছে..." : "অ্যাসাইনমেন্ট সংরক্ষণ করুন"}
             </button>
           </div>
         </div>
@@ -430,7 +430,7 @@ function AssignmentSubmissionsModal({ assignment, onClose }: { assignment: Assig
       <div className="max-h-[92vh] w-full max-w-[760px] overflow-y-auto rounded-[20px] border border-white/5 bg-gray-900/75 p-7 shadow-[0px_15px_30px_0px_rgba(59,130,246,0.46)]">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold text-slate-50">Assignment Submissions</h2>
+            <h2 className="text-base font-bold text-slate-50">অ্যাসাইনমেন্ট জমা</h2>
             <p className="mt-1 text-xs text-slate-400">{assignment.title}</p>
           </div>
           <button
@@ -444,11 +444,11 @@ function AssignmentSubmissionsModal({ assignment, onClose }: { assignment: Assig
 
         <div className="mt-6 flex flex-col gap-3">
           {isLoading ? (
-            <p className="py-10 text-center text-sm text-slate-400">Loading submissions...</p>
+            <p className="py-10 text-center text-sm text-slate-400">জমা তালিকা লোড হচ্ছে...</p>
           ) : submissions.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-slate-800 p-7 text-center">
               <FileText size={28} className="mx-auto text-slate-500" />
-              <p className="mt-3 text-sm font-semibold text-blue-50">No submissions yet</p>
+              <p className="mt-3 text-sm font-semibold text-blue-50">এখনো কেউ জমা দেয়নি</p>
             </div>
           ) : (
             submissions.map((submission) => <SubmissionCard key={submission.id} submission={submission} />)
@@ -488,10 +488,10 @@ function SubmissionCard({ submission }: { submission: Submission }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-sm font-semibold text-blue-50">
-            {submission.student_name || submission.student_email || `Student #${submission.student}`}
+            {submission.student_name || submission.student_email || `শিক্ষার্থী #${submission.student}`}
           </p>
           <p className="mt-1 text-xs text-slate-400">
-            Submitted {formatDateTime(submission.submitted_at)}
+            জমা: {formatDateTime(submission.submitted_at)}
             {submission.student_email ? ` • ${submission.student_email}` : ""}
           </p>
         </div>
@@ -505,7 +505,7 @@ function SubmissionCard({ submission }: { submission: Submission }) {
       </div>
 
       <p className="mt-2 text-xs text-slate-400">
-        Source: <span className="font-semibold text-blue-50">{submission.source === "telegram" ? "Telegram" : "Website"}</span>
+        মাধ্যম: <span className="font-semibold text-blue-50">{submission.source === "telegram" ? "Telegram" : "ওয়েবসাইট"}</span>
         {submission.original_filename ? ` • ${submission.original_filename}` : ""}
       </p>
 
@@ -518,7 +518,7 @@ function SubmissionCard({ submission }: { submission: Submission }) {
             className="flex items-center gap-1.5 rounded-xl border border-slate-800 px-3 py-2 text-xs font-semibold text-blue-50 hover:bg-white/5"
           >
             <FileText size={14} />
-            File
+            ফাইল
           </a>
         )}
         {submission.drive_link && (
@@ -529,7 +529,7 @@ function SubmissionCard({ submission }: { submission: Submission }) {
             className="flex items-center gap-1.5 rounded-xl border border-slate-800 px-3 py-2 text-xs font-semibold text-blue-50 hover:bg-white/5"
           >
             <LinkIcon size={14} />
-            Link
+            লিংক
           </a>
         )}
       </div>
@@ -547,7 +547,7 @@ function SubmissionCard({ submission }: { submission: Submission }) {
             min="0"
             value={marks}
             onChange={(e) => setMarks(e.target.value)}
-            placeholder="Marks"
+            placeholder="নম্বর"
             className="rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 placeholder:text-slate-200/50 focus:outline-none"
           />
           <select
@@ -556,23 +556,23 @@ function SubmissionCard({ submission }: { submission: Submission }) {
             className="cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
           >
             <option value="submitted" className="bg-slate-800 text-slate-200">
-              Submitted
+              জমা হয়েছে
             </option>
             <option value="evaluated" className="bg-slate-800 text-slate-200">
-              Evaluated
+              মূল্যায়িত
             </option>
             <option value="late" className="bg-slate-800 text-slate-200">
-              Late
+              দেরিতে জমা
             </option>
             <option value="rejected" className="bg-slate-800 text-slate-200">
-              Rejected
+              বাতিল
             </option>
           </select>
           <input
             type="text"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder="Teacher comment"
+            placeholder="শিক্ষকের মন্তব্য"
             className="rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 placeholder:text-slate-200/50 focus:outline-none"
           />
           <button
@@ -581,7 +581,7 @@ function SubmissionCard({ submission }: { submission: Submission }) {
             disabled={isLoading}
             className="rounded-[10px] bg-gradient-to-br from-blue-500 to-blue-600 px-4 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isLoading ? "Saving..." : "Evaluate"}
+            {isLoading ? "সংরক্ষণ হচ্ছে..." : "মূল্যায়ন করুন"}
           </button>
         </div>
       )}

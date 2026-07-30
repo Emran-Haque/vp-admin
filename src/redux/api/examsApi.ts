@@ -97,6 +97,11 @@ export type PublishResultOutput = {
   leaderboard_publish_at: string | null;
 };
 
+export type RecalculateResultsOutput = {
+  detail: string;
+  updated_attempts: number;
+};
+
 export type LeaderboardRow = {
   rank: number;
   student_id: number;
@@ -206,15 +211,16 @@ export const examsApi = baseApi.injectEndpoints({
       invalidatesTags: (_result, _error, { examId }) => [
         { type: "ExamQuestions", id: examId },
         { type: "Exams", id: examId },
+        "ExamAttempts",
       ],
     }),
     updateQuestion: builder.mutation<ExamQuestion, { id: number; data: UpdateExamQuestionInput }>({
       query: ({ id, data }) => ({ url: `admin/questions/${id}/`, method: "PATCH", body: data }),
-      invalidatesTags: (_result, _error, { id }) => [{ type: "ExamQuestions", id }],
+      invalidatesTags: ["ExamQuestions", "ExamAttempts", "Exams"],
     }),
     deleteQuestion: builder.mutation<void, number>({
       query: (id) => ({ url: `admin/questions/${id}/`, method: "DELETE" }),
-      invalidatesTags: ["ExamQuestions"],
+      invalidatesTags: ["ExamQuestions", "ExamAttempts", "Exams"],
     }),
     publishExam: builder.mutation<{ status: string }, number>({
       query: (id) => ({ url: `admin/exams/${id}/publish/`, method: "POST" }),
@@ -232,16 +238,25 @@ export const examsApi = baseApi.injectEndpoints({
         method: "POST",
         body: data ?? {},
       }),
-      invalidatesTags: (_result, _error, { id }) => [{ type: "Exams", id }],
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: "Exams", id },
+        "ExamAttempts",
+      ],
     }),
-    recalculateLeaderboard: builder.mutation<{ detail: string }, number>({
+    recalculateLeaderboard: builder.mutation<RecalculateResultsOutput, number>({
       query: (id) => ({ url: `admin/exams/${id}/recalculate-leaderboard/`, method: "POST" }),
+      invalidatesTags: (_result, _error, id) => [
+        { type: "Exams", id },
+        "ExamAttempts",
+      ],
     }),
     getExamLeaderboard: builder.query<LeaderboardResponse, number>({
       query: (id) => `admin/exams/${id}/leaderboard/`,
+      providesTags: (_result, _error, id) => [{ type: "ExamAttempts", id: `leaderboard-${id}` }],
     }),
     getExamAnalytics: builder.query<ExamAnalytics, number>({
       query: (id) => `admin/exams/${id}/analytics/`,
+      providesTags: (_result, _error, id) => [{ type: "ExamAttempts", id: `analytics-${id}` }],
     }),
     getExamAttempts: builder.query<Paginated<ExamAttempt>, ExamAttemptListParams | void>({
       query: (params) => ({ url: "admin/exam-attempts/", params: params ?? undefined }),

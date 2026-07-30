@@ -5,7 +5,7 @@ const steps = [
   { step: 1, label: "মৌলিক তথ্য" },
   { step: 2, label: "কোর্স ম্যাটেরিয়াল" },
   { step: 3, label: "সাবজেক্ট ও FAQ" },
-  { step: 4, label: "Assignments" },
+  { step: 4, label: "অ্যাসাইনমেন্ট" },
   { step: 5, label: "রিভিউ ও প্রকাশ" },
 ] as const;
 
@@ -16,6 +16,7 @@ type Props = {
   title?: string;
   subtitle?: string;
   backHref?: string;
+  onStepChange?: (step: CourseWizardStep) => void;
 };
 
 export default function WizardHeader({
@@ -23,6 +24,7 @@ export default function WizardHeader({
   title = "নতুন কোর্স তৈরি করুন",
   subtitle = "ভিডিও, ফাইল, কুইজ ও অ্যাসাইনমেন্টসহ পূর্ণাঙ্গ কোর্স সেট আপ করুন",
   backHref = "/courses",
+  onStepChange,
 }: Props) {
   return (
     <section className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
@@ -51,10 +53,12 @@ export default function WizardHeader({
           const isActive = s === step;
           return (
             <div key={s} className="flex min-w-[150px] flex-1 items-center gap-2">
-              <div
-                className={`flex flex-1 items-center gap-2 rounded-xl border px-3.5 py-2 ${
+              <button
+                type="button"
+                onClick={() => onStepChange?.(s)}
+                className={`flex flex-1 items-center gap-2 rounded-xl border px-3.5 py-2 text-left transition ${
                   isActive ? "border-blue-500 bg-white/10" : "border-slate-800 bg-slate-900"
-                }`}
+                } ${onStepChange ? "cursor-pointer hover:border-blue-500/60 hover:bg-white/5" : ""}`}
               >
                 <span
                   className={`flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
@@ -66,7 +70,7 @@ export default function WizardHeader({
                 <span className={`text-sm font-semibold ${isActive ? "text-white" : "text-slate-400"}`}>
                   {label}
                 </span>
-              </div>
+              </button>
               {index < steps.length - 1 && <ChevronRight size={16} className="hidden shrink-0 text-slate-400 xl:block" />}
             </div>
           );

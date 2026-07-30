@@ -421,24 +421,24 @@ export default function StepBasicInfo({ value, onChange, files, onFilesChange, e
       <section className="rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h2 className="text-xl font-bold leading-8 text-blue-50">Telegram Assignment Group</h2>
+            <h2 className="text-xl font-bold leading-8 text-blue-50">Telegram অ্যাসাইনমেন্ট গ্রুপ</h2>
             <p className="mt-1 text-sm text-slate-400">
-              Save the invite link for students. The bot will detect and save the group ID after you send the connect command.
+              শিক্ষার্থীদের জন্য ইনভাইট লিংক সংরক্ষণ করুন। কানেক্ট কমান্ড পাঠানোর পর বট গ্রুপ আইডি শনাক্ত করে সংরক্ষণ করবে।
             </p>
           </div>
           {value.telegramGroupChatId ? (
             <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-500">
-              Connected
+              সংযুক্ত
             </span>
           ) : (
             <span className="rounded-full bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-500">
-              Not connected
+              সংযুক্ত নয়
             </span>
           )}
         </div>
 
         <div className="pt-6">
-          <label className="block pb-1.5 text-base font-medium text-blue-50">Telegram group invite link</label>
+          <label className="block pb-1.5 text-base font-medium text-blue-50">Telegram গ্রুপ ইনভাইট লিংক</label>
           <input
             type="url"
             value={value.telegramGroupLink}
@@ -449,24 +449,24 @@ export default function StepBasicInfo({ value, onChange, files, onFilesChange, e
         </div>
 
         <div className="mt-5 rounded-2xl border border-slate-800 bg-gray-900/50 p-4">
-          <p className="text-sm font-semibold text-blue-50">Group connection command</p>
+          <p className="text-sm font-semibold text-blue-50">গ্রুপ সংযোগ কমান্ড</p>
           {value.telegramGroupConnectCode ? (
             <>
               <code className="mt-2 block rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-emerald-400">
                 /connect_course {value.telegramGroupConnectCode}
               </code>
               <p className="mt-2 text-xs text-slate-400">
-                Add @VaiyaderPathshala_bot to the Telegram group, then send this command inside that group.
+                Telegram গ্রুপে @VaiyaderPathshala_bot যোগ করুন, তারপর সেই গ্রুপে এই কমান্ডটি পাঠান।
               </p>
             </>
           ) : (
             <p className="mt-2 text-sm text-slate-400">
-              Save the course draft first to generate the connect command.
+              কানেক্ট কমান্ড তৈরি করতে আগে কোর্সের খসড়া সংরক্ষণ করুন।
             </p>
           )}
           {value.telegramGroupChatId ? (
             <p className="mt-3 text-xs text-slate-400">
-              Connected group: {value.telegramGroupTitle || "Telegram group"} · ID {value.telegramGroupChatId}
+              সংযুক্ত গ্রুপ: {value.telegramGroupTitle || "Telegram গ্রুপ"} · ID {value.telegramGroupChatId}
             </p>
           ) : null}
         </div>

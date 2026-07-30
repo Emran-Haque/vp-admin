@@ -296,7 +296,7 @@ export default function Page() {
 
   return (
     <div className="flex flex-col gap-7">
-      <WizardHeader step={step} />
+      <WizardHeader step={step} onStepChange={setStep} />
 
       {isSubmitting && (
         <p className="rounded-2xl border border-slate-800 bg-slate-900 p-4 text-center text-sm text-slate-400">
