@@ -15,7 +15,19 @@ const resourceTypes: { value: CourseResource["resource_type"]; label: string }[]
   { value: "link", label: "লিংক" },
 ];
 
-export default function AddResourceModal({ courseId, onClose }: { courseId: number; onClose: () => void }) {
+type AddResourceModalProps = {
+  courseId: number;
+  initialSubjectId?: number;
+  initialSubjectName?: string;
+  onClose: () => void;
+};
+
+export default function AddResourceModal({
+  courseId,
+  initialSubjectId,
+  initialSubjectName,
+  onClose,
+}: AddResourceModalProps) {
   const [title, setTitle] = useState("");
   const [resourceType, setResourceType] = useState<CourseResource["resource_type"]>("pdf");
   const [externalLink, setExternalLink] = useState("");
@@ -29,6 +41,7 @@ export default function AddResourceModal({ courseId, onClose }: { courseId: numb
       await createResource({
         course: courseId,
         title,
+        subject: initialSubjectId ?? null,
         resource_type: resourceType,
         external_link: externalLink,
       }).unwrap();
@@ -59,6 +72,12 @@ export default function AddResourceModal({ courseId, onClose }: { courseId: numb
               <p className="text-xs text-red-500">{error}</p>
             </div>
           )}
+
+          {initialSubjectName ? (
+            <div className="rounded-[10px] border border-blue-500/25 bg-blue-500/10 px-3.5 py-2 text-xs font-semibold text-blue-100">
+              বিষয়: {initialSubjectName}
+            </div>
+          ) : null}
 
           <div>
             <label className="block pb-1.5 text-xs font-semibold text-slate-400">রিসোর্সের নাম</label>

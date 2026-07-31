@@ -5,7 +5,19 @@ import { X, Save, AlertTriangle } from "lucide-react";
 import { useCreateExamMutation } from "@/redux/api/examsApi";
 import { extractErrorMessage } from "@/lib/api-error";
 
-export default function AddExamModal({ courseId, onClose }: { courseId: number; onClose: () => void }) {
+type AddExamModalProps = {
+  courseId: number;
+  initialSubjectId?: number;
+  initialSubjectName?: string;
+  onClose: () => void;
+};
+
+export default function AddExamModal({
+  courseId,
+  initialSubjectId,
+  initialSubjectName,
+  onClose,
+}: AddExamModalProps) {
   const [title, setTitle] = useState("");
   const [durationMinutes, setDurationMinutes] = useState("30");
   const [examDate, setExamDate] = useState("");
@@ -19,6 +31,7 @@ export default function AddExamModal({ courseId, onClose }: { courseId: number; 
       await createExam({
         course: courseId,
         title,
+        subject: initialSubjectId ?? null,
         duration_minutes: Number(durationMinutes) || 0,
         exam_date: examDate,
       }).unwrap();
@@ -49,6 +62,12 @@ export default function AddExamModal({ courseId, onClose }: { courseId: number; 
               <p className="text-xs text-red-500">{error}</p>
             </div>
           )}
+
+          {initialSubjectName ? (
+            <div className="rounded-[10px] border border-blue-500/25 bg-blue-500/10 px-3.5 py-2 text-xs font-semibold text-blue-100">
+              বিষয়: {initialSubjectName}
+            </div>
+          ) : null}
 
           <div>
             <label className="block pb-1.5 text-xs font-semibold text-slate-400">পরীক্ষার নাম</label>

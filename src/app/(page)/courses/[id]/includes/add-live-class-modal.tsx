@@ -6,7 +6,19 @@ import { useCreateClassMutation } from "@/redux/api/classesApi";
 import { useGetTeachersQuery } from "@/redux/api/contentApi";
 import { extractErrorMessage } from "@/lib/api-error";
 
-export default function AddLiveClassModal({ courseId, onClose }: { courseId: number; onClose: () => void }) {
+type AddLiveClassModalProps = {
+  courseId: number;
+  initialSubjectId?: number;
+  initialSubjectName?: string;
+  onClose: () => void;
+};
+
+export default function AddLiveClassModal({
+  courseId,
+  initialSubjectId,
+  initialSubjectName,
+  onClose,
+}: AddLiveClassModalProps) {
   const [title, setTitle] = useState("");
   const [classDate, setClassDate] = useState("");
   const [startTime, setStartTime] = useState("");
@@ -43,6 +55,7 @@ export default function AddLiveClassModal({ courseId, onClose }: { courseId: num
       formData.append("start_time", startTime);
       formData.append("is_live", "true");
       formData.append("live_url", liveUrl);
+      if (initialSubjectId) formData.append("subject", String(initialSubjectId));
       if (teacher) formData.append("teacher", teacher);
       if (thumbnail) formData.append("thumbnail", thumbnail);
 
@@ -74,6 +87,12 @@ export default function AddLiveClassModal({ courseId, onClose }: { courseId: num
               <p className="text-xs text-red-500">{error}</p>
             </div>
           )}
+
+          {initialSubjectName ? (
+            <div className="rounded-[10px] border border-blue-500/25 bg-blue-500/10 px-3.5 py-2 text-xs font-semibold text-blue-100">
+              বিষয়: {initialSubjectName}
+            </div>
+          ) : null}
 
           <div>
             <label className="block pb-1.5 text-xs font-semibold text-slate-400">ক্লাসের নাম</label>

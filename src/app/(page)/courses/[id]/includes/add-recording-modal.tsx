@@ -5,7 +5,19 @@ import { X, Save, AlertTriangle } from "lucide-react";
 import { useCreateClassMutation, useCreateClassVideoMutation } from "@/redux/api/classesApi";
 import { extractErrorMessage } from "@/lib/api-error";
 
-export default function AddRecordingModal({ courseId, onClose }: { courseId: number; onClose: () => void }) {
+type AddRecordingModalProps = {
+  courseId: number;
+  initialSubjectId?: number;
+  initialSubjectName?: string;
+  onClose: () => void;
+};
+
+export default function AddRecordingModal({
+  courseId,
+  initialSubjectId,
+  initialSubjectName,
+  onClose,
+}: AddRecordingModalProps) {
   const [sessionTitle, setSessionTitle] = useState("");
   const [videoTitle, setVideoTitle] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
@@ -19,7 +31,11 @@ export default function AddRecordingModal({ courseId, onClose }: { courseId: num
   const handleSave = async () => {
     setError(null);
     try {
-      const createdClass = await createClass({ course: courseId, title: sessionTitle }).unwrap();
+      const classData = new FormData();
+      classData.append("course", String(courseId));
+      classData.append("title", sessionTitle);
+      if (initialSubjectId) classData.append("subject", String(initialSubjectId));
+      const createdClass = await createClass(classData).unwrap();
       await createClassVideo({
         course_class: createdClass.id,
         title: videoTitle,
@@ -53,6 +69,12 @@ export default function AddRecordingModal({ courseId, onClose }: { courseId: num
               <p className="text-xs text-red-500">{error}</p>
             </div>
           )}
+
+          {initialSubjectName ? (
+            <div className="rounded-[10px] border border-blue-500/25 bg-blue-500/10 px-3.5 py-2 text-xs font-semibold text-blue-100">
+              বিষয়: {initialSubjectName}
+            </div>
+          ) : null}
 
           <div>
             <label className="block pb-1.5 text-xs font-semibold text-slate-400">ক্লাসের নাম</label>

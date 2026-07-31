@@ -5,7 +5,7 @@ export type CourseResource = {
   id: number;
   course: number;
   title: string;
-  subject: string;
+  subject: number | string | null;
   resource_type: "book" | "note" | "pdf" | "question_bank" | "magazine" | "short_note" | "link";
   file: string | null;
   external_link: string;

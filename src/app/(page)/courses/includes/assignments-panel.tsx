@@ -229,11 +229,25 @@ function AssignmentTelegramButton({
   );
 }
 
-function AddAssignmentModal({ courseId, onClose }: { courseId: number; onClose: () => void }) {
+type AddAssignmentModalProps = {
+  courseId: number;
+  initialSubjectId?: number;
+  initialSubjectName?: string;
+  onClose: () => void;
+};
+
+export function AddAssignmentModal({
+  courseId,
+  initialSubjectId,
+  initialSubjectName,
+  onClose,
+}: AddAssignmentModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [courseClassId, setCourseClassId] = useState("");
-  const [subjectId, setSubjectId] = useState("");
+  const [subjectId, setSubjectId] = useState(
+    initialSubjectId ? String(initialSubjectId) : "",
+  );
   const [dueDate, setDueDate] = useState("");
   const [maxMarks, setMaxMarks] = useState("100");
   const [status, setStatus] = useState<Assignment["status"]>("active");
@@ -294,6 +308,12 @@ function AddAssignmentModal({ courseId, onClose }: { courseId: number; onClose: 
             </div>
           )}
 
+          {initialSubjectName ? (
+            <div className="rounded-[10px] border border-blue-500/25 bg-blue-500/10 px-3.5 py-2 text-xs font-semibold text-blue-100">
+              বিষয়: {initialSubjectName}
+            </div>
+          ) : null}
+
           <div>
             <label className="block pb-1.5 text-xs font-semibold text-slate-400">অ্যাসাইনমেন্টের শিরোনাম</label>
             <input
@@ -343,6 +363,7 @@ function AddAssignmentModal({ courseId, onClose }: { courseId: number; onClose: 
               <select
                 value={subjectId}
                 onChange={(e) => setSubjectId(e.target.value)}
+                disabled={Boolean(initialSubjectId)}
                 className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
               >
                 <option value="" className="bg-slate-800 text-slate-200">
