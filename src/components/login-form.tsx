@@ -23,7 +23,7 @@ function EyeIcon({ isVisible }: { isVisible: boolean }) {
       stroke="currentColor"
       strokeWidth="2.2"
       strokeLinecap="round"
-      strokeLinejoin="round"
+      strokeLinejoin="round" 
     >
       {isVisible ? (
         <>
@@ -44,10 +44,10 @@ function EyeIcon({ isVisible }: { isVisible: boolean }) {
 function describeLoginError(error: unknown): string {
   if (error && typeof error === "object" && "status" in error) {
     const status = (error as { status: unknown }).status;
-    if (status === "FETCH_ERROR") return "সার্ভারে সংযোগ করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।";
+    if (status === "FETCH_ERROR") return "সার্ভারে সংযোগ করা যায়নি। ইন্টারনেট সংযোগ করুন।";
     if (status === 400 || status === 401) return "ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।";
   }
-  return "লগইন করা যায়নি। আবার চেষ্টা করুন।";
+  return "লগইন করা যায়নি। আবার চেষ্টা করুন। ";
 }
 
 export function LoginForm() {
