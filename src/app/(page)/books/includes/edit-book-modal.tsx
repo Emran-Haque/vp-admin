@@ -44,6 +44,7 @@ export default function EditBookModal({ book, onClose }: { book: Book; onClose: 
   useEffect(() => {
     if (faqsData?.results) {
       const bookFaqs = faqsData.results.filter((f) => f.related_book === book.id);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFaqs(
         bookFaqs.map((f) => ({
           id: String(f.id),

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ClipboardList, HelpCircle, Clock, Calendar, CheckCircle2, Pencil, Trash2 } from "lucide-react";
+import { ClipboardList, HelpCircle, Clock, Calendar, CheckCircle2, Pencil, Trash2, ListChecks } from "lucide-react";
 import {
   useGetExamsQuery,
   useDeleteExamMutation,
@@ -72,7 +72,7 @@ export default function ExamList() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-end gap-2">
               <span className={`rounded-full border px-3.5 py-1.5 text-sm font-semibold ${status.className}`}>
                 {status.label}
               </span>
@@ -91,8 +91,11 @@ export default function ExamList() {
               {hasPermission("can_edit_exam") && (
                 <Link
                   href={`/mcq/${exam.id}/edit`}
-                  className="flex size-10 cursor-pointer items-center justify-center rounded-xl border border-slate-800 text-blue-50 transition-colors duration-200 hover:bg-white/5"
+                  className="flex h-10 cursor-pointer items-center gap-2 rounded-xl border border-blue-500/30 bg-blue-500/10 px-3.5 text-sm font-black text-blue-100 transition-colors duration-200 hover:bg-blue-500/20"
                 >
+                  <ListChecks size={16} />
+                  প্রশ্ন/উত্তর এডিট
+                  <span className="sr-only">Edit {exam.title}</span>
                   <Pencil size={16} />
                 </Link>
               )}

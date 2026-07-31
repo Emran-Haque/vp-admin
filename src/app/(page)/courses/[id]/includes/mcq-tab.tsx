@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ClipboardCheck, Plus, ArrowUpRight, Trash2 } from "lucide-react";
+import { ClipboardCheck, Plus, Pencil, Trash2 } from "lucide-react";
 import { useGetExamsQuery, useDeleteExamMutation } from "@/redux/api/examsApi";
 import { usePermissions } from "@/hooks/use-permissions";
 import EmptyState from "./empty-state";
@@ -79,12 +79,15 @@ export default function McqTab({ courseId }: { courseId: number }) {
                     >
                       {statusLabels[exam.status] ?? exam.status}
                     </span>
-                    <Link
-                      href={`/mcq/${exam.id}/edit`}
-                      className="flex size-9 items-center justify-center rounded-xl border border-slate-800 text-blue-50 hover:bg-white/5"
-                    >
-                      <ArrowUpRight size={15} />
-                    </Link>
+                    {hasPermission("can_edit_exam") && (
+                      <Link
+                        href={`/mcq/${exam.id}/edit`}
+                        className="flex h-9 items-center gap-1.5 rounded-xl border border-blue-500/30 bg-blue-500/10 px-3 text-xs font-black text-blue-100 hover:bg-blue-500/20"
+                      >
+                        <Pencil size={14} />
+                        প্রশ্ন এডিট
+                      </Link>
+                    )}
                     {hasPermission("can_delete_exam") && (
                       <button
                         type="button"

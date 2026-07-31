@@ -22,6 +22,7 @@ export default function AddLiveClassModal({ courseId, onClose }: { courseId: num
 
   useEffect(() => {
     if (!thumbnail) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPreviewUrl(null);
       return;
     }

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, RefreshCw } from "lucide-react";
 import WizardHeader from "../../create/includes/wizard-header";
 import StepBasicInfo from "../../create/includes/step-basic-info";
 import StepQuestions from "../../create/includes/step-questions";
@@ -18,6 +18,7 @@ import {
   useUpdateQuestionMutation,
   useDeleteQuestionMutation,
   useGetExamAttemptsQuery,
+  useRecalculateLeaderboardMutation,
 } from "@/redux/api/examsApi";
 import { useGetCourseSubjectsQuery } from "@/redux/api/courseSubjectsApi";
 import {
@@ -61,6 +62,7 @@ export default function Page() {
   const [addExamQuestion] = useAddExamQuestionMutation();
   const [updateQuestion] = useUpdateQuestionMutation();
   const [deleteQuestion] = useDeleteQuestionMutation();
+  const [recalculateLeaderboard] = useRecalculateLeaderboardMutation();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [basicInfo, setBasicInfo] = useState<ExamBasicInfo | null>(null);
@@ -227,11 +229,27 @@ export default function Page() {
       }
     }
 
+    let recalculatedAttempts: number | null = null;
+    if (shouldWarnAboutRegrade) {
+      try {
+        const recalculated = await recalculateLeaderboard(examId).unwrap();
+        recalculatedAttempts = recalculated.updated_attempts;
+      } catch (err) {
+        setSaveError(`পরিবর্তন সংরক্ষিত হয়েছে, কিন্তু ফলাফল পুনরায় হিসাব করা যায়নি: ${extractErrorMessage(err)}`);
+        setIsSaving(false);
+        return;
+      }
+    }
+
     originalQuestionIdsRef.current = savedQuestionIds;
     originalCorrectOptionsRef.current = savedCorrectOptions;
     setIsSaving(false);
     if (shouldWarnAboutRegrade) {
-      setSaveMessage("Changes saved. Submitted results and leaderboard were recalculated.");
+      setSaveMessage(
+        recalculatedAttempts === null
+          ? "পরিবর্তন সংরক্ষিত হয়েছে। জমা দেওয়া ফলাফল ও লিডারবোর্ড পুনরায় হিসাব করা হয়েছে।"
+          : `পরিবর্তন সংরক্ষিত হয়েছে। ${recalculatedAttempts}টি জমা দেওয়া ফলাফল ও লিডারবোর্ড পুনরায় হিসাব করা হয়েছে।`
+      );
       return;
     }
     setSaveMessage("পরিবর্তন সংরক্ষণ করা হয়েছে।");
@@ -266,8 +284,19 @@ export default function Page() {
         onPrev={() => setStep((s) => (s > 1 ? ((s - 1) as 1 | 2) : s))}
         onNext={() => setStep((s) => (s < 3 ? ((s + 1) as 2 | 3) : s))}
         onSave={handleSave}
-        showSave={false}
       />
+
+      {exam.status === "published" && (
+        <div className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5">
+          <RefreshCw size={20} className="mt-0.5 shrink-0 text-amber-400" />
+          <div>
+            <p className="text-sm font-bold text-amber-200">প্রকাশিত পরীক্ষার প্রশ্ন/সঠিক উত্তর এডিট করছেন</p>
+            <p className="mt-1 text-sm leading-6 text-amber-100/75">
+              প্রশ্ন, সঠিক উত্তর, নেগেটিভ মার্ক বা প্রশ্ন সংখ্যা পরিবর্তন করলে সেভ করার সময় আগের জমা দেওয়া শিক্ষার্থীদের ফলাফল ও লিডারবোর্ড আবার হিসাব করা হবে।
+            </p>
+          </div>
+        </div>
+      )}
 
       {saveError && (
         <div className="flex items-start gap-3 rounded-2xl border border-red-500/30 bg-red-500/5 p-5">
