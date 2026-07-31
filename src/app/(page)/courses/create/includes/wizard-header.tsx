@@ -5,11 +5,10 @@ const steps = [
   { step: 1, label: "মৌলিক তথ্য" },
   { step: 2, label: "কোর্স ম্যাটেরিয়াল" },
   { step: 3, label: "সাবজেক্ট ও FAQ" },
-  { step: 4, label: "অ্যাসাইনমেন্ট" },
-  { step: 5, label: "রিভিউ ও প্রকাশ" },
+  { step: 4, label: "রিভিউ ও প্রকাশ" },
 ] as const;
 
-export type CourseWizardStep = 1 | 2 | 3 | 4 | 5;
+export type CourseWizardStep = 1 | 2 | 3 | 4;
 
 type Props = {
   step: CourseWizardStep;
@@ -22,7 +21,7 @@ type Props = {
 export default function WizardHeader({
   step,
   title = "নতুন কোর্স তৈরি করুন",
-  subtitle = "ভিডিও, ফাইল, কুইজ ও অ্যাসাইনমেন্টসহ পূর্ণাঙ্গ কোর্স সেট আপ করুন",
+  subtitle = "কোর্সের মৌলিক তথ্য, ম্যাটেরিয়াল, বিষয় ও FAQ সেট আপ করুন",
   backHref = "/courses",
   onStepChange,
 }: Props) {

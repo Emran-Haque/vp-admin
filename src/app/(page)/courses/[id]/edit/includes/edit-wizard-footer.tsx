@@ -28,7 +28,7 @@ export default function EditWizardFooter({ step, isSaving, onPrev, onNext, onSav
       </button>
 
       <div className="flex items-center gap-3">
-        {step < 5 && (
+        {step < 4 && (
           <button
             type="button"
             onClick={onNext}

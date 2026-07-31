@@ -47,7 +47,7 @@ export default function WizardFooter({
           খসড়া সংরক্ষণ করুন
         </button>
 
-        {step < 5 ? (
+        {step < 4 ? (
           <button
             type="button"
             onClick={onNext}

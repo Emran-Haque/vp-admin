@@ -6,7 +6,6 @@ import WizardHeader from "./includes/wizard-header";
 import StepBasicInfo from "./includes/step-basic-info";
 import StepMaterials from "./includes/step-materials";
 import StepSubjectsFaqs from "./includes/step-subjects-faqs";
-import StepAssignments from "./includes/step-assignments";
 import StepReview from "./includes/step-review";
 import WizardFooter from "./includes/wizard-footer";
 import type { CourseWizardStep } from "./includes/wizard-header";
@@ -291,7 +290,7 @@ export default function Page() {
       const saved = await handleSubmit(false);
       if (!saved) return;
     }
-    setStep((s) => (s < 5 ? ((s + 1) as CourseWizardStep) : s));
+    setStep((s) => (s < 4 ? ((s + 1) as CourseWizardStep) : s));
   };
 
   return (
@@ -332,8 +331,7 @@ export default function Page() {
           onTeacherIdsChange={(teacherIds) => setBasicInfo({ ...basicInfo, teacherIds })}
         />
       )}
-      {step === 4 && <StepAssignments courseId={courseId ?? undefined} />}
-      {step === 5 && (
+      {step === 4 && (
         <StepReview
           basicInfo={basicInfo}
           files={files}

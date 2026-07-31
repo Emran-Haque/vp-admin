@@ -7,7 +7,6 @@ import WizardHeader from "../../create/includes/wizard-header";
 import StepBasicInfo from "../../create/includes/step-basic-info";
 import StepMaterials from "../../create/includes/step-materials";
 import StepSubjectsFaqs from "../../create/includes/step-subjects-faqs";
-import StepAssignments from "../../create/includes/step-assignments";
 import StepReview from "../../create/includes/step-review";
 import EditWizardFooter from "./includes/edit-wizard-footer";
 import type { CourseWizardStep } from "../../create/includes/wizard-header";
@@ -534,7 +533,7 @@ export default function Page() {
         step={step}
         isSaving={isSaving}
         onPrev={() => setStep((s) => (s > 1 ? ((s - 1) as CourseWizardStep) : s))}
-        onNext={() => setStep((s) => (s < 5 ? ((s + 1) as CourseWizardStep) : s))}
+        onNext={() => setStep((s) => (s < 4 ? ((s + 1) as CourseWizardStep) : s))}
         onSave={handleSave}
         showSave={false}
       />
@@ -577,8 +576,7 @@ export default function Page() {
           onTeacherIdsChange={(teacherIds) => setBasicInfo({ ...basicInfo, teacherIds })}
         />
       )}
-      {step === 4 && <StepAssignments courseId={courseId} />}
-      {step === 5 && (
+      {step === 4 && (
         <StepReview
           basicInfo={basicInfo}
           files={files}
@@ -593,7 +591,7 @@ export default function Page() {
         step={step}
         isSaving={isSaving}
         onPrev={() => setStep((s) => (s > 1 ? ((s - 1) as CourseWizardStep) : s))}
-        onNext={() => setStep((s) => (s < 5 ? ((s + 1) as CourseWizardStep) : s))}
+        onNext={() => setStep((s) => (s < 4 ? ((s + 1) as CourseWizardStep) : s))}
         onSave={handleSave}
       />
     </div>
