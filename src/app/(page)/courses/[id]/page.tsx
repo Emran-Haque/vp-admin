@@ -5,6 +5,7 @@ import { useGetCourseQuery } from "@/redux/api/coursesApi";
 import { useGetCourseSubjectsQuery } from "@/redux/api/courseSubjectsApi";
 import CourseDetailsHeader from "./includes/course-details-header";
 import CourseStatCards from "./includes/course-stat-cards";
+import CourseSubjectOverview from "./includes/course-subject-overview";
 import CourseTabs from "./includes/course-tabs";
 import ErrorState from "@/components/error-state";
 
@@ -32,6 +33,7 @@ export default function Page() {
     <div className="flex flex-col gap-7">
       <CourseDetailsHeader course={course} />
       <CourseStatCards course={course} subjectCount={subjectsData?.results.length ?? 0} />
+      <CourseSubjectOverview courseId={course.id} />
       <CourseTabs courseId={course.id} />
     </div>
   );

@@ -14,7 +14,7 @@ const tabs: { key: TabKey; label: string; icon: LucideIcon }[] = [
   { key: "recordings", label: "ক্লাস রেকর্ডিং", icon: Video },
   { key: "live", label: "লাইভ ক্লাস", icon: Radio },
   { key: "resources", label: "রিসোর্স", icon: FileText },
-  { key: "assignments", label: "Assignments", icon: ClipboardList },
+  { key: "assignments", label: "অ্যাসাইনমেন্ট", icon: ClipboardList },
   { key: "mcq", label: "MCQ পরীক্ষা", icon: ClipboardCheck },
 ];
 
