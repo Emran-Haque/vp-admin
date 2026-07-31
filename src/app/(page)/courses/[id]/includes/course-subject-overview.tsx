@@ -27,7 +27,7 @@ import AddRecordingModal from "./add-recording-modal";
 import AddResourceModal from "./add-resource-modal";
 import { AddAssignmentModal } from "../../includes/assignments-panel";
 
-type SubjectTab = "overview" | "lectures" | "live" | "notes" | "assignments" | "mcq";
+type SubjectTab = "lectures" | "live" | "notes" | "assignments" | "mcq";
 type ModalKey = "recording" | "live" | "resource" | "assignment" | "exam" | null;
 
 type SubjectBundle = {
@@ -43,7 +43,6 @@ type SubjectBundle = {
 const GENERAL_SUBJECT = "সাধারণ";
 
 const tabs: { key: SubjectTab; label: string; icon: LucideIcon }[] = [
-  { key: "overview", label: "ওভারভিউ", icon: BookOpen },
   { key: "lectures", label: "লেকচার", icon: Video },
   { key: "live", label: "লাইভ", icon: Radio },
   { key: "notes", label: "নোট/ম্যাটেরিয়াল", icon: FileText },
@@ -75,7 +74,7 @@ function totalItems(bundle: SubjectBundle) {
 
 export default function CourseSubjectOverview({ courseId }: { courseId: number }) {
   const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<SubjectTab>("overview");
+  const [activeTab, setActiveTab] = useState<SubjectTab>("lectures");
   const [modal, setModal] = useState<ModalKey>(null);
   const { data: subjectsData, isLoading: subjectsLoading } =
     useGetCourseSubjectsQuery({ course: courseId });
@@ -198,7 +197,7 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
                 key={bundle.subject.id}
                 onSelect={() => {
                   setSelectedSubjectId(bundle.subject.id);
-                  setActiveTab("overview");
+                  setActiveTab("lectures");
                 }}
               />
             ))}
@@ -391,9 +390,9 @@ function SubjectActions({
         ? [{ label: "নোট/রিসোর্স যোগ", modal: "resource", icon: FileText }]
         : activeTab === "assignments"
           ? [{ label: "অ্যাসাইনমেন্ট যোগ", modal: "assignment", icon: ClipboardList }]
-          : activeTab === "mcq"
-            ? [{ label: "MCQ যোগ", modal: "exam", icon: ClipboardCheck }]
-            : [{ label: "লেকচার যোগ", modal: "recording", icon: Video }];
+      : activeTab === "mcq"
+        ? [{ label: "MCQ যোগ", modal: "exam", icon: ClipboardCheck }]
+        : [{ label: "লেকচার যোগ", modal: "recording", icon: Video }];
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -421,16 +420,6 @@ function SubjectTabContent({
   bundle: SubjectBundle;
   courseId: number;
 }) {
-  if (activeTab === "overview") {
-    return (
-      <div className="mt-4 grid gap-3 md:grid-cols-3">
-        <SummaryTile icon={Video} label="লেকচার" value={bundle.classes.length} />
-        <SummaryTile icon={FileText} label="নোট/রিসোর্স" value={bundle.resources.length} />
-        <SummaryTile icon={ClipboardCheck} label="MCQ পরীক্ষা" value={bundle.exams.length} />
-      </div>
-    );
-  }
-
   if (activeTab === "lectures") {
     return (
       <ItemList
@@ -500,26 +489,6 @@ function SubjectTabContent({
       >
         কোর্সের সব কন্টেন্ট এডিট করুন
       </Link>
-    </div>
-  );
-}
-
-function SummaryTile({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: number;
-}) {
-  return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-950/35 p-4">
-      <span className="flex items-center gap-2 text-xs font-semibold text-slate-400">
-        <Icon size={15} />
-        {label}
-      </span>
-      <strong className="mt-2 block text-2xl font-black text-blue-50">{value}</strong>
     </div>
   );
 }
