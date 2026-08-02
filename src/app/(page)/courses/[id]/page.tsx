@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { BookOpen, Users, type LucideIcon } from "lucide-react";
 import { useGetCourseQuery } from "@/redux/api/coursesApi";
 import { useGetCourseSubjectsQuery } from "@/redux/api/courseSubjectsApi";
@@ -24,8 +24,11 @@ const managementTabs: {
 
 export default function Page() {
   const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
   const courseId = Number(params.id);
-  const [activeTab, setActiveTab] = useState<CourseManagementTab>("subjects");
+  const [activeTab, setActiveTab] = useState<CourseManagementTab>(
+    searchParams.get("tab") === "students" ? "students" : "subjects"
+  );
 
   const { data: course, isLoading, isError, error } = useGetCourseQuery(courseId, { skip: !courseId });
   const { data: subjectsData } = useGetCourseSubjectsQuery({ course: courseId }, { skip: !courseId });
@@ -72,7 +75,10 @@ export default function Page() {
       {activeTab === "subjects" ? (
         <CourseSubjectOverview courseId={course.id} />
       ) : (
-        <CourseEnrolledStudents courseId={course.id} />
+        <CourseEnrolledStudents
+          courseId={course.id}
+          verificationRequired={course.verification_required}
+        />
       )}
     </div>
   );

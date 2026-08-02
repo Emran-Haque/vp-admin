@@ -12,6 +12,17 @@ export type AdminDashboard = {
     revenue: string;
   };
   content: { teachers: number; reviews: number; success_stories: number };
+  notifications?: {
+    id: number;
+    title: string;
+    message: string;
+    notification_type: string;
+    is_read: boolean;
+    related_object_type: string;
+    related_object_id: number | null;
+    created_at: string;
+  }[];
+  unread_notifications?: number;
 };
 
 export type ModeratorDashboard = {

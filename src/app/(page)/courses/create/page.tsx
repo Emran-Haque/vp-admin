@@ -34,6 +34,7 @@ const emptyBasicInfo: BasicInfo = {
   oldPrice: "",
   discount: "",
   isFree: false,
+  verificationRequired: false,
   duration: "",
   batchStartDate: "",
   classStartDate: "",
@@ -106,6 +107,7 @@ export default function Page() {
     if (basicInfo.oldPrice) formData.append("old_price", basicInfo.oldPrice);
     if (basicInfo.discount) formData.append("discount", basicInfo.discount);
     formData.append("is_free", String(basicInfo.isFree));
+    formData.append("verification_required", String(basicInfo.verificationRequired));
     formData.append("is_published", String(isPublished));
     formData.append("duration", basicInfo.duration);
     if (basicInfo.batchStartDate) formData.append("batch_start_date", basicInfo.batchStartDate);

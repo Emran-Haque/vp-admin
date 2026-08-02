@@ -19,6 +19,7 @@ export type Course = {
   discount: string;
   is_free: boolean;
   is_published: boolean;
+  verification_required: boolean;
   enrollment_count: number;
   batch_start_date: string | null;
   class_start_date: string | null;
@@ -69,6 +70,12 @@ export type Enrollment = {
   source: string;
   enrolled_at: string;
   is_active: boolean;
+  is_verified: boolean;
+  verified_at: string | null;
+  verified_by: number | null;
+  student_name?: string;
+  student_email?: string | null;
+  student_phone?: string | null;
 };
 
 export const coursesApi = baseApi.injectEndpoints({
@@ -113,6 +120,19 @@ export const coursesApi = baseApi.injectEndpoints({
       query: ({ id, page }) => ({ url: `admin/courses/${id}/enrollments/`, params: { page } }),
       providesTags: (_result, _error, { id }) => [{ type: "Enrollments", id }],
     }),
+    updateEnrollmentVerification: builder.mutation<
+      Enrollment,
+      { courseId: number; enrollmentId: number; is_verified: boolean }
+    >({
+      query: ({ courseId, enrollmentId, is_verified }) => ({
+        url: `admin/courses/${courseId}/enrollments/${enrollmentId}/verification/`,
+        method: "PATCH",
+        body: { is_verified },
+      }),
+      invalidatesTags: (_result, _error, { courseId }) => [
+        { type: "Enrollments", id: courseId },
+      ],
+    }),
     getCourseCategories: builder.query<CourseCategory[] | Paginated<CourseCategory>, void>({
       query: () => "public/categories/",
       providesTags: ["CourseCategories"],
@@ -129,5 +149,6 @@ export const {
   useDeleteCourseMutation,
   usePublishCourseMutation,
   useGetCourseEnrollmentsQuery,
+  useUpdateEnrollmentVerificationMutation,
   useGetCourseCategoriesQuery,
 } = coursesApi;
