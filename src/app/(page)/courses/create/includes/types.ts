@@ -29,6 +29,7 @@ export type BasicInfo = {
   oldPrice: string;
   discount: string;
   isFree: boolean;
+  verificationRequired: boolean;
   duration: string;
   batchStartDate: string;
   classStartDate: string;

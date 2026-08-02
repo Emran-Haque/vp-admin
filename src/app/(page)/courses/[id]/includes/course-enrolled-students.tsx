@@ -12,7 +12,10 @@ import {
   Search,
   ShieldCheck,
 } from "lucide-react";
-import { useGetCourseEnrollmentsQuery } from "@/redux/api/coursesApi";
+import {
+  useGetCourseEnrollmentsQuery,
+  useUpdateEnrollmentVerificationMutation,
+} from "@/redux/api/coursesApi";
 import { useGetStudentQuery } from "@/redux/api/studentsApi";
 import { usePermissions } from "@/hooks/use-permissions";
 import { statusOf, studentStatusStyles } from "@/lib/student-status";
@@ -35,7 +38,13 @@ function sourceLabel(value: string) {
   return value || "Manual";
 }
 
-export default function CourseEnrolledStudents({ courseId }: { courseId: number }) {
+export default function CourseEnrolledStudents({
+  courseId,
+  verificationRequired,
+}: {
+  courseId: number;
+  verificationRequired: boolean;
+}) {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
@@ -68,6 +77,7 @@ export default function CourseEnrolledStudents({ courseId }: { courseId: number 
           </h2>
           <p className="mt-1 text-sm text-slate-400">
             এই কোর্সে মোট {data?.count ?? 0} জন শিক্ষার্থী ভর্তি আছে
+            {verificationRequired ? " · এই কোর্সে অ্যাডমিন ভেরিফিকেশন চালু আছে" : ""}
           </p>
         </div>
         <label className="flex min-w-[260px] items-center gap-2 rounded-2xl border border-slate-800 bg-slate-950/35 px-3.5 py-2.5">
@@ -102,6 +112,7 @@ export default function CourseEnrolledStudents({ courseId }: { courseId: number 
               key={enrollment.id}
               onSelect={() => setSelectedStudentId(enrollment.student)}
               search={trimmedSearch}
+              verificationRequired={verificationRequired}
             />
           ))
         )}
@@ -145,22 +156,33 @@ function EnrollmentStudentRow({
   enrollment,
   onSelect,
   search,
+  verificationRequired,
 }: {
   enrollment: {
     id: number;
     student: number;
+    course: number;
     source: string;
     enrolled_at: string;
     is_active: boolean;
+    is_verified: boolean;
+    student_name?: string;
+    student_email?: string | null;
+    student_phone?: string | null;
   };
   onSelect: () => void;
   search: string;
+  verificationRequired: boolean;
 }) {
   const { data: student, isLoading } = useGetStudentQuery(enrollment.student);
+  const [updateVerification, { isLoading: isUpdating }] = useUpdateEnrollmentVerificationMutation();
+  const studentName = student?.full_name || enrollment.student_name || `শিক্ষার্থী #${enrollment.student}`;
+  const studentEmail = student?.email || enrollment.student_email || "-";
+  const studentPhone = student?.phone || enrollment.student_phone || "-";
   const haystack = [
-    student?.full_name,
-    student?.email,
-    student?.phone,
+    studentName,
+    studentEmail,
+    studentPhone,
     student?.student_profile?.batch,
     student?.student_profile?.institution,
     String(enrollment.student),
@@ -169,7 +191,7 @@ function EnrollmentStudentRow({
     .join(" ")
     .toLowerCase();
 
-  if (search && student && !haystack.includes(search)) return null;
+  if (search && !haystack.includes(search)) return null;
 
   const status = student
     ? studentStatusStyles[statusOf(student)]
@@ -181,10 +203,14 @@ function EnrollmentStudentRow({
       };
 
   return (
-    <button
-      type="button"
+    <div
       onClick={onSelect}
-      className="flex w-full flex-wrap items-center gap-4 rounded-2xl border border-slate-800 bg-gray-900/40 p-4 text-left transition hover:border-slate-700"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") onSelect();
+      }}
+      className="flex w-full cursor-pointer flex-wrap items-center gap-4 rounded-2xl border border-slate-800 bg-gray-900/40 p-4 text-left transition hover:border-slate-700"
     >
       <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-sky-500">
         <GraduationCap size={24} className="text-white" />
@@ -193,9 +219,7 @@ function EnrollmentStudentRow({
       <div className="min-w-[240px] flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-base font-semibold text-blue-50">
-            {isLoading
-              ? "লোড হচ্ছে..."
-              : student?.full_name || `শিক্ষার্থী #${enrollment.student}`}
+            {isLoading ? "লোড হচ্ছে..." : studentName}
           </p>
           <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${status.className}`}>
             {status.label}
@@ -203,15 +227,26 @@ function EnrollmentStudentRow({
           <span className="rounded-full border border-blue-500/25 bg-blue-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-blue-300">
             {sourceLabel(enrollment.source)}
           </span>
+          {verificationRequired && (
+            <span
+              className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${
+                enrollment.is_verified
+                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                  : "border-amber-500/30 bg-amber-500/10 text-amber-300"
+              }`}
+            >
+              {enrollment.is_verified ? "ভেরিফায়েড" : "ভেরিফিকেশন বাকি"}
+            </span>
+          )}
         </div>
         <div className="mt-1.5 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-slate-400">
           <span className="flex items-center gap-1">
             <Mail size={13} />
-            {student?.email || "-"}
+            {studentEmail}
           </span>
           <span className="flex items-center gap-1">
             <Phone size={13} />
-            {student?.phone || "-"}
+            {studentPhone}
           </span>
           <span className="flex items-center gap-1">
             <BookMarked size={13} />
@@ -225,6 +260,29 @@ function EnrollmentStudentRow({
           </span>
         </div>
       </div>
-    </button>
+      {verificationRequired && (
+        <label
+          className="ml-auto flex min-w-[170px] cursor-pointer flex-col gap-1.5 text-xs font-semibold text-slate-400"
+          onClick={(event) => event.stopPropagation()}
+        >
+          ভেরিফিকেশন
+          <select
+            value={enrollment.is_verified ? "yes" : "no"}
+            disabled={isUpdating}
+            onChange={(event) => {
+              void updateVerification({
+                courseId: enrollment.course,
+                enrollmentId: enrollment.id,
+                is_verified: event.target.value === "yes",
+              });
+            }}
+            className="h-10 rounded-xl border border-slate-800 bg-slate-950 px-3 text-sm font-bold text-blue-50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <option value="yes">হ্যাঁ, ভেরিফায়েড</option>
+            <option value="no">না, পেন্ডিং</option>
+          </select>
+        </label>
+      )}
+    </div>
   );
 }

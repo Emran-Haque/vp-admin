@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BookOpen, Video, HelpCircle, ClipboardList, Users, Clock, Pencil, Trash2, Sparkles, type LucideIcon } from "lucide-react";
-import { useGetCoursesQuery, useDeleteCourseMutation, type Course } from "@/redux/api/coursesApi";
+import { BookOpen, Video, HelpCircle, ClipboardList, Users, Clock, Pencil, Trash2, Sparkles, ShieldCheck, type LucideIcon } from "lucide-react";
+import { useGetCoursesQuery, useDeleteCourseMutation, useUpdateCourseMutation, type Course } from "@/redux/api/coursesApi";
 import { usePermissions } from "@/hooks/use-permissions";
 import ErrorState from "@/components/error-state";
 
@@ -41,6 +41,7 @@ function priceLabel(course: Course) {
 export default function CourseList() {
   const { data, isLoading, isError, error } = useGetCoursesQuery();
   const [deleteCourse] = useDeleteCourseMutation();
+  const [updateCourse] = useUpdateCourseMutation();
   const { hasPermission } = usePermissions();
   const router = useRouter();
 
@@ -145,6 +146,47 @@ export default function CourseList() {
                 <span className="truncate">{course.duration || "—"}</span>
               </span>
               <div className="flex items-center gap-2">
+                {hasPermission("can_view_course_enrollments") && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      router.push(`/courses/${course.id}?tab=students`);
+                    }}
+                    className="flex h-10 items-center gap-2 rounded-xl border border-slate-800 px-3 text-xs font-bold text-blue-50 transition-colors duration-200 hover:bg-white/5"
+                  >
+                    <Users size={15} />
+                    ভর্তি তালিকা
+                  </button>
+                )}
+                {hasPermission("can_edit_course") && (
+                  <label
+                    className={`flex h-10 cursor-pointer items-center gap-2 rounded-xl border px-3 text-xs font-bold transition-colors duration-200 ${
+                      course.verification_required
+                        ? "border-amber-500/40 bg-amber-500/10 text-amber-300"
+                        : "border-slate-800 text-slate-300 hover:bg-white/5"
+                    }`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={course.verification_required}
+                      onChange={(e) => {
+                        void updateCourse({
+                          id: course.id,
+                          data: { verification_required: e.target.checked },
+                        });
+                      }}
+                      className="sr-only"
+                    />
+                    <ShieldCheck size={15} />
+                    {course.verification_required ? "ভেরিফাই লাগবে" : "সরাসরি অ্যাক্সেস"}
+                  </label>
+                )}
                 {hasPermission("can_edit_course") && (
                   <button
                     type="button"

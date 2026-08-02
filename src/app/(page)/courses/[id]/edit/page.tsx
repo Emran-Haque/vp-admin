@@ -63,6 +63,7 @@ function toBasicInfo(course: Course): BasicInfo {
     oldPrice: course.old_price,
     discount: course.discount,
     isFree: course.is_free,
+    verificationRequired: course.verification_required,
     duration: course.duration,
     batchStartDate: course.batch_start_date ?? "",
     classStartDate: course.class_start_date ?? "",
@@ -246,6 +247,7 @@ export default function Page() {
     if (basicInfo.oldPrice) formData.append("old_price", basicInfo.oldPrice);
     if (basicInfo.discount) formData.append("discount", basicInfo.discount);
     formData.append("is_free", String(basicInfo.isFree));
+    formData.append("verification_required", String(basicInfo.verificationRequired));
     formData.append("duration", basicInfo.duration);
     if (basicInfo.batchStartDate) formData.append("batch_start_date", basicInfo.batchStartDate);
     if (basicInfo.classStartDate) formData.append("class_start_date", basicInfo.classStartDate);

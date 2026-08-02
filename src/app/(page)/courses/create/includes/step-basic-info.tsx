@@ -293,6 +293,23 @@ export default function StepBasicInfo({ value, onChange, files, onFilesChange, e
           <span className="text-base font-medium text-blue-50">এটি একটি ফ্রি কোর্স</span>
         </label>
 
+        <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-800 bg-gray-900/50 p-4">
+          <input
+            type="checkbox"
+            checked={value.verificationRequired}
+            onChange={(e) => set("verificationRequired", e.target.checked)}
+            className="mt-1 size-4 cursor-pointer accent-blue-500"
+          />
+          <span>
+            <span className="block text-base font-semibold text-blue-50">
+              ভর্তির পর অ্যাডমিন ভেরিফিকেশন লাগবে
+            </span>
+            <span className="mt-1 block text-sm leading-6 text-slate-400">
+              চালু থাকলে পেমেন্টের পর শিক্ষার্থী কোর্সটি দেখবে, কিন্তু অ্যাডমিন অনুমোদন না দেওয়া পর্যন্ত খুলতে পারবে না।
+            </span>
+          </span>
+        </label>
+
         {!value.isFree && (
           <div className="grid grid-cols-1 gap-6 pt-5 sm:grid-cols-3">
             <div>
