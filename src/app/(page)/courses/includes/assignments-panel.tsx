@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   ClipboardList,
+  Download,
   Eye,
   FileText,
+  Image as ImageIcon,
   Link as LinkIcon,
   Plus,
   Save,
@@ -23,7 +25,10 @@ import {
   usePostAssignmentToTelegramMutation,
   type Assignment,
   type Submission,
+  type SubmissionAttachment,
 } from "@/redux/api/assignmentsApi";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/redux/store";
 import { useGetClassesQuery } from "@/redux/api/classesApi";
 import { useGetCourseSubjectsQuery } from "@/redux/api/courseSubjectsApi";
 import { usePermissions } from "@/hooks/use-permissions";
@@ -487,6 +492,7 @@ function SubmissionCard({ submission }: { submission: Submission }) {
   const [error, setError] = useState<string | null>(null);
   const [evaluateSubmission, { isLoading }] = useEvaluateSubmissionMutation();
   const { hasPermission } = usePermissions();
+  const attachments = submission.attachments ?? [];
 
   const handleEvaluate = async () => {
     setError(null);
@@ -555,6 +561,14 @@ function SubmissionCard({ submission }: { submission: Submission }) {
         )}
       </div>
 
+      {attachments.length > 0 && (
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          {attachments.map((attachment) => (
+            <SubmissionAttachmentCard attachment={attachment} key={attachment.id} />
+          ))}
+        </div>
+      )}
+
       {submission.text_answer && (
         <p className="mt-3 rounded-xl border border-slate-800 bg-slate-950/40 p-3 text-xs text-slate-300">
           {submission.text_answer}
@@ -608,6 +622,131 @@ function SubmissionCard({ submission }: { submission: Submission }) {
       )}
 
       {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
+    </div>
+  );
+}
+
+function formatFileSize(value: number | null | undefined) {
+  if (!value) return "";
+  if (value < 1024) return `${value} B`;
+  if (value < 1024 * 1024) return `${Math.round(value / 1024)} KB`;
+  return `${(value / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function SubmissionAttachmentCard({ attachment }: { attachment: SubmissionAttachment }) {
+  const token = useSelector((state: RootState) => state.auth.token);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!attachment.is_image || !attachment.view_url || !token) return;
+    let active = true;
+    let objectUrl: string | null = null;
+
+    async function loadPreview() {
+      setIsLoadingPreview(true);
+      setError(null);
+      try {
+        const response = await fetch(attachment.view_url, {
+          headers: { Authorization: `Token ${token}` },
+        });
+        if (!response.ok) throw new Error("Preview failed");
+        const blob = await response.blob();
+        objectUrl = URL.createObjectURL(blob);
+        if (active) setPreviewUrl(objectUrl);
+      } catch {
+        if (active) setError("প্রিভিউ আনা যায়নি");
+      } finally {
+        if (active) setIsLoadingPreview(false);
+      }
+    }
+
+    void loadPreview();
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [attachment.is_image, attachment.view_url, token]);
+
+  const openAttachment = async (mode: "view" | "download") => {
+    const url = mode === "download" ? attachment.download_url : attachment.view_url;
+    if (!url || !token) return;
+    setError(null);
+    try {
+      const response = await fetch(url, {
+        headers: { Authorization: `Token ${token}` },
+      });
+      if (!response.ok) throw new Error("File failed");
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      if (mode === "download") {
+        const a = document.createElement("a");
+        a.href = objectUrl;
+        a.download = attachment.original_filename || `attachment-${attachment.id}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(objectUrl);
+      } else {
+        window.open(objectUrl, "_blank", "noopener,noreferrer");
+        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+      }
+    } catch {
+      setError("ফাইল খোলা যায়নি");
+    }
+  };
+
+  return (
+    <div className="rounded-2xl border border-slate-800 bg-slate-950/35 p-3">
+      <div className="flex items-start gap-3">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-300">
+          {attachment.is_image ? <ImageIcon size={18} /> : <FileText size={18} />}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-bold text-blue-50">
+            {attachment.original_filename || `Attachment #${attachment.id}`}
+          </p>
+          <p className="mt-1 text-[11px] text-slate-500">
+            {attachment.source === "telegram" ? "Telegram" : "ওয়েবসাইট"}
+            {formatFileSize(attachment.file_size) ? ` • ${formatFileSize(attachment.file_size)}` : ""}
+          </p>
+        </div>
+      </div>
+
+      {attachment.is_image && (
+        <div className="mt-3 aspect-video overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
+          {previewUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={previewUrl} alt={attachment.original_filename || "Attachment"} className="h-full w-full object-cover" />
+          ) : (
+            <div className="flex h-full items-center justify-center text-xs text-slate-500">
+              {isLoadingPreview ? "প্রিভিউ লোড হচ্ছে..." : "প্রিভিউ নেই"}
+            </div>
+          )}
+        </div>
+      )}
+
+      {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => void openAttachment("view")}
+          className="flex items-center gap-1.5 rounded-xl border border-slate-800 px-3 py-2 text-xs font-semibold text-blue-50 hover:bg-white/5"
+        >
+          <Eye size={14} />
+          দেখুন
+        </button>
+        <button
+          type="button"
+          onClick={() => void openAttachment("download")}
+          className="flex items-center gap-1.5 rounded-xl border border-slate-800 px-3 py-2 text-xs font-semibold text-blue-50 hover:bg-white/5"
+        >
+          <Download size={14} />
+          ডাউনলোড
+        </button>
+      </div>
     </div>
   );
 }
