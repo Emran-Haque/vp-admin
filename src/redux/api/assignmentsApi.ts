@@ -88,6 +88,22 @@ export type Submission = {
   teacher_comment: string;
   evaluated_by: number | null;
   evaluated_at: string | null;
+  attachments: SubmissionAttachment[];
+};
+
+export type SubmissionAttachment = {
+  id: number;
+  source: "website" | "telegram";
+  file: string | null;
+  original_filename: string;
+  mime_type: string;
+  file_size: number | null;
+  telegram_message_id: number | null;
+  telegram_media_group_id: string;
+  ordering: number;
+  view_url: string;
+  download_url: string;
+  is_image: boolean;
 };
 
 export type SubmissionListParams = {
