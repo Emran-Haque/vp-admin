@@ -263,18 +263,37 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
         </p>
       ) : (
         <>
-          <div className="mt-5 grid gap-3 xl:grid-cols-3 md:grid-cols-2">
-            {bundles.map((bundle) => (
-              <SubjectCard
-                bundle={bundle}
-                isActive={bundle.subject.id === selectedBundle?.subject.id}
-                key={bundle.subject.id}
-                onSelect={() => {
-                  setSelectedSubjectId(bundle.subject.id);
-                  setActiveTab("lectures");
-                }}
-              />
-            ))}
+          {/* Compact subject chips that scroll horizontally (mobile-friendly);
+              the selected subject's content shows in the panel below. */}
+          <div className="mt-5 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {bundles.map((bundle) => {
+              const isActive = bundle.subject.id === selectedBundle?.subject.id;
+              return (
+                <button
+                  className={`inline-flex h-10 shrink-0 items-center gap-2 rounded-full border px-4 text-[13px] font-black transition ${
+                    isActive
+                      ? "border-blue-400/50 bg-blue-500/15 text-white"
+                      : "border-slate-800 bg-slate-950/40 text-slate-300 hover:border-slate-700 hover:text-white"
+                  }`}
+                  key={bundle.subject.id}
+                  onClick={() => {
+                    setSelectedSubjectId(bundle.subject.id);
+                    setActiveTab("lectures");
+                  }}
+                  type="button"
+                >
+                  <BookOpen size={15} />
+                  {bundle.subject.name}
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-black ${
+                      isActive ? "bg-white/15 text-white" : "bg-white/[0.06] text-slate-400"
+                    }`}
+                  >
+                    {totalItems(bundle)}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           {unassignedCount > 0 ? (
@@ -525,64 +544,6 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
   );
 }
 
-function SubjectCard({
-  bundle,
-  isActive,
-  onSelect,
-}: {
-  bundle: SubjectBundle;
-  isActive: boolean;
-  onSelect: () => void;
-}) {
-  const items = [
-    { label: "লেকচার", value: bundle.classes.length, icon: Video },
-    { label: "লাইভ", value: bundle.liveClasses.length, icon: Radio },
-    { label: "রেকর্ডিং", value: bundle.recordings, icon: Video },
-    { label: "নোট", value: bundle.resources.length, icon: FileText },
-    { label: "কাজ", value: bundle.assignments.length, icon: ClipboardList },
-    { label: "MCQ", value: bundle.exams.length, icon: ClipboardCheck },
-  ];
-
-  return (
-    <button
-      className={`rounded-2xl border p-4 text-left transition ${
-        isActive
-          ? "border-blue-500 bg-blue-500/10"
-          : "border-slate-800 bg-gray-900/40 hover:border-slate-700"
-      }`}
-      onClick={onSelect}
-      type="button"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-base font-bold text-blue-50">{bundle.subject.name}</h3>
-          <p className="mt-1 text-xs text-slate-400">
-            মোট {totalItems(bundle)}টি শেখার আইটেম
-          </p>
-        </div>
-        <span className="rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-xs font-bold text-blue-300">
-          বিষয়
-        </span>
-      </div>
-      <div className="mt-4 grid grid-cols-3 gap-2">
-        {items.map(({ icon: Icon, label, value }) => (
-          <span
-            className="rounded-xl border border-slate-800 bg-slate-950/35 px-2.5 py-2"
-            key={label}
-          >
-            <span className="flex items-center gap-1.5 text-slate-400">
-              <Icon size={13} />
-              <span className="text-[11px] font-semibold">{label}</span>
-            </span>
-            <strong className="mt-1 block text-base font-black text-blue-50">
-              {value}
-            </strong>
-          </span>
-        ))}
-      </div>
-    </button>
-  );
-}
 
 function SubjectActions({
   activeTab,
