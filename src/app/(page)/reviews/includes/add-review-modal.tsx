@@ -87,7 +87,7 @@ export default function AddReviewModal({ onClose }: { onClose: () => void }) {
               onChange={(e) => setCourseId(e.target.value)}
               className="mt-1.5 w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-2.5 text-sm text-blue-50 focus:border-amber-500 focus:outline-none"
             >
-              <option value="">-- কোর্স সিলেক্ট করুন --</option>
+              <option value="">-- কোর্স নির্বাচন করুন --</option>
               {isLoadingCourses ? (
                 <option disabled>কোর্স লোড হচ্ছে…</option>
               ) : (
@@ -112,7 +112,7 @@ export default function AddReviewModal({ onClose }: { onClose: () => void }) {
               onChange={(e) => setStudentId(e.target.value)}
               className="mt-1.5 w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-2.5 text-sm text-blue-50 focus:border-amber-500 focus:outline-none"
             >
-              <option value="">-- শিক্ষার্থী সিলেক্ট করুন --</option>
+              <option value="">-- শিক্ষার্থী নির্বাচন করুন --</option>
               {isLoadingStudents ? (
                 <option disabled>শিক্ষার্থী লোড হচ্ছে…</option>
               ) : (

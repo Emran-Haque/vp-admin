@@ -93,7 +93,7 @@ export default function MaterialItemCard({ item, courseId, onUpdate, onRemove, o
       {item.kind === "mcq" && (
         <div className="mt-3 flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-slate-400">কুইজ সিলেক্ট করুন</label>
+            <label className="text-xs font-medium text-slate-400">কুইজ নির্বাচন করুন</label>
             <select
               value={item.quizId ? String(item.quizId) : item.questions?.length ? "new" : ""}
               onChange={(e) => {

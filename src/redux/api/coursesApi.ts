@@ -62,6 +62,14 @@ export type CourseCategory = {
   is_active: boolean;
 };
 
+export type CreateCourseCategoryInput = {
+  name: string;
+  kind?: string;
+  description?: string;
+  ordering?: number;
+  is_active?: boolean;
+};
+
 export type Enrollment = {
   id: number;
   student: number;
@@ -137,6 +145,33 @@ export const coursesApi = baseApi.injectEndpoints({
       query: () => "public/categories/",
       providesTags: ["CourseCategories"],
     }),
+    // Admin list returns ALL categories (incl. inactive) for the manage modal.
+    getAdminCourseCategories: builder.query<
+      CourseCategory[] | Paginated<CourseCategory>,
+      void
+    >({
+      query: () => "admin/course-categories/",
+      providesTags: ["CourseCategories"],
+    }),
+    createCourseCategory: builder.mutation<CourseCategory, CreateCourseCategoryInput>({
+      query: (body) => ({ url: "admin/course-categories/", method: "POST", body }),
+      invalidatesTags: ["CourseCategories"],
+    }),
+    updateCourseCategory: builder.mutation<
+      CourseCategory,
+      { id: number; data: Partial<CreateCourseCategoryInput> }
+    >({
+      query: ({ id, data }) => ({
+        url: `admin/course-categories/${id}/`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["CourseCategories"],
+    }),
+    deleteCourseCategory: builder.mutation<void, number>({
+      query: (id) => ({ url: `admin/course-categories/${id}/`, method: "DELETE" }),
+      invalidatesTags: ["CourseCategories"],
+    }),
   }),
   overrideExisting: false,
 });
@@ -151,4 +186,8 @@ export const {
   useGetCourseEnrollmentsQuery,
   useUpdateEnrollmentVerificationMutation,
   useGetCourseCategoriesQuery,
+  useGetAdminCourseCategoriesQuery,
+  useCreateCourseCategoryMutation,
+  useUpdateCourseCategoryMutation,
+  useDeleteCourseCategoryMutation,
 } = coursesApi;
