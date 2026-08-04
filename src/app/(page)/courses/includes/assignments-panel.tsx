@@ -195,7 +195,7 @@ export default function AssignmentsPanel({ courseId, compact = false }: Assignme
   );
 }
 
-function AssignmentTelegramButton({
+export function AssignmentTelegramButton({
   assignmentId,
   onMessage,
 }: {

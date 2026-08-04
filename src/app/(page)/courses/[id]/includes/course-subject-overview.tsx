@@ -48,6 +48,7 @@ import AddResourceModal from "./add-resource-modal";
 import {
   AddAssignmentModal,
   AssignmentSubmissionsModal,
+  AssignmentTelegramButton,
 } from "../../includes/assignments-panel";
 
 type SubjectTab = "lectures" | "live" | "notes" | "assignments" | "mcq";
@@ -200,6 +201,7 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
   const router = useRouter();
   const [editTarget, setEditTarget] = useState<EditTarget | null>(null);
   const [viewSubmissions, setViewSubmissions] = useState<Assignment | null>(null);
+  const [telegramMessage, setTelegramMessage] = useState<string | null>(null);
   const [deleteClass] = useDeleteClassMutation();
   const [deleteResource] = useDeleteResourceMutation();
   const [deleteAssignment] = useDeleteAssignmentMutation();
@@ -237,6 +239,19 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
           নতুন বিষয় যোগ করুন
         </Link>
       </div>
+
+      {telegramMessage ? (
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-blue-500/30 bg-blue-500/10 p-3 text-xs text-blue-100">
+          <span>{telegramMessage}</span>
+          <button
+            type="button"
+            onClick={() => setTelegramMessage(null)}
+            className="shrink-0 rounded-lg border border-blue-400/30 px-2 py-1 font-bold text-blue-200"
+          >
+            বন্ধ
+          </button>
+        </div>
+      ) : null}
 
       {isLoading ? (
         <p className="mt-5 rounded-2xl border border-slate-800 bg-gray-900/40 p-6 text-center text-sm text-slate-400">
@@ -292,7 +307,7 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
           0 ? (
             <div className="mt-3 rounded-2xl border border-amber-500/25 bg-amber-500/[0.04] p-4">
               <p className="text-sm font-bold text-amber-100">
-                বিষয়হীন কন্টেন্ট — সম্পাদনা করে বিষয় দিন
+                বিষয়হীন কন্টেন্ট — এডিট করে বিষয় দিন
               </p>
               <div className="mt-3 space-y-4">
                 {unassignedItems.lectures.length > 0 ? (
@@ -345,6 +360,7 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
                     <p className="mb-1.5 text-xs font-semibold text-slate-400">অ্যাসাইনমেন্ট</p>
                     <ItemList
                       empty=""
+                      onTelegramMessage={setTelegramMessage}
                       items={unassignedItems.assignments.map((item) => ({
                         id: item.id,
                         title: item.title,
@@ -352,6 +368,7 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
                         onView: () => setViewSubmissions(item),
                         onEdit: () => setEditTarget({ type: "assignments", item }),
                         onDelete: () => handleDelete("assignments", item.id, item.title),
+                        telegramAssignmentId: item.id,
                       }))}
                     />
                   </div>
@@ -420,6 +437,7 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
                 onEdit={setEditTarget}
                 onDelete={handleDelete}
                 onViewSubmissions={setViewSubmissions}
+                onTelegramMessage={setTelegramMessage}
               />
             </div>
           ) : null}
@@ -608,6 +626,7 @@ function SubjectTabContent({
   onEdit,
   onDelete,
   onViewSubmissions,
+  onTelegramMessage,
 }: {
   activeTab: SubjectTab;
   bundle: SubjectBundle;
@@ -615,6 +634,7 @@ function SubjectTabContent({
   onEdit: (target: EditTarget) => void;
   onDelete: (tab: SubjectTab, id: number, title: string) => void;
   onViewSubmissions: (assignment: Assignment) => void;
+  onTelegramMessage: (message: string | null) => void;
 }) {
   const router = useRouter();
 
@@ -667,6 +687,7 @@ function SubjectTabContent({
     return (
       <ItemList
         empty="এই বিষয়ে এখনো কোনো অ্যাসাইনমেন্ট নেই।"
+        onTelegramMessage={onTelegramMessage}
         items={bundle.assignments.map((item) => ({
           id: item.id,
           title: item.title,
@@ -674,6 +695,7 @@ function SubjectTabContent({
           onView: () => onViewSubmissions(item),
           onEdit: () => onEdit({ type: "assignments", item }),
           onDelete: () => onDelete("assignments", item.id, item.title),
+          telegramAssignmentId: item.id,
         }))}
       />
     );
@@ -709,9 +731,18 @@ type ListItem = {
   onView?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  telegramAssignmentId?: number;
 };
 
-function ItemList({ empty, items }: { empty: string; items: ListItem[] }) {
+function ItemList({
+  empty,
+  items,
+  onTelegramMessage,
+}: {
+  empty: string;
+  items: ListItem[];
+  onTelegramMessage?: (message: string | null) => void;
+}) {
   if (items.length === 0) {
     return (
       <p className="mt-4 rounded-2xl border border-dashed border-slate-800 p-6 text-center text-sm text-slate-400">
@@ -730,8 +761,17 @@ function ItemList({ empty, items }: { empty: string; items: ListItem[] }) {
           </div>
         );
         const actions =
-          item.onView || item.onEdit || item.onDelete ? (
+          item.onView ||
+          item.onEdit ||
+          item.onDelete ||
+          item.telegramAssignmentId ? (
             <div className="flex shrink-0 items-center gap-2">
+              {item.telegramAssignmentId ? (
+                <AssignmentTelegramButton
+                  assignmentId={item.telegramAssignmentId}
+                  onMessage={onTelegramMessage ?? (() => {})}
+                />
+              ) : null}
               {item.onView ? (
                 <button
                   type="button"
@@ -749,7 +789,7 @@ function ItemList({ empty, items }: { empty: string; items: ListItem[] }) {
                   className="flex items-center gap-1 rounded-lg border border-slate-700 px-2.5 py-1.5 text-xs font-semibold text-blue-50 hover:bg-white/5"
                 >
                   <Pencil size={13} />
-                  সম্পাদনা
+                  এডিট
                 </button>
               ) : null}
               {item.onDelete ? (
