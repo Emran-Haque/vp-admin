@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
-import { Upload, X, FileText, Image as ImageIcon } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Upload, X, FileText, Image as ImageIcon, FolderCog } from "lucide-react";
 import { useGetCourseCategoriesQuery } from "@/redux/api/coursesApi";
 import type { BasicInfo, CourseFiles } from "./types";
+import ManageCourseCategoriesModal from "./manage-categories-modal";
 
 type ExistingCourseFiles = {
   thumbnail: string | null;
@@ -187,6 +188,7 @@ function FileUploadField({
 export default function StepBasicInfo({ value, onChange, files, onFilesChange, existingFiles }: Props) {
   const { data: categoriesData } = useGetCourseCategoriesQuery();
   const categories = Array.isArray(categoriesData) ? categoriesData : categoriesData?.results ?? [];
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
 
   const set = <K extends keyof BasicInfo>(key: K, val: BasicInfo[K]) => {
     onChange({ ...value, [key]: val });
@@ -247,7 +249,17 @@ export default function StepBasicInfo({ value, onChange, files, onFilesChange, e
 
         <div className="grid grid-cols-1 gap-6 pt-6 sm:grid-cols-2">
           <div>
-            <label className="block pb-1.5 text-base font-medium text-blue-50">ক্যাটাগরি</label>
+            <div className="flex items-center justify-between pb-1.5">
+              <label className="block text-base font-medium text-blue-50">ক্যাটাগরি</label>
+              <button
+                type="button"
+                onClick={() => setShowCategoryModal(true)}
+                className="flex items-center gap-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 px-2.5 py-1 text-xs font-bold text-blue-300 hover:bg-blue-500/20"
+              >
+                <FolderCog size={13} />
+                ক্যাটাগরি ব্যবস্থাপনা
+              </button>
+            </div>
             <select
               value={value.category}
               onChange={(e) => set("category", e.target.value)}
@@ -260,6 +272,19 @@ export default function StepBasicInfo({ value, onChange, files, onFilesChange, e
                 </option>
               ))}
             </select>
+            {categories.length === 0 && (
+              <p className="pt-1.5 text-xs text-amber-400">
+                কোনো ক্যাটাগরি নেই। কোর্স তৈরি করতে আগে{" "}
+                <button
+                  type="button"
+                  onClick={() => setShowCategoryModal(true)}
+                  className="font-bold underline"
+                >
+                  একটি ক্যাটাগরি যোগ করুন
+                </button>
+                ।
+              </p>
+            )}
           </div>
 
           <div>
@@ -545,6 +570,10 @@ export default function StepBasicInfo({ value, onChange, files, onFilesChange, e
           </div>
         </div>
       </section>
+
+      {showCategoryModal && (
+        <ManageCourseCategoriesModal onClose={() => setShowCategoryModal(false)} />
+      )}
     </div>
   );
 }

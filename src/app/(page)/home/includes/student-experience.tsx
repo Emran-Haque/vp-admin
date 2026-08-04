@@ -23,7 +23,7 @@ export default function StudentExperience() {
           href="/students"
           className="flex shrink-0 items-center gap-2 rounded-full bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white"
         >
-          ভিউ করুন
+          দেখুন
           <ArrowRight size={16} />
         </Link>
       </div>
