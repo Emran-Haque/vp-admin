@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import {
   useCreateAssignmentMutation,
+  useUpdateAssignmentMutation,
   useDeleteAssignmentMutation,
   useEvaluateSubmissionMutation,
   useGetAssignmentsQuery,
@@ -238,6 +239,7 @@ type AddAssignmentModalProps = {
   courseId: number;
   initialSubjectId?: number;
   initialSubjectName?: string;
+  editItem?: Assignment;
   onClose: () => void;
 };
 
@@ -245,22 +247,32 @@ export function AddAssignmentModal({
   courseId,
   initialSubjectId,
   initialSubjectName,
+  editItem,
   onClose,
 }: AddAssignmentModalProps) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [courseClassId, setCourseClassId] = useState("");
-  const [subjectId, setSubjectId] = useState(
-    initialSubjectId ? String(initialSubjectId) : "",
+  const isEdit = Boolean(editItem);
+  const [title, setTitle] = useState(editItem?.title ?? "");
+  const [description, setDescription] = useState(editItem?.description ?? "");
+  const [courseClassId, setCourseClassId] = useState(
+    editItem?.course_class ? String(editItem.course_class) : "",
   );
-  const [dueDate, setDueDate] = useState("");
-  const [maxMarks, setMaxMarks] = useState("100");
-  const [status, setStatus] = useState<Assignment["status"]>("active");
+  const [subjectId, setSubjectId] = useState(
+    editItem?.subject
+      ? String(editItem.subject)
+      : initialSubjectId
+        ? String(initialSubjectId)
+        : "",
+  );
+  const [dueDate, setDueDate] = useState(editItem?.due_date?.slice(0, 16) ?? "");
+  const [maxMarks, setMaxMarks] = useState(editItem?.max_marks ?? "100");
+  const [status, setStatus] = useState<Assignment["status"]>(editItem?.status ?? "active");
   const [error, setError] = useState<string | null>(null);
 
   const { data: classesData } = useGetClassesQuery({ course: courseId });
   const { data: subjectsData } = useGetCourseSubjectsQuery({ course: courseId });
-  const [createAssignment, { isLoading }] = useCreateAssignmentMutation();
+  const [createAssignment, { isLoading: isCreating }] = useCreateAssignmentMutation();
+  const [updateAssignment, { isLoading: isUpdating }] = useUpdateAssignmentMutation();
+  const isLoading = isCreating || isUpdating;
 
   const classes = useMemo(() => classesData?.results ?? [], [classesData?.results]);
   const subjects = useMemo(() => subjectsData?.results ?? [], [subjectsData?.results]);
@@ -275,7 +287,7 @@ export function AddAssignmentModal({
   const handleSave = async () => {
     setError(null);
     try {
-      await createAssignment({
+      const payload = {
         course: courseId,
         course_class: courseClassId ? Number(courseClassId) : null,
         subject: subjectId ? Number(subjectId) : null,
@@ -284,7 +296,12 @@ export function AddAssignmentModal({
         due_date: dueDate,
         max_marks: maxMarks || "0",
         status,
-      }).unwrap();
+      };
+      if (isEdit && editItem) {
+        await updateAssignment({ id: editItem.id, data: payload }).unwrap();
+      } else {
+        await createAssignment(payload).unwrap();
+      }
       onClose();
     } catch (err) {
       setError(extractErrorMessage(err));
@@ -295,7 +312,9 @@ export function AddAssignmentModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-800/95 p-4">
       <div className="max-h-[92vh] w-full max-w-[640px] overflow-y-auto rounded-[20px] border border-white/5 bg-gray-900/75 p-7 shadow-[0px_15px_30px_0px_rgba(59,130,246,0.46)]">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-slate-50">অ্যাসাইনমেন্ট যোগ করুন</h2>
+          <h2 className="text-base font-bold text-slate-50">
+            {isEdit ? "অ্যাসাইনমেন্ট সম্পাদনা" : "অ্যাসাইনমেন্ট যোগ করুন"}
+          </h2>
           <button
             type="button"
             onClick={onClose}

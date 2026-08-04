@@ -6,7 +6,6 @@ import { BookOpen, Users, type LucideIcon } from "lucide-react";
 import { useGetCourseQuery } from "@/redux/api/coursesApi";
 import { useGetCourseSubjectsQuery } from "@/redux/api/courseSubjectsApi";
 import CourseDetailsHeader from "./includes/course-details-header";
-import CourseStatCards from "./includes/course-stat-cards";
 import CourseSubjectOverview from "./includes/course-subject-overview";
 import CourseEnrolledStudents from "./includes/course-enrolled-students";
 import ErrorState from "@/components/error-state";
@@ -47,16 +46,15 @@ export default function Page() {
   }
 
   return (
-    <div className="flex flex-col gap-7">
-      <CourseDetailsHeader course={course} />
-      <CourseStatCards course={course} subjectCount={subjectsData?.results.length ?? 0} />
+    <div className="flex flex-col gap-4">
+      <CourseDetailsHeader course={course} subjectCount={subjectsData?.results.length ?? 0} />
 
-      <div className="flex flex-wrap gap-2.5">
+      <div className="flex flex-wrap gap-2">
         {managementTabs.map(({ icon: Icon, key, label }) => {
           const active = activeTab === key;
           return (
             <button
-              className={`flex items-center gap-2 rounded-2xl border px-5 py-3 text-sm font-semibold transition-colors duration-200 ${
+              className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold transition-colors duration-200 ${
                 active
                   ? "border-blue-500 bg-blue-500/10 text-blue-50"
                   : "border-slate-800 bg-slate-900 text-slate-400 hover:text-blue-50"

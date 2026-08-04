@@ -2,7 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { X, Save, AlertTriangle, Upload } from "lucide-react";
-import { useCreateClassMutation } from "@/redux/api/classesApi";
+import {
+  useCreateClassMutation,
+  useUpdateClassMutation,
+  type CourseClass,
+} from "@/redux/api/classesApi";
 import { useGetTeachersQuery } from "@/redux/api/contentApi";
 import { extractErrorMessage } from "@/lib/api-error";
 
@@ -10,6 +14,7 @@ type AddLiveClassModalProps = {
   courseId: number;
   initialSubjectId?: number;
   initialSubjectName?: string;
+  editItem?: CourseClass;
   onClose: () => void;
 };
 
@@ -17,13 +22,15 @@ export default function AddLiveClassModal({
   courseId,
   initialSubjectId,
   initialSubjectName,
+  editItem,
   onClose,
 }: AddLiveClassModalProps) {
-  const [title, setTitle] = useState("");
-  const [classDate, setClassDate] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [liveUrl, setLiveUrl] = useState("");
-  const [teacher, setTeacher] = useState("");
+  const isEdit = Boolean(editItem);
+  const [title, setTitle] = useState(editItem?.title ?? "");
+  const [classDate, setClassDate] = useState(editItem?.class_date ?? "");
+  const [startTime, setStartTime] = useState(editItem?.start_time?.slice(0, 5) ?? "");
+  const [liveUrl, setLiveUrl] = useState(editItem?.live_url ?? "");
+  const [teacher, setTeacher] = useState(editItem?.teacher ? String(editItem.teacher) : "");
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -43,11 +50,47 @@ export default function AddLiveClassModal({
     return () => URL.revokeObjectURL(url);
   }, [thumbnail]);
 
-  const [createClass, { isLoading }] = useCreateClassMutation();
+  const [createClass, { isLoading: isCreating }] = useCreateClassMutation();
+  const [updateClass, { isLoading: isUpdating }] = useUpdateClassMutation();
+  const isLoading = isCreating || isUpdating;
 
   const handleSave = async () => {
     setError(null);
     try {
+      if (isEdit && editItem) {
+        // Text fields via JSON PATCH; a new thumbnail (if picked) goes via FormData.
+        if (thumbnail) {
+          const formData = new FormData();
+          formData.append("title", title);
+          formData.append("class_date", classDate);
+          formData.append("start_time", startTime);
+          formData.append("live_url", liveUrl);
+          if (teacher) formData.append("teacher", teacher);
+          formData.append("thumbnail", thumbnail);
+          await updateClass({ id: editItem.id, data: formData }).unwrap();
+        } else {
+          await updateClass({
+            id: editItem.id,
+            data: teacher
+              ? {
+                  title,
+                  class_date: classDate,
+                  start_time: startTime,
+                  live_url: liveUrl,
+                  teacher: Number(teacher),
+                }
+              : {
+                  title,
+                  class_date: classDate,
+                  start_time: startTime,
+                  live_url: liveUrl,
+                },
+          }).unwrap();
+        }
+        onClose();
+        return;
+      }
+
       const formData = new FormData();
       formData.append("course", String(courseId));
       formData.append("title", title);
@@ -70,7 +113,9 @@ export default function AddLiveClassModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-800/95 p-4">
       <div className="w-full max-w-[560px] rounded-[20px] border border-white/5 bg-gray-900/75 p-7 shadow-[0px_15px_30px_0px_rgba(59,130,246,0.46)]">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-slate-50">লাইভ ক্লাস যোগ করুন</h2>
+          <h2 className="text-base font-bold text-slate-50">
+            {isEdit ? "লাইভ ক্লাস সম্পাদনা" : "লাইভ ক্লাস যোগ করুন"}
+          </h2>
           <button
             type="button"
             onClick={onClose}

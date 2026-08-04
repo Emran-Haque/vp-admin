@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { X, Save, AlertTriangle } from "lucide-react";
-import { useCreateResourceMutation, type CourseResource } from "@/redux/api/resourcesApi";
+import {
+  useCreateResourceMutation,
+  useUpdateResourceMutation,
+  type CourseResource,
+} from "@/redux/api/resourcesApi";
 import { extractErrorMessage } from "@/lib/api-error";
 
 const resourceTypes: { value: CourseResource["resource_type"]; label: string }[] = [
@@ -19,6 +23,7 @@ type AddResourceModalProps = {
   courseId: number;
   initialSubjectId?: number;
   initialSubjectName?: string;
+  editItem?: CourseResource;
   onClose: () => void;
 };
 
@@ -26,18 +31,36 @@ export default function AddResourceModal({
   courseId,
   initialSubjectId,
   initialSubjectName,
+  editItem,
   onClose,
 }: AddResourceModalProps) {
-  const [title, setTitle] = useState("");
-  const [resourceType, setResourceType] = useState<CourseResource["resource_type"]>("pdf");
-  const [externalLink, setExternalLink] = useState("");
+  const isEdit = Boolean(editItem);
+  const [title, setTitle] = useState(editItem?.title ?? "");
+  const [resourceType, setResourceType] = useState<CourseResource["resource_type"]>(
+    editItem?.resource_type ?? "pdf",
+  );
+  const [externalLink, setExternalLink] = useState(editItem?.external_link ?? "");
   const [error, setError] = useState<string | null>(null);
 
-  const [createResource, { isLoading }] = useCreateResourceMutation();
+  const [createResource, { isLoading: isCreating }] = useCreateResourceMutation();
+  const [updateResource, { isLoading: isUpdating }] = useUpdateResourceMutation();
+  const isLoading = isCreating || isUpdating;
 
   const handleSave = async () => {
     setError(null);
     try {
+      if (isEdit && editItem) {
+        await updateResource({
+          id: editItem.id,
+          data: {
+            title,
+            resource_type: resourceType,
+            external_link: externalLink,
+          },
+        }).unwrap();
+        onClose();
+        return;
+      }
       await createResource({
         course: courseId,
         title,
@@ -55,7 +78,9 @@ export default function AddResourceModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-800/95 p-4">
       <div className="w-full max-w-[560px] rounded-[20px] border border-white/5 bg-gray-900/75 p-7 shadow-[0px_15px_30px_0px_rgba(59,130,246,0.46)]">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-slate-50">রিসোর্স যোগ করুন</h2>
+          <h2 className="text-base font-bold text-slate-50">
+            {isEdit ? "রিসোর্স সম্পাদনা" : "রিসোর্স যোগ করুন"}
+          </h2>
           <button
             type="button"
             onClick={onClose}

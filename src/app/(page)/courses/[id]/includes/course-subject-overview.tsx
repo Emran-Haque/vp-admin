@@ -8,19 +8,33 @@ import {
   ClipboardCheck,
   ClipboardList,
   FileText,
+  Pencil,
   Plus,
   Radio,
+  Trash2,
   Video,
   type LucideIcon,
 } from "lucide-react";
-import { useGetAssignmentsQuery, type Assignment } from "@/redux/api/assignmentsApi";
-import { useGetClassesQuery, type CourseClass } from "@/redux/api/classesApi";
+import {
+  useGetAssignmentsQuery,
+  useDeleteAssignmentMutation,
+  type Assignment,
+} from "@/redux/api/assignmentsApi";
+import {
+  useGetClassesQuery,
+  useDeleteClassMutation,
+  type CourseClass,
+} from "@/redux/api/classesApi";
 import {
   useGetCourseSubjectsQuery,
   type CourseSubject,
 } from "@/redux/api/courseSubjectsApi";
 import { useGetExamsQuery, type Exam } from "@/redux/api/examsApi";
-import { useGetResourcesQuery, type CourseResource } from "@/redux/api/resourcesApi";
+import {
+  useGetResourcesQuery,
+  useDeleteResourceMutation,
+  type CourseResource,
+} from "@/redux/api/resourcesApi";
 import AddExamModal from "./add-exam-modal";
 import AddLiveClassModal from "./add-live-class-modal";
 import AddRecordingModal from "./add-recording-modal";
@@ -39,6 +53,11 @@ type SubjectBundle = {
   assignments: Assignment[];
   exams: Exam[];
 };
+
+type EditTarget =
+  | { type: "lectures" | "live"; item: CourseClass }
+  | { type: "notes"; item: CourseResource }
+  | { type: "assignments"; item: Assignment };
 
 const GENERAL_SUBJECT = "সাধারণ";
 
@@ -154,6 +173,18 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
 
   const closeModal = () => setModal(null);
 
+  const [editTarget, setEditTarget] = useState<EditTarget | null>(null);
+  const [deleteClass] = useDeleteClassMutation();
+  const [deleteResource] = useDeleteResourceMutation();
+  const [deleteAssignment] = useDeleteAssignmentMutation();
+
+  const handleDelete = (tab: SubjectTab, id: number, title: string) => {
+    if (!confirm(`"${title}" মুছে ফেলতে চান?`)) return;
+    if (tab === "lectures" || tab === "live") deleteClass(id);
+    else if (tab === "notes") deleteResource(id);
+    else if (tab === "assignments") deleteAssignment(id);
+  };
+
   return (
     <section className="rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -267,6 +298,8 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
                 activeTab={activeTab}
                 bundle={selectedBundle}
                 courseId={courseId}
+                onEdit={setEditTarget}
+                onDelete={handleDelete}
               />
             </div>
           ) : null}
@@ -311,6 +344,36 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
           initialSubjectId={selectedBundle.subject.id}
           initialSubjectName={selectedBundle.subject.name}
           onClose={closeModal}
+        />
+      ) : null}
+
+      {/* Edit modals — reuse the add modals in edit mode. */}
+      {editTarget?.type === "lectures" ? (
+        <AddRecordingModal
+          courseId={courseId}
+          editItem={editTarget.item}
+          onClose={() => setEditTarget(null)}
+        />
+      ) : null}
+      {editTarget?.type === "live" ? (
+        <AddLiveClassModal
+          courseId={courseId}
+          editItem={editTarget.item}
+          onClose={() => setEditTarget(null)}
+        />
+      ) : null}
+      {editTarget?.type === "notes" ? (
+        <AddResourceModal
+          courseId={courseId}
+          editItem={editTarget.item}
+          onClose={() => setEditTarget(null)}
+        />
+      ) : null}
+      {editTarget?.type === "assignments" ? (
+        <AddAssignmentModal
+          courseId={courseId}
+          editItem={editTarget.item}
+          onClose={() => setEditTarget(null)}
         />
       ) : null}
     </section>
@@ -415,10 +478,14 @@ function SubjectTabContent({
   activeTab,
   bundle,
   courseId,
+  onEdit,
+  onDelete,
 }: {
   activeTab: SubjectTab;
   bundle: SubjectBundle;
   courseId: number;
+  onEdit: (target: EditTarget) => void;
+  onDelete: (tab: SubjectTab, id: number, title: string) => void;
 }) {
   if (activeTab === "lectures") {
     return (
@@ -428,6 +495,8 @@ function SubjectTabContent({
           id: item.id,
           title: item.title,
           meta: `${item.videos.length}টি ভিডিও · ${item.class_materials.length}টি ম্যাটেরিয়াল`,
+          onEdit: () => onEdit({ type: "lectures", item }),
+          onDelete: () => onDelete("lectures", item.id, item.title),
         }))}
       />
     );
@@ -441,6 +510,8 @@ function SubjectTabContent({
           id: item.id,
           title: item.title,
           meta: item.class_date || "তারিখ দেওয়া হয়নি",
+          onEdit: () => onEdit({ type: "live", item }),
+          onDelete: () => onDelete("live", item.id, item.title),
         }))}
       />
     );
@@ -454,6 +525,8 @@ function SubjectTabContent({
           id: item.id,
           title: item.title,
           meta: item.resource_type,
+          onEdit: () => onEdit({ type: "notes", item }),
+          onDelete: () => onDelete("notes", item.id, item.title),
         }))}
       />
     );
@@ -467,6 +540,8 @@ function SubjectTabContent({
           id: item.id,
           title: item.title,
           meta: `${item.max_marks} নম্বর · ${item.status}`,
+          onEdit: () => onEdit({ type: "assignments", item }),
+          onDelete: () => onDelete("assignments", item.id, item.title),
         }))}
       />
     );
@@ -493,13 +568,16 @@ function SubjectTabContent({
   );
 }
 
-function ItemList({
-  empty,
-  items,
-}: {
-  empty: string;
-  items: { id: number; title: string; meta: string; href?: string }[];
-}) {
+type ListItem = {
+  id: number;
+  title: string;
+  meta: string;
+  href?: string;
+  onEdit?: () => void;
+  onDelete?: () => void;
+};
+
+function ItemList({ empty, items }: { empty: string; items: ListItem[] }) {
   if (items.length === 0) {
     return (
       <p className="mt-4 rounded-2xl border border-dashed border-slate-800 p-6 text-center text-sm text-slate-400">
@@ -511,26 +589,52 @@ function ItemList({
   return (
     <div className="mt-4 flex flex-col gap-2.5">
       {items.map((item) => {
-        const content = (
-          <>
-            <p className="text-sm font-semibold text-blue-50">{item.title}</p>
+        const body = (
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold text-blue-50">{item.title}</p>
             <p className="mt-1 text-xs text-slate-400">{item.meta}</p>
-          </>
+          </div>
         );
+        const actions =
+          item.onEdit || item.onDelete ? (
+            <div className="flex shrink-0 items-center gap-2">
+              {item.onEdit ? (
+                <button
+                  type="button"
+                  onClick={item.onEdit}
+                  className="flex items-center gap-1 rounded-lg border border-slate-700 px-2.5 py-1.5 text-xs font-semibold text-blue-50 hover:bg-white/5"
+                >
+                  <Pencil size={13} />
+                  সম্পাদনা
+                </button>
+              ) : null}
+              {item.onDelete ? (
+                <button
+                  type="button"
+                  onClick={item.onDelete}
+                  className="flex size-8 items-center justify-center rounded-lg border border-red-600/40 bg-red-600/10 text-red-500 hover:bg-red-600/20"
+                >
+                  <Trash2 size={14} />
+                </button>
+              ) : null}
+            </div>
+          ) : null;
+
         return item.href ? (
           <Link
-            className="rounded-2xl border border-slate-800 bg-slate-950/25 p-4 no-underline hover:bg-white/5"
+            className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-950/25 p-4 no-underline hover:bg-white/5"
             href={item.href}
             key={item.id}
           >
-            {content}
+            {body}
           </Link>
         ) : (
           <div
-            className="rounded-2xl border border-slate-800 bg-slate-950/25 p-4"
+            className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-950/25 p-4"
             key={item.id}
           >
-            {content}
+            {body}
+            {actions}
           </div>
         );
       })}

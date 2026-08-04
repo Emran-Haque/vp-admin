@@ -45,3 +45,17 @@ body {
     color-scheme: dark;
   }
 }
+
+/* The admin UI is always dark. Force <select> dropdowns to render their native
+   <option> popup dark regardless of the OS light/dark setting — otherwise the
+   popup shows a white background on light-mode systems. Scoped to <select> only
+   so the date/time inputs' manual calendar-icon inversion isn't affected. */
+@layer base {
+  select {
+    color-scheme: dark;
+  }
+  option {
+    background-color: #1e293b; /* slate-800 — matches the styled options */
+    color: #e2e8f0; /* slate-200 */
+  }
+}
