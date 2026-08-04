@@ -2,11 +2,12 @@
 
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, Bell, User, X, Mail, Phone, Shield, type LucideIcon } from "lucide-react";
+import { Menu, Bell, User, X, Mail, Phone, Shield, Pencil, Check, type LucideIcon } from "lucide-react";
 import { navItems } from "./nav-items";
 import { useAppSelector } from "@/redux/hooks";
 import { useGetAdminDashboardQuery } from "@/redux/api/dashboardApi";
-import { useGetProfileQuery } from "@/redux/api/authApi";
+import { useGetProfileQuery, useUpdateProfileMutation } from "@/redux/api/authApi";
+import { extractErrorMessage } from "@/lib/api-error";
 
 const ROLE_LABELS: Record<string, string> = {
   super_admin: "সুপার অ্যাডমিন",
@@ -28,9 +29,29 @@ export default function Header() {
   const unread = dashboard?.unread_notifications ?? 0;
 
   // Only the super admin's drawer needs the full profile (incl. phone).
-  const { data: profile } = useGetProfileQuery(undefined, {
+  const { data: profile, refetch } = useGetProfileQuery(undefined, {
     skip: !isSuperAdmin || !drawerOpen,
   });
+  const [updateProfile, { isLoading: savingPhone }] = useUpdateProfileMutation();
+  const [editingPhone, setEditingPhone] = useState(false);
+  const [phoneInput, setPhoneInput] = useState("");
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+
+  const startEditPhone = () => {
+    setPhoneInput(profile?.phone ?? "");
+    setPhoneError(null);
+    setEditingPhone(true);
+  };
+  const savePhone = async () => {
+    setPhoneError(null);
+    try {
+      await updateProfile({ phone: phoneInput.trim() }).unwrap();
+      await refetch();
+      setEditingPhone(false);
+    } catch (err) {
+      setPhoneError(extractErrorMessage(err));
+    }
+  };
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-white/5 bg-gray-950/90 px-5">
@@ -106,7 +127,50 @@ export default function Header() {
 
             <div className="mt-6 space-y-2.5">
               <InfoRow icon={Mail} label="ইমেইল" value={profile?.email ?? user?.email ?? "—"} />
-              <InfoRow icon={Phone} label="মোবাইল" value={profile?.phone || "—"} />
+              <div className="rounded-xl border border-white/5 bg-white/[0.03] p-3">
+                <div className="flex items-center gap-3">
+                  <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-blue-300">
+                    <Phone size={16} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-semibold text-slate-400">মোবাইল</p>
+                    {editingPhone ? (
+                      <input
+                        type="tel"
+                        value={phoneInput}
+                        onChange={(e) => setPhoneInput(e.target.value)}
+                        placeholder="01XXXXXXXXX"
+                        className="mt-1 w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-sm text-white focus:outline-none"
+                      />
+                    ) : (
+                      <p className="truncate text-sm font-bold text-white">{profile?.phone || "—"}</p>
+                    )}
+                  </div>
+                  {editingPhone ? (
+                    <button
+                      type="button"
+                      onClick={savePhone}
+                      disabled={savingPhone}
+                      className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-500 text-white disabled:opacity-50"
+                      aria-label="সংরক্ষণ"
+                    >
+                      <Check size={15} />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={startEditPhone}
+                      className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-300"
+                      aria-label="মোবাইল পরিবর্তন করুন"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                  )}
+                </div>
+                {phoneError ? (
+                  <p className="mt-2 text-xs text-red-400">{phoneError}</p>
+                ) : null}
+              </div>
               <InfoRow
                 icon={Shield}
                 label="ভূমিকা"

@@ -11,6 +11,7 @@ import {
   Link as LinkIcon,
   Plus,
   Save,
+  Search,
   Send,
   Trash2,
   X,
@@ -469,46 +470,168 @@ export function AddAssignmentModal({
 
 export function AssignmentSubmissionsModal({ assignment, onClose }: { assignment: Assignment; onClose: () => void }) {
   const { data, isLoading } = useGetSubmissionsQuery({ assignment: assignment.id });
-  const submissions = data?.results ?? [];
+  const submissions = useMemo(() => data?.results ?? [], [data?.results]);
+  const [filter, setFilter] = useState<"ungraded" | "all" | "graded">("ungraded");
+  const [search, setSearch] = useState("");
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  const filtered = useMemo(() => {
+    let list = submissions;
+    if (filter === "ungraded") list = list.filter((s) => s.status !== "evaluated");
+    else if (filter === "graded") list = list.filter((s) => s.status === "evaluated");
+    const q = search.trim().toLowerCase();
+    if (q) {
+      list = list.filter((s) =>
+        (s.student_name || s.student_email || "").toLowerCase().includes(q),
+      );
+    }
+    return list;
+  }, [submissions, filter, search]);
+
+  const selected = filtered.find((s) => s.id === selectedId) ?? filtered[0] ?? null;
+
+  // ↑/↓ move between students (ignored while typing in a field).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (!filtered.length) return;
+      const idx = filtered.findIndex((s) => s.id === selected?.id);
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSelectedId(filtered[Math.min(idx + 1, filtered.length - 1)].id);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSelectedId(filtered[Math.max(idx - 1, 0)].id);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [filtered, selected]);
+
+  const gradedCount = submissions.filter((s) => s.status === "evaluated").length;
+
+  const filterTabs: [typeof filter, string][] = [
+    ["ungraded", "মূল্যায়ন বাকি"],
+    ["all", "সব"],
+    ["graded", "মূল্যায়িত"],
+  ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-800/95 p-4">
-      <div className="max-h-[92vh] w-full max-w-[760px] overflow-y-auto rounded-[20px] border border-white/5 bg-gray-900/75 p-7 shadow-[0px_15px_30px_0px_rgba(59,130,246,0.46)]">
-        <div className="flex items-center justify-between">
+      <div className="flex h-[88vh] w-full max-w-[1080px] flex-col overflow-hidden rounded-[20px] border border-white/5 bg-gray-900/90 shadow-[0px_15px_30px_0px_rgba(59,130,246,0.46)]">
+        <div className="flex items-center justify-between border-b border-white/5 px-5 py-4">
           <div>
             <h2 className="text-base font-bold text-slate-50">অ্যাসাইনমেন্ট জমা</h2>
-            <p className="mt-1 text-xs text-slate-400">{assignment.title}</p>
+            <p className="mt-0.5 text-xs text-slate-400">
+              {assignment.title} • মূল্যায়িত {gradedCount}/{submissions.length}
+            </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex size-8 cursor-pointer items-center justify-center rounded-lg bg-white/5 text-slate-400"
+            className="flex size-8 items-center justify-center rounded-lg bg-white/5 text-slate-400"
           >
             <X size={16} />
           </button>
         </div>
 
-        <div className="mt-6 flex flex-col gap-3">
-          {isLoading ? (
-            <p className="py-10 text-center text-sm text-slate-400">জমা তালিকা লোড হচ্ছে...</p>
-          ) : submissions.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-800 p-7 text-center">
-              <FileText size={28} className="mx-auto text-slate-500" />
-              <p className="mt-3 text-sm font-semibold text-blue-50">এখনো কেউ জমা দেয়নি</p>
-            </div>
-          ) : (
-            submissions.map((submission) => <SubmissionCard key={submission.id} submission={submission} />)
-          )}
-        </div>
+        {isLoading ? (
+          <p className="py-16 text-center text-sm text-slate-400">জমা তালিকা লোড হচ্ছে...</p>
+        ) : submissions.length === 0 ? (
+          <div className="flex flex-1 flex-col items-center justify-center p-7 text-center">
+            <FileText size={28} className="text-slate-500" />
+            <p className="mt-3 text-sm font-semibold text-blue-50">এখনো কেউ জমা দেয়নি</p>
+          </div>
+        ) : (
+          <div className="flex min-h-0 flex-1">
+            <aside className="flex w-[300px] shrink-0 flex-col border-r border-white/5 max-[720px]:w-[170px]">
+              <div className="border-b border-white/5 p-3">
+                <div className="flex items-center gap-2 rounded-[10px] border border-white/10 bg-white/5 px-2.5">
+                  <Search size={14} className="text-slate-400" />
+                  <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="নাম দিয়ে খুঁজুন"
+                    className="w-full bg-transparent py-2 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none"
+                  />
+                </div>
+                <div className="mt-2 flex gap-1.5">
+                  {filterTabs.map(([key, label]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setFilter(key)}
+                      className={`flex-1 rounded-lg px-2 py-1.5 text-[11px] font-bold transition ${
+                        filter === key
+                          ? "bg-blue-500/20 text-blue-200"
+                          : "bg-white/5 text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="min-h-0 flex-1 overflow-y-auto p-2">
+                {filtered.length === 0 ? (
+                  <p className="p-4 text-center text-xs text-slate-500">কেউ নেই</p>
+                ) : (
+                  filtered.map((s) => {
+                    const active = s.id === selected?.id;
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setSelectedId(s.id)}
+                        className={`mb-1.5 flex w-full items-center gap-2 rounded-[10px] border p-2.5 text-left transition ${
+                          active
+                            ? "border-blue-500/50 bg-blue-500/10"
+                            : "border-transparent hover:bg-white/[0.04]"
+                        }`}
+                      >
+                        <span
+                          className={`size-2 shrink-0 rounded-full ${
+                            s.status === "evaluated" ? "bg-emerald-400" : "bg-amber-400"
+                          }`}
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-xs font-bold text-blue-50">
+                            {s.student_name || s.student_email || `শিক্ষার্থী #${s.student}`}
+                          </span>
+                          <span className="block truncate text-[10px] text-slate-500">
+                            {s.attachments?.length ?? 0}টি ফাইল • {statusLabels[s.status] ?? s.status}
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </aside>
+
+            <section className="min-h-0 flex-1 overflow-y-auto">
+              {selected ? (
+                <GradingPanel key={selected.id} submission={selected} />
+              ) : (
+                <p className="p-10 text-center text-sm text-slate-500">
+                  একজন শিক্ষার্থী নির্বাচন করুন
+                </p>
+              )}
+            </section>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function SubmissionCard({ submission }: { submission: Submission }) {
+function GradingPanel({ submission }: { submission: Submission }) {
   const [marks, setMarks] = useState(submission.marks_obtained ?? "");
   const [comment, setComment] = useState(submission.teacher_comment ?? "");
-  const [status, setStatus] = useState<Submission["status"]>(submission.status);
+  const [status, setStatus] = useState<Submission["status"]>(
+    submission.status === "submitted" ? "evaluated" : submission.status,
+  );
   const [error, setError] = useState<string | null>(null);
   const [evaluateSubmission, { isLoading }] = useEvaluateSubmissionMutation();
   const { hasPermission } = usePermissions();
@@ -519,22 +642,20 @@ function SubmissionCard({ submission }: { submission: Submission }) {
     try {
       await evaluateSubmission({
         id: submission.id,
-        data: {
-          marks_obtained: marks || "0",
-          teacher_comment: comment,
-          status,
-        },
+        data: { marks_obtained: marks || "0", teacher_comment: comment, status },
       }).unwrap();
+      // With the default "মূল্যায়ন বাকি" filter, a graded student drops out of the
+      // list and the panel auto-advances to the next ungraded one.
     } catch (err) {
       setError(extractErrorMessage(err));
     }
   };
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-gray-900/40 p-4">
+    <div className="p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-blue-50">
+          <p className="text-sm font-bold text-blue-50">
             {submission.student_name || submission.student_email || `শিক্ষার্থী #${submission.student}`}
           </p>
           <p className="mt-1 text-xs text-slate-400">
@@ -544,7 +665,7 @@ function SubmissionCard({ submission }: { submission: Submission }) {
         </div>
         <span
           className={`rounded-full px-3 py-1 text-[11px] font-semibold outline outline-1 outline-offset-[-1px] ${getStatusClass(
-            submission.status
+            submission.status,
           )}`}
         >
           {statusLabels[submission.status] ?? submission.status}
@@ -552,8 +673,10 @@ function SubmissionCard({ submission }: { submission: Submission }) {
       </div>
 
       <p className="mt-2 text-xs text-slate-400">
-        মাধ্যম: <span className="font-semibold text-blue-50">{submission.source === "telegram" ? "Telegram" : "ওয়েবসাইট"}</span>
-        {submission.original_filename ? ` • ${submission.original_filename}` : ""}
+        মাধ্যম:{" "}
+        <span className="font-semibold text-blue-50">
+          {submission.source === "telegram" ? "Telegram" : "ওয়েবসাইট"}
+        </span>
       </p>
 
       <div className="mt-3 flex flex-wrap gap-2">
@@ -582,7 +705,7 @@ function SubmissionCard({ submission }: { submission: Submission }) {
       </div>
 
       {attachments.length > 0 && (
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {attachments.map((attachment) => (
             <SubmissionAttachmentCard attachment={attachment} key={attachment.id} />
           ))}
@@ -596,52 +719,46 @@ function SubmissionCard({ submission }: { submission: Submission }) {
       )}
 
       {hasPermission("can_evaluate_assignments") && (
-        <div className="mt-4 grid gap-3 sm:grid-cols-[120px_160px_1fr_auto]">
-          <input
-            type="number"
-            min="0"
-            value={marks}
-            onChange={(e) => setMarks(e.target.value)}
-            placeholder="নম্বর"
-            className="rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 placeholder:text-slate-200/50 focus:outline-none"
-          />
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as Submission["status"])}
-            className="cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
-          >
-            <option value="submitted" className="bg-slate-800 text-slate-200">
-              জমা হয়েছে
-            </option>
-            <option value="evaluated" className="bg-slate-800 text-slate-200">
-              মূল্যায়িত
-            </option>
-            <option value="late" className="bg-slate-800 text-slate-200">
-              দেরিতে জমা
-            </option>
-            <option value="rejected" className="bg-slate-800 text-slate-200">
-              বাতিল
-            </option>
-          </select>
-          <input
-            type="text"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="শিক্ষকের মন্তব্য"
-            className="rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 placeholder:text-slate-200/50 focus:outline-none"
-          />
+        <div className="mt-5 rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
+          <p className="mb-3 text-xs font-bold text-slate-300">মূল্যায়ন</p>
+          <div className="grid gap-3 sm:grid-cols-[120px_170px_1fr]">
+            <input
+              type="number"
+              min="0"
+              value={marks}
+              onChange={(e) => setMarks(e.target.value)}
+              placeholder="নম্বর"
+              className="rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 placeholder:text-slate-200/50 focus:outline-none"
+            />
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value as Submission["status"])}
+              className="cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
+            >
+              <option value="submitted">জমা হয়েছে</option>
+              <option value="evaluated">মূল্যায়িত</option>
+              <option value="late">দেরিতে জমা</option>
+              <option value="rejected">বাতিল</option>
+            </select>
+            <input
+              type="text"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="শিক্ষকের মন্তব্য"
+              className="rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 placeholder:text-slate-200/50 focus:outline-none"
+            />
+          </div>
           <button
             type="button"
             onClick={handleEvaluate}
             disabled={isLoading}
-            className="rounded-[10px] bg-gradient-to-br from-blue-500 to-blue-600 px-4 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-3 rounded-[10px] bg-gradient-to-br from-blue-500 to-blue-600 px-4 py-2.5 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isLoading ? "সংরক্ষণ হচ্ছে..." : "মূল্যায়ন করুন"}
+            {isLoading ? "সংরক্ষণ হচ্ছে..." : "মূল্যায়ন সংরক্ষণ করুন"}
           </button>
+          {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
         </div>
       )}
-
-      {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
     </div>
   );
 }
