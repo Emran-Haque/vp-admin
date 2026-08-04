@@ -360,47 +360,48 @@ export function AddAssignmentModal({
             />
           </div>
 
-          <div className="grid gap-3.5 sm:grid-cols-2">
-            <div>
-              <label className="block pb-1.5 text-xs font-semibold text-slate-400">ক্লাস</label>
-              <select
-                value={courseClassId}
-                onChange={(e) => {
-                  setCourseClassId(e.target.value);
-                  setSubjectId("");
-                }}
-                className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
-              >
-                <option value="" className="bg-slate-800 text-slate-200">
-                  সব ক্লাস / কোনো ক্লাস নয়
-                </option>
-                {classes.map((item) => (
-                  <option key={item.id} value={item.id} className="bg-slate-800 text-slate-200">
-                    {item.title}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {!initialSubjectId ? (
+            <div className="grid gap-3.5 sm:grid-cols-2">
+              <div>
+                <label className="block pb-1.5 text-xs font-semibold text-slate-400">ক্লাস (ঐচ্ছিক)</label>
+                <select
+                  value={courseClassId}
+                  onChange={(e) => {
+                    const cid = e.target.value;
+                    setCourseClassId(cid);
+                    // Follow the selected class's subject instead of clearing it,
+                    // so the assignment never loses its subject.
+                    const cls = classes.find((c) => String(c.id) === cid);
+                    if (cls?.subject) setSubjectId(String(cls.subject));
+                  }}
+                  className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
+                >
+                  <option value="">সব ক্লাস / কোনো ক্লাস নয়</option>
+                  {classes.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div>
-              <label className="block pb-1.5 text-xs font-semibold text-slate-400">বিষয়</label>
-              <select
-                value={subjectId}
-                onChange={(e) => setSubjectId(e.target.value)}
-                disabled={Boolean(initialSubjectId)}
-                className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
-              >
-                <option value="" className="bg-slate-800 text-slate-200">
-                  কোনো বিষয় নয়
-                </option>
-                {subjectOptions.map((subject) => (
-                  <option key={subject.id} value={subject.id} className="bg-slate-800 text-slate-200">
-                    {subject.name}
-                  </option>
-                ))}
-              </select>
+              <div>
+                <label className="block pb-1.5 text-xs font-semibold text-slate-400">বিষয়</label>
+                <select
+                  value={subjectId}
+                  onChange={(e) => setSubjectId(e.target.value)}
+                  className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
+                >
+                  <option value="">কোনো বিষয় নয়</option>
+                  {subjectOptions.map((subject) => (
+                    <option key={subject.id} value={subject.id}>
+                      {subject.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-          </div>
+          ) : null}
 
           <div className="grid gap-3.5 sm:grid-cols-3">
             <div>
@@ -466,7 +467,7 @@ export function AddAssignmentModal({
   );
 }
 
-function AssignmentSubmissionsModal({ assignment, onClose }: { assignment: Assignment; onClose: () => void }) {
+export function AssignmentSubmissionsModal({ assignment, onClose }: { assignment: Assignment; onClose: () => void }) {
   const { data, isLoading } = useGetSubmissionsQuery({ assignment: assignment.id });
   const submissions = data?.results ?? [];
 

@@ -7,6 +7,7 @@ import {
   useUpdateClassMutation,
   type CourseClass,
 } from "@/redux/api/classesApi";
+import { useGetCourseSubjectsQuery } from "@/redux/api/courseSubjectsApi";
 import { useGetTeachersQuery } from "@/redux/api/contentApi";
 import { extractErrorMessage } from "@/lib/api-error";
 
@@ -31,6 +32,9 @@ export default function AddLiveClassModal({
   const [startTime, setStartTime] = useState(editItem?.start_time?.slice(0, 5) ?? "");
   const [liveUrl, setLiveUrl] = useState(editItem?.live_url ?? "");
   const [teacher, setTeacher] = useState(editItem?.teacher ? String(editItem.teacher) : "");
+  const [subjectId, setSubjectId] = useState(
+    editItem?.subject ? String(editItem.subject) : "",
+  );
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -38,6 +42,8 @@ export default function AddLiveClassModal({
 
   const { data: teachersData } = useGetTeachersQuery();
   const teachers = teachersData?.results ?? [];
+  const { data: subjectsData } = useGetCourseSubjectsQuery({ course: courseId });
+  const subjects = subjectsData?.results ?? [];
 
   useEffect(() => {
     if (!thumbnail) {
@@ -66,26 +72,21 @@ export default function AddLiveClassModal({
           formData.append("start_time", startTime);
           formData.append("live_url", liveUrl);
           if (teacher) formData.append("teacher", teacher);
+          if (subjectId) formData.append("subject", subjectId);
           formData.append("thumbnail", thumbnail);
           await updateClass({ id: editItem.id, data: formData }).unwrap();
         } else {
-          await updateClass({
-            id: editItem.id,
-            data: teacher
-              ? {
-                  title,
-                  class_date: classDate,
-                  start_time: startTime,
-                  live_url: liveUrl,
-                  teacher: Number(teacher),
-                }
-              : {
-                  title,
-                  class_date: classDate,
-                  start_time: startTime,
-                  live_url: liveUrl,
-                },
-          }).unwrap();
+          const data: Partial<
+            Omit<CourseClass, "id" | "videos" | "class_materials" | "quizzes">
+          > = {
+            title,
+            class_date: classDate,
+            start_time: startTime,
+            live_url: liveUrl,
+          };
+          if (teacher) data.teacher = Number(teacher);
+          if (subjectId) data.subject = subjectId;
+          await updateClass({ id: editItem.id, data }).unwrap();
         }
         onClose();
         return;
@@ -136,6 +137,24 @@ export default function AddLiveClassModal({
           {initialSubjectName ? (
             <div className="rounded-[10px] border border-blue-500/25 bg-blue-500/10 px-3.5 py-2 text-xs font-semibold text-blue-100">
               বিষয়: {initialSubjectName}
+            </div>
+          ) : null}
+
+          {isEdit ? (
+            <div>
+              <label className="block pb-1.5 text-xs font-semibold text-slate-400">বিষয়</label>
+              <select
+                value={subjectId}
+                onChange={(e) => setSubjectId(e.target.value)}
+                className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
+              >
+                <option value="">কোনো বিষয় নয়</option>
+                {subjects.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
             </div>
           ) : null}
 
