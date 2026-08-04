@@ -2,11 +2,13 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
   BookOpen,
   ClipboardCheck,
   ClipboardList,
+  Eye,
   FileText,
   Pencil,
   Plus,
@@ -29,7 +31,11 @@ import {
   useGetCourseSubjectsQuery,
   type CourseSubject,
 } from "@/redux/api/courseSubjectsApi";
-import { useGetExamsQuery, type Exam } from "@/redux/api/examsApi";
+import {
+  useGetExamsQuery,
+  useDeleteExamMutation,
+  type Exam,
+} from "@/redux/api/examsApi";
 import {
   useGetResourcesQuery,
   useDeleteResourceMutation,
@@ -39,7 +45,10 @@ import AddExamModal from "./add-exam-modal";
 import AddLiveClassModal from "./add-live-class-modal";
 import AddRecordingModal from "./add-recording-modal";
 import AddResourceModal from "./add-resource-modal";
-import { AddAssignmentModal } from "../../includes/assignments-panel";
+import {
+  AddAssignmentModal,
+  AssignmentSubmissionsModal,
+} from "../../includes/assignments-panel";
 
 type SubjectTab = "lectures" | "live" | "notes" | "assignments" | "mcq";
 type ModalKey = "recording" | "live" | "resource" | "assignment" | "exam" | null;
@@ -135,11 +144,14 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
         const subjectClasses = classes.filter((item) =>
           sameSubject(item.subject, subject, subjects),
         );
+        const recordedClasses = subjectClasses.filter((item) => !item.is_live);
         return {
           subject,
-          classes: subjectClasses,
+          // Lectures are recorded (non-live) classes only; live classes live in
+          // their own tab so they don't double-show in the lecture list.
+          classes: recordedClasses,
           liveClasses: subjectClasses.filter((item) => item.is_live),
-          recordings: subjectClasses.reduce((sum, item) => sum + item.videos.length, 0),
+          recordings: recordedClasses.reduce((sum, item) => sum + item.videos.length, 0),
           resources: resources.filter((item) => sameSubject(item.subject, subject, subjects)),
           assignments: assignments.filter((item) =>
             sameSubject(item.subject ?? item.subject_name, subject, subjects),
@@ -171,18 +183,34 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
     );
   }, [assignments, classes, exams, resources, subjects]);
 
+  // The actual unassigned items (no subject) so admins can fix them in place.
+  const unassignedItems = useMemo(() => {
+    const isGen = (v: unknown) => cleanSubject(v, subjects) === GENERAL_SUBJECT;
+    return {
+      lectures: classes.filter((c) => !c.is_live && isGen(c.subject)),
+      live: classes.filter((c) => c.is_live && isGen(c.subject)),
+      notes: resources.filter((r) => isGen(r.subject)),
+      assignments: assignments.filter((a) => isGen(a.subject ?? a.subject_name)),
+      exams: exams.filter((e) => isGen(e.subject)),
+    };
+  }, [assignments, classes, exams, resources, subjects]);
+
   const closeModal = () => setModal(null);
 
+  const router = useRouter();
   const [editTarget, setEditTarget] = useState<EditTarget | null>(null);
+  const [viewSubmissions, setViewSubmissions] = useState<Assignment | null>(null);
   const [deleteClass] = useDeleteClassMutation();
   const [deleteResource] = useDeleteResourceMutation();
   const [deleteAssignment] = useDeleteAssignmentMutation();
+  const [deleteExam] = useDeleteExamMutation();
 
   const handleDelete = (tab: SubjectTab, id: number, title: string) => {
     if (!confirm(`"${title}" মুছে ফেলতে চান?`)) return;
     if (tab === "lectures" || tab === "live") deleteClass(id);
     else if (tab === "notes") deleteResource(id);
     else if (tab === "assignments") deleteAssignment(id);
+    else if (tab === "mcq") deleteExam(id);
   };
 
   return (
@@ -256,6 +284,97 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
             </div>
           ) : null}
 
+          {unassignedItems.lectures.length +
+            unassignedItems.live.length +
+            unassignedItems.notes.length +
+            unassignedItems.assignments.length +
+            unassignedItems.exams.length >
+          0 ? (
+            <div className="mt-3 rounded-2xl border border-amber-500/25 bg-amber-500/[0.04] p-4">
+              <p className="text-sm font-bold text-amber-100">
+                বিষয়হীন কন্টেন্ট — সম্পাদনা করে বিষয় দিন
+              </p>
+              <div className="mt-3 space-y-4">
+                {unassignedItems.lectures.length > 0 ? (
+                  <div>
+                    <p className="mb-1.5 text-xs font-semibold text-slate-400">লেকচার</p>
+                    <ItemList
+                      empty=""
+                      items={unassignedItems.lectures.map((item) => ({
+                        id: item.id,
+                        title: item.title,
+                        meta: `${item.videos.length}টি ভিডিও`,
+                        onEdit: () => setEditTarget({ type: "lectures", item }),
+                        onDelete: () => handleDelete("lectures", item.id, item.title),
+                      }))}
+                    />
+                  </div>
+                ) : null}
+                {unassignedItems.live.length > 0 ? (
+                  <div>
+                    <p className="mb-1.5 text-xs font-semibold text-slate-400">লাইভ ক্লাস</p>
+                    <ItemList
+                      empty=""
+                      items={unassignedItems.live.map((item) => ({
+                        id: item.id,
+                        title: item.title,
+                        meta: item.class_date || "—",
+                        onEdit: () => setEditTarget({ type: "live", item }),
+                        onDelete: () => handleDelete("live", item.id, item.title),
+                      }))}
+                    />
+                  </div>
+                ) : null}
+                {unassignedItems.notes.length > 0 ? (
+                  <div>
+                    <p className="mb-1.5 text-xs font-semibold text-slate-400">নোট/রিসোর্স</p>
+                    <ItemList
+                      empty=""
+                      items={unassignedItems.notes.map((item) => ({
+                        id: item.id,
+                        title: item.title,
+                        meta: item.resource_type,
+                        onEdit: () => setEditTarget({ type: "notes", item }),
+                        onDelete: () => handleDelete("notes", item.id, item.title),
+                      }))}
+                    />
+                  </div>
+                ) : null}
+                {unassignedItems.assignments.length > 0 ? (
+                  <div>
+                    <p className="mb-1.5 text-xs font-semibold text-slate-400">অ্যাসাইনমেন্ট</p>
+                    <ItemList
+                      empty=""
+                      items={unassignedItems.assignments.map((item) => ({
+                        id: item.id,
+                        title: item.title,
+                        meta: `${item.max_marks} নম্বর`,
+                        onView: () => setViewSubmissions(item),
+                        onEdit: () => setEditTarget({ type: "assignments", item }),
+                        onDelete: () => handleDelete("assignments", item.id, item.title),
+                      }))}
+                    />
+                  </div>
+                ) : null}
+                {unassignedItems.exams.length > 0 ? (
+                  <div>
+                    <p className="mb-1.5 text-xs font-semibold text-slate-400">MCQ পরীক্ষা</p>
+                    <ItemList
+                      empty=""
+                      items={unassignedItems.exams.map((item) => ({
+                        id: item.id,
+                        title: item.title,
+                        meta: `${item.total_questions} প্রশ্ন`,
+                        onEdit: () => router.push(`/mcq/${item.id}/edit`),
+                        onDelete: () => handleDelete("mcq", item.id, item.title),
+                      }))}
+                    />
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+
           {selectedBundle ? (
             <div className="mt-5 rounded-2xl border border-slate-800 bg-gray-900/40 p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -300,6 +419,7 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
                 courseId={courseId}
                 onEdit={setEditTarget}
                 onDelete={handleDelete}
+                onViewSubmissions={setViewSubmissions}
               />
             </div>
           ) : null}
@@ -374,6 +494,13 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
           courseId={courseId}
           editItem={editTarget.item}
           onClose={() => setEditTarget(null)}
+        />
+      ) : null}
+
+      {viewSubmissions ? (
+        <AssignmentSubmissionsModal
+          assignment={viewSubmissions}
+          onClose={() => setViewSubmissions(null)}
         />
       ) : null}
     </section>
@@ -480,13 +607,17 @@ function SubjectTabContent({
   courseId,
   onEdit,
   onDelete,
+  onViewSubmissions,
 }: {
   activeTab: SubjectTab;
   bundle: SubjectBundle;
   courseId: number;
   onEdit: (target: EditTarget) => void;
   onDelete: (tab: SubjectTab, id: number, title: string) => void;
+  onViewSubmissions: (assignment: Assignment) => void;
 }) {
+  const router = useRouter();
+
   if (activeTab === "lectures") {
     return (
       <ItemList
@@ -540,6 +671,7 @@ function SubjectTabContent({
           id: item.id,
           title: item.title,
           meta: `${item.max_marks} নম্বর · ${item.status}`,
+          onView: () => onViewSubmissions(item),
           onEdit: () => onEdit({ type: "assignments", item }),
           onDelete: () => onDelete("assignments", item.id, item.title),
         }))}
@@ -555,7 +687,8 @@ function SubjectTabContent({
           id: item.id,
           title: item.title,
           meta: `${item.total_questions} প্রশ্ন · ${item.duration_minutes} মিনিট`,
-          href: `/mcq/${item.id}/edit`,
+          onEdit: () => router.push(`/mcq/${item.id}/edit`),
+          onDelete: () => onDelete("mcq", item.id, item.title),
         }))}
       />
       <Link
@@ -573,6 +706,7 @@ type ListItem = {
   title: string;
   meta: string;
   href?: string;
+  onView?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
 };
@@ -596,8 +730,18 @@ function ItemList({ empty, items }: { empty: string; items: ListItem[] }) {
           </div>
         );
         const actions =
-          item.onEdit || item.onDelete ? (
+          item.onView || item.onEdit || item.onDelete ? (
             <div className="flex shrink-0 items-center gap-2">
+              {item.onView ? (
+                <button
+                  type="button"
+                  onClick={item.onView}
+                  className="flex items-center gap-1 rounded-lg border border-slate-700 px-2.5 py-1.5 text-xs font-semibold text-blue-50 hover:bg-white/5"
+                >
+                  <Eye size={13} />
+                  জমা দেখা
+                </button>
+              ) : null}
               {item.onEdit ? (
                 <button
                   type="button"

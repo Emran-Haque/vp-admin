@@ -7,6 +7,7 @@ import {
   useUpdateResourceMutation,
   type CourseResource,
 } from "@/redux/api/resourcesApi";
+import { useGetCourseSubjectsQuery } from "@/redux/api/courseSubjectsApi";
 import { extractErrorMessage } from "@/lib/api-error";
 
 const resourceTypes: { value: CourseResource["resource_type"]; label: string }[] = [
@@ -40,7 +41,13 @@ export default function AddResourceModal({
     editItem?.resource_type ?? "pdf",
   );
   const [externalLink, setExternalLink] = useState(editItem?.external_link ?? "");
+  const [subjectId, setSubjectId] = useState(
+    editItem?.subject ? String(editItem.subject) : "",
+  );
   const [error, setError] = useState<string | null>(null);
+
+  const { data: subjectsData } = useGetCourseSubjectsQuery({ course: courseId });
+  const subjects = subjectsData?.results ?? [];
 
   const [createResource, { isLoading: isCreating }] = useCreateResourceMutation();
   const [updateResource, { isLoading: isUpdating }] = useUpdateResourceMutation();
@@ -56,6 +63,7 @@ export default function AddResourceModal({
             title,
             resource_type: resourceType,
             external_link: externalLink,
+            subject: subjectId ? Number(subjectId) : null,
           },
         }).unwrap();
         onClose();
@@ -101,6 +109,24 @@ export default function AddResourceModal({
           {initialSubjectName ? (
             <div className="rounded-[10px] border border-blue-500/25 bg-blue-500/10 px-3.5 py-2 text-xs font-semibold text-blue-100">
               বিষয়: {initialSubjectName}
+            </div>
+          ) : null}
+
+          {isEdit ? (
+            <div>
+              <label className="block pb-1.5 text-xs font-semibold text-slate-400">বিষয়</label>
+              <select
+                value={subjectId}
+                onChange={(e) => setSubjectId(e.target.value)}
+                className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
+              >
+                <option value="">কোনো বিষয় নয়</option>
+                {subjects.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
             </div>
           ) : null}
 

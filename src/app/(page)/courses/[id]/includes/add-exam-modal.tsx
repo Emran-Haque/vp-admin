@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { X, Save, AlertTriangle } from "lucide-react";
 import { useCreateExamMutation } from "@/redux/api/examsApi";
 import { extractErrorMessage } from "@/lib/api-error";
@@ -23,12 +24,13 @@ export default function AddExamModal({
   const [examDate, setExamDate] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  const router = useRouter();
   const [createExam, { isLoading }] = useCreateExamMutation();
 
   const handleSave = async () => {
     setError(null);
     try {
-      await createExam({
+      const created = await createExam({
         course: courseId,
         title,
         subject: initialSubjectId ?? null,
@@ -36,6 +38,9 @@ export default function AddExamModal({
         exam_date: examDate,
       }).unwrap();
       onClose();
+      // Take the admin straight to the question editor so they can add
+      // questions and publish without hunting for the exam afterwards.
+      router.push(`/mcq/${created.id}/edit`);
     } catch (err) {
       setError(extractErrorMessage(err));
     }
@@ -102,7 +107,7 @@ export default function AddExamModal({
           </div>
 
           <p className="text-xs text-slate-400">
-            পরীক্ষা তৈরির পর প্রশ্ন যোগ করতে ও প্রকাশ করতে &quot;MCQ পরীক্ষা&quot; পেজে যান।
+            পরীক্ষা তৈরির পরপরই প্রশ্ন যোগ ও প্রকাশ করার পেজে নিয়ে যাওয়া হবে।
           </p>
 
           <div className="flex justify-end gap-2.5 pt-2">
