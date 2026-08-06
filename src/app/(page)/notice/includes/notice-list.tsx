@@ -8,6 +8,7 @@ import {
   type Notice,
 } from "@/redux/api/noticesApi";
 import ErrorState from "@/components/error-state";
+import { PageLoader } from "@/components/loaders";
 
 const targetTypeStyles: Record<string, { label: string; icon: typeof Users }> = {
   all: { label: "সবার জন্য", icon: Users },
@@ -46,7 +47,7 @@ export default function NoticeList({ onEdit }: { onEdit: (notice: Notice) => voi
   const [toggleVisibility] = useToggleNoticeVisibilityMutation();
 
   if (isLoading) {
-    return <p className="text-center text-sm text-slate-400">নোটিশের তালিকা লোড হচ্ছে…</p>;
+    return <PageLoader label="নোটিশের তালিকা লোড হচ্ছে…" />;
   }
 
   if (isError) {

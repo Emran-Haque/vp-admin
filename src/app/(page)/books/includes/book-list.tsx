@@ -4,6 +4,7 @@ import { BookOpen, Star, Pencil, Trash2, User, Building2 } from "lucide-react";
 import { useGetBooksQuery, useDeleteBookMutation, type Book } from "@/redux/api/booksApi";
 import { usePermissions } from "@/hooks/use-permissions";
 import ErrorState from "@/components/error-state";
+import { PageLoader } from "@/components/loaders";
 
 type Props = {
   search: string;
@@ -22,7 +23,7 @@ export default function BookList({ search, category, availability, onEdit }: Pro
   const { hasPermission } = usePermissions();
 
   if (isLoading) {
-    return <p className="text-center text-sm text-slate-400">বইয়ের তালিকা লোড হচ্ছে…</p>;
+    return <PageLoader label="বইয়ের তালিকা লোড হচ্ছে…" />;
   }
 
   if (isError) {

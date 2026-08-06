@@ -8,6 +8,7 @@ import { useAppSelector } from "@/redux/hooks";
 import { useGetAdminDashboardQuery } from "@/redux/api/dashboardApi";
 import { useGetProfileQuery, useUpdateProfileMutation } from "@/redux/api/authApi";
 import { extractErrorMessage } from "@/lib/api-error";
+import { NotificationsDrawer } from "./notifications-drawer";
 
 const ROLE_LABELS: Record<string, string> = {
   super_admin: "সুপার অ্যাডমিন",
@@ -22,6 +23,7 @@ export default function Header() {
   const user = useAppSelector((state) => state.auth.user);
   const isSuperAdmin = user?.role === "super_admin";
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
 
   // Live unread count (replaces the old hardcoded badge). Reuses the cached
   // admin-dashboard query the home page already loads.
@@ -72,7 +74,9 @@ export default function Header() {
       <div className="flex items-center gap-2.5">
         <button
           type="button"
-          className="relative flex size-9 items-center justify-center rounded-[10px] border border-white/5 bg-white/5"
+          onClick={() => setNotifOpen(true)}
+          className="relative flex size-9 cursor-pointer items-center justify-center rounded-[10px] border border-white/5 bg-white/5 hover:bg-white/10"
+          aria-label="নোটিফিকেশন"
         >
           <Bell size={16} className="text-white" />
           {unread > 0 ? (
@@ -180,6 +184,8 @@ export default function Header() {
           </aside>
         </>
       ) : null}
+
+      <NotificationsDrawer open={notifOpen} onClose={() => setNotifOpen(false)} />
     </header>
   );
 }

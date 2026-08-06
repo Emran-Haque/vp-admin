@@ -16,6 +16,7 @@ import { STATUS_PARAMS } from "./status-params";
 import StudentDetailModal from "./student-detail-modal";
 import { useEffect, useState } from "react";
 import ErrorState from "@/components/error-state";
+import { PageLoader } from "@/components/loaders";
 
 export default function StudentList({
   search,
@@ -73,7 +74,7 @@ export default function StudentList({
   const notEnrolledLoading = course === NOT_ENROLLED_VALUE && enrolledAnywhereIds === null;
 
   if (isLoading || notEnrolledLoading) {
-    return <p className="text-center text-sm text-slate-400">শিক্ষার্থীদের তালিকা লোড হচ্ছে…</p>;
+    return <PageLoader label="শিক্ষার্থীদের তালিকা লোড হচ্ছে…" />;
   }
 
   if (isError) {

@@ -8,6 +8,7 @@ import {
   type Teacher,
 } from "@/redux/api/contentApi";
 import ErrorState from "@/components/error-state";
+import { PageLoader } from "@/components/loaders";
 
 const socialIcons: Record<string, typeof Globe> = {
   facebook: Link2,
@@ -22,7 +23,7 @@ export default function TeacherList({ onEdit }: { onEdit: (teacher: Teacher) => 
   const [updateTeacher] = useUpdateTeacherMutation();
 
   if (isLoading) {
-    return <p className="text-center text-sm text-slate-400">শিক্ষকদের তালিকা লোড হচ্ছে…</p>;
+    return <PageLoader label="শিক্ষকদের তালিকা লোড হচ্ছে…" />;
   }
 
   if (isError) {

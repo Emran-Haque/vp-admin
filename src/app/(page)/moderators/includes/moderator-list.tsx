@@ -9,6 +9,7 @@ import {
   type Moderator,
 } from "@/redux/api/moderatorsApi";
 import ErrorState from "@/components/error-state";
+import { PageLoader } from "@/components/loaders";
 
 type Props = {
   search: string;
@@ -22,7 +23,7 @@ export default function ModeratorList({ search, onManagePermissions }: Props) {
   const [reactivateModerator] = useReactivateModeratorMutation();
 
   if (isLoading) {
-    return <p className="text-center text-sm text-slate-400">মডারেটরদের তালিকা লোড হচ্ছে…</p>;
+    return <PageLoader label="মডারেটরদের তালিকা লোড হচ্ছে…" />;
   }
 
   if (isError) {

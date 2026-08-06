@@ -24,6 +24,7 @@ import { useGetBooksQuery } from "@/redux/api/booksApi";
 import { usePermissions } from "@/hooks/use-permissions";
 import ErrorState from "@/components/error-state";
 import { CATEGORY_OPTIONS } from "./add-faq-modal";
+import { PageLoader } from "@/components/loaders";
 
 const CATEGORY_LABELS: Record<string, string> = {
   general: "সাধারণ",
@@ -48,7 +49,7 @@ export default function FaqList({ onEdit }: { onEdit: (faq: Faq) => void }) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   if (isLoading) {
-    return <p className="py-12 text-center text-sm text-slate-400">FAQ তালিকা লোড হচ্ছে…</p>;
+    return <PageLoader label="FAQ তালিকা লোড হচ্ছে…" />;
   }
 
   if (isError) {

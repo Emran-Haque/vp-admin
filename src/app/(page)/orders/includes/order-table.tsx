@@ -4,6 +4,7 @@ import { Eye } from "lucide-react";
 import type { Order } from "@/redux/api/ordersApi";
 import { orderStatuses, paymentStatuses, orderStatusBadge, paymentStatusBadge, statusLabel } from "./status-config";
 import ErrorState from "@/components/error-state";
+import { PageLoader } from "@/components/loaders";
 
 type Props = {
   orders: Order[];
@@ -15,7 +16,7 @@ type Props = {
 
 export default function OrderTable({ orders, isLoading, isError, error, onView }: Props) {
   if (isLoading) {
-    return <p className="p-8 text-center text-sm text-slate-400">অর্ডারের তালিকা লোড হচ্ছে…</p>;
+    return <PageLoader label="অর্ডারের তালিকা লোড হচ্ছে…" />;
   }
 
   if (isError) {

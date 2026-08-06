@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import WizardHeader from "../../create/includes/wizard-header";
 import StepBasicInfo from "../../create/includes/step-basic-info";
-import StepMaterials from "../../create/includes/step-materials";
+import StepMaterials, { validateMaterialTitles } from "../../create/includes/step-materials";
 import StepSubjectsFaqs from "../../create/includes/step-subjects-faqs";
 import StepReview from "../../create/includes/step-review";
 import EditWizardFooter from "./includes/edit-wizard-footer";
@@ -235,6 +235,14 @@ export default function Page() {
     setIsSaving(true);
     setSaveError(null);
     setSaveMessage(null);
+
+    // Block saving materials that were never renamed from their default title.
+    const materialError = validateMaterialTitles(materials);
+    if (materialError) {
+      setSaveError(materialError);
+      setIsSaving(false);
+      return;
+    }
 
     const formData = new FormData();
     formData.append("title", basicInfo.name);

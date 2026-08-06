@@ -23,12 +23,31 @@ const createQuestion = (): QuizQuestion => ({
   correctIndex: null,
 });
 
+// The titles a freshly-added material starts with. Publishing a material still
+// carrying one of these means it was never named, so we block the save.
+export const DEFAULT_MATERIAL_TITLES = ["নতুন পিডিএফ", "নতুন ভিডিও", "নতুন কুইজ"];
+
 const createMaterial = (kind: MaterialKind): MaterialDraft => {
   const id = crypto.randomUUID();
   if (kind === "pdf") return { id, kind, title: "নতুন পিডিএফ", file: null, driveLink: "" };
   if (kind === "video") return { id, kind, title: "নতুন ভিডিও", videoUrl: "" };
   return { id, kind, title: "নতুন কুইজ", questions: [createQuestion()] };
 };
+
+/** Returns an error message if any material has an empty or still-default title
+ *  (so nothing publishes as "নতুন পিডিএফ" etc.), otherwise null. */
+export function validateMaterialTitles(materials: MaterialDraft[]): string | null {
+  for (const material of materials) {
+    const title = material.title.trim();
+    if (!title) {
+      return "প্রতিটি ম্যাটেরিয়ালের একটি নাম দিন।";
+    }
+    if (DEFAULT_MATERIAL_TITLES.includes(title)) {
+      return `ম্যাটেরিয়ালের ডিফল্ট নাম "${title}" পরিবর্তন করে আসল নাম দিন।`;
+    }
+  }
+  return null;
+}
 
 export default function StepMaterials({ materials, courseId, onChange }: Props) {
   const addMaterial = (kind: MaterialKind) => {

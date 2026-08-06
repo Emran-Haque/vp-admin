@@ -23,6 +23,7 @@ import { useGetCoursesQuery } from "@/redux/api/coursesApi";
 import { useGetStudentsQuery } from "@/redux/api/studentsApi";
 import { usePermissions } from "@/hooks/use-permissions";
 import ErrorState from "@/components/error-state";
+import { PageLoader } from "@/components/loaders";
 
 export default function ReviewList({ onEdit }: { onEdit: (review: Review) => void }) {
   const { data, isLoading, isError, error } = useGetReviewsQuery();
@@ -39,7 +40,7 @@ export default function ReviewList({ onEdit }: { onEdit: (review: Review) => voi
   const [filterRating, setFilterRating] = useState<number | 0>(0);
 
   if (isLoading) {
-    return <p className="py-12 text-center text-sm text-slate-400">রিভিউ সমূহের তালিকা লোড হচ্ছে…</p>;
+    return <PageLoader label="রিভিউ সমূহের তালিকা লোড হচ্ছে…" />;
   }
 
   if (isError) {

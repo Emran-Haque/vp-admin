@@ -6,6 +6,7 @@ import { BookOpen, Video, HelpCircle, ClipboardList, Users, Clock, Pencil, Trash
 import { useGetCoursesQuery, useDeleteCourseMutation, useUpdateCourseMutation, type Course } from "@/redux/api/coursesApi";
 import { usePermissions } from "@/hooks/use-permissions";
 import ErrorState from "@/components/error-state";
+import { PageLoader } from "@/components/loaders";
 
 const statusStyles = {
   published: { label: "প্রকাশিত", className: "bg-white text-blue-500 outline-emerald-500/40" },
@@ -46,7 +47,7 @@ export default function CourseList() {
   const router = useRouter();
 
   if (isLoading) {
-    return <p className="text-center text-sm text-slate-400">কোর্সের তালিকা লোড হচ্ছে…</p>;
+    return <PageLoader label="কোর্সের তালিকা লোড হচ্ছে…" />;
   }
 
   if (isError) {

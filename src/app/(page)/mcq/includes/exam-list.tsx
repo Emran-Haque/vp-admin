@@ -10,6 +10,7 @@ import {
 } from "@/redux/api/examsApi";
 import { usePermissions } from "@/hooks/use-permissions";
 import ErrorState from "@/components/error-state";
+import { PageLoader } from "@/components/loaders";
 
 const resultStatusStyles: Record<string, { label: string; className: string }> = {
   published: { label: "ফলাফল প্রকাশিত", className: "border-emerald-500/40 bg-emerald-500/10 text-emerald-500" },
@@ -28,7 +29,7 @@ export default function ExamList() {
   const { hasPermission } = usePermissions();
 
   if (isLoading) {
-    return <p className="text-center text-sm text-slate-400">পরীক্ষার তালিকা লোড হচ্ছে…</p>;
+    return <PageLoader label="পরীক্ষার তালিকা লোড হচ্ছে…" />;
   }
 
   if (isError) {

@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import Sidebar from "@/components/sidebar";
 import Header from "@/components/header";
+import { GlobalLoadingBar } from "@/components/loaders";
 import { useAppSelector } from "@/redux/hooks";
 import { useNavPermissions } from "@/hooks/use-nav-permissions";
 import { navItems, type RouteGuard } from "@/components/nav-items";
@@ -47,6 +48,7 @@ export default function PageLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-zinc-900">
+      <GlobalLoadingBar />
       <Sidebar />
       <div className="flex flex-col md:pl-64">
         <Header />

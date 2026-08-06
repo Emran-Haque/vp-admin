@@ -60,6 +60,7 @@ export const baseApi = createApi({
     "StaticPages",
     "HomeContent",
     "CommunityLinks",
+    "Notifications",
   ],
   endpoints: () => ({}),
 });
