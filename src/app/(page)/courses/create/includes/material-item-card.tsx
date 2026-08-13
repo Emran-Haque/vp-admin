@@ -13,13 +13,15 @@ const badgeConfig: Record<MaterialKind, { label: string; icon: LucideIcon; class
 type Props = {
   item: MaterialDraft;
   courseId?: number;
+  /** 1-based position within its type tab; shown as a numbered chip. */
+  position?: number;
   onUpdate: (patch: Partial<MaterialDraft>) => void;
   onRemove: () => void;
   onAddQuestion: () => void;
   onUpdateQuestion: (questionId: string, patch: Partial<QuizQuestion>) => void;
 };
 
-export default function MaterialItemCard({ item, courseId, onUpdate, onRemove, onAddQuestion, onUpdateQuestion }: Props) {
+export default function MaterialItemCard({ item, courseId, position, onUpdate, onRemove, onAddQuestion, onUpdateQuestion }: Props) {
   const badge = badgeConfig[item.kind];
 
   const { data: examsData, isLoading: isLoadingExams } = useGetExamsQuery(
@@ -32,9 +34,9 @@ export default function MaterialItemCard({ item, courseId, onUpdate, onRemove, o
   return (
     <div className="rounded-2xl border border-slate-800 bg-gray-900/40 p-3.5">
       <div className="flex items-center gap-2">
-        <span className={`flex shrink-0 items-center gap-1.5 rounded-xl px-2 py-1 text-sm font-semibold ${badge.className}`}>
+        <span className={`flex shrink-0 items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-sm font-semibold ${badge.className}`}>
           <badge.icon size={16} />
-          {badge.label}
+          {typeof position === "number" ? position.toLocaleString("bn-BD") : badge.label}
         </span>
         <input
           type="text"

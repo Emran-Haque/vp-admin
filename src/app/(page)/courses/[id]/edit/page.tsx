@@ -537,6 +537,7 @@ export default function Page() {
         title="কোর্স সম্পাদনা করুন"
         subtitle="কোর্সের সব তথ্য, ম্যাটেরিয়াল, সাবজেক্ট ও FAQ সম্পাদনা করুন"
         backHref={`/courses/${courseId}`}
+        onStepChange={setStep}
       />
 
       <EditWizardFooter
