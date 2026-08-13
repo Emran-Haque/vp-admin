@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, FileText, HelpCircle, Plus, Trash2, Upload, Video, type LucideIcon } from "lucide-react";
+import { Check, FileText, HelpCircle, PlayCircle, Plus, Trash2, Upload, Video, type LucideIcon } from "lucide-react";
 import { useGetExamsQuery } from "@/redux/api/examsApi";
 import type { MaterialDraft, MaterialKind, QuizQuestion } from "./types";
 
@@ -10,19 +10,31 @@ const badgeConfig: Record<MaterialKind, { label: string; icon: LucideIcon; class
   mcq: { label: "কুইজ", icon: HelpCircle, className: "bg-red-600/20 text-red-500" },
 };
 
+/** Extract a YouTube video id from any watch/short/embed/youtu.be URL (or a bare id). */
+function youtubeId(url: string): string | null {
+  const value = (url || "").trim();
+  if (!value) return null;
+  if (/^[a-zA-Z0-9_-]{11}$/.test(value)) return value;
+  const match = value.match(
+    /(?:youtube\.com\/watch\?(?:.*&)?v=|youtu\.be\/|youtube\.com\/(?:embed|live|shorts)\/)([a-zA-Z0-9_-]{11})/
+  );
+  return match ? match[1] : null;
+}
+
+const isFacebookVideo = (url: string) => /facebook\.com|fb\.watch/i.test(url || "");
+
 type Props = {
   item: MaterialDraft;
   courseId?: number;
-  /** 1-based position within its type tab; shown as a numbered chip. */
-  position?: number;
   onUpdate: (patch: Partial<MaterialDraft>) => void;
   onRemove: () => void;
   onAddQuestion: () => void;
   onUpdateQuestion: (questionId: string, patch: Partial<QuizQuestion>) => void;
 };
 
-export default function MaterialItemCard({ item, courseId, position, onUpdate, onRemove, onAddQuestion, onUpdateQuestion }: Props) {
+export default function MaterialItemCard({ item, courseId, onUpdate, onRemove, onAddQuestion, onUpdateQuestion }: Props) {
   const badge = badgeConfig[item.kind];
+  const ytId = item.kind === "video" ? youtubeId(item.videoUrl ?? "") : null;
 
   const { data: examsData, isLoading: isLoadingExams } = useGetExamsQuery(
     item.kind === "mcq" ? (courseId ? { course: courseId } : undefined) : undefined,
@@ -36,7 +48,7 @@ export default function MaterialItemCard({ item, courseId, position, onUpdate, o
       <div className="flex items-center gap-2">
         <span className={`flex shrink-0 items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-sm font-semibold ${badge.className}`}>
           <badge.icon size={16} />
-          {typeof position === "number" ? position.toLocaleString("bn-BD") : badge.label}
+          {badge.label}
         </span>
         <input
           type="text"
@@ -81,7 +93,7 @@ export default function MaterialItemCard({ item, courseId, position, onUpdate, o
       )}
 
       {item.kind === "video" && (
-        <div className="mt-2">
+        <div className="mt-3 flex flex-col gap-3">
           <input
             type="text"
             value={item.videoUrl ?? ""}
@@ -89,6 +101,33 @@ export default function MaterialItemCard({ item, courseId, position, onUpdate, o
             placeholder="YouTube / Facebook ভিডিও লিংক"
             className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-sm text-blue-50 placeholder:text-slate-400 focus:outline-none"
           />
+
+          {/* Smart preview: YouTube thumbnail confirms the right video was pasted. */}
+          {ytId ? (
+            <a
+              href={`https://www.youtube.com/watch?v=${ytId}`}
+              target="_blank"
+              rel="noreferrer"
+              className="group relative block aspect-video w-full max-w-xs overflow-hidden rounded-xl border border-slate-800 bg-black"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`https://img.youtube.com/vi/${ytId}/hqdefault.jpg`}
+                alt="ভিডিও থাম্বনেইল"
+                className="h-full w-full object-cover transition group-hover:opacity-90"
+              />
+              <span className="absolute inset-0 flex items-center justify-center">
+                <PlayCircle size={44} className="text-white/90 drop-shadow-lg" />
+              </span>
+            </a>
+          ) : item.videoUrl && isFacebookVideo(item.videoUrl) ? (
+            <div className="flex items-center gap-2 rounded-xl border border-slate-800 bg-gray-900/60 px-3.5 py-3 text-sm text-slate-300">
+              <Video size={16} className="shrink-0 text-blue-400" />
+              Facebook ভিডিও লিংক যুক্ত হয়েছে।
+            </div>
+          ) : item.videoUrl ? (
+            <p className="text-xs text-amber-400">লিংকটি সঠিক YouTube/Facebook ভিডিও লিংক কিনা যাচাই করুন।</p>
+          ) : null}
         </div>
       )}
 
