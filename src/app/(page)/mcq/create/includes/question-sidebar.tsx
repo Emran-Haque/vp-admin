@@ -1,5 +1,6 @@
 import { Plus } from "lucide-react";
 import CsvImportButton from "./csv-import-button";
+import CsvSampleButton from "./csv-sample";
 import type { Question } from "./types";
 
 type Props = {
@@ -63,6 +64,8 @@ export default function QuestionSidebar({
         onErrors={onImportErrors}
         className="mt-2.5 flex items-center justify-center gap-2 rounded-xl border border-slate-700 px-3.5 py-3 text-base font-medium text-slate-200 hover:bg-white/5"
       />
+
+      <CsvSampleButton className="mt-2.5 flex items-center justify-center gap-2 rounded-xl border border-slate-700/60 px-3.5 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/5" />
     </div>
   );
 }
