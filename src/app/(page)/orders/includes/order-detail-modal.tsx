@@ -196,7 +196,7 @@ export default function OrderDetailModal({ order, onClose }: { order: Order; onC
 
           {paymentStatus === "paid" && order.payment_status !== "paid" && (
             <p className="text-xs text-amber-500">
-              পেমেন্ট &quot;পরিশোধিত&quot; করলে কোর্স আইটেম স্বয়ংক্রিয়ভাবে এনরোল হবে এবং বইয়ের স্টক কমে যাবে।
+              পেমেন্ট &quot;পেইড&quot; করলে কোর্স আইটেম স্বয়ংক্রিয়ভাবে এনরোল হবে এবং বইয়ের স্টক কমে যাবে।
             </p>
           )}
         </div>

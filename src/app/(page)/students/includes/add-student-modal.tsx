@@ -105,7 +105,7 @@ export default function AddStudentModal({ onClose }: { onClose: () => void }) {
               onChange={(e) => setIsVerified(e.target.checked)}
               className="size-4 cursor-pointer accent-blue-500"
             />
-            <span className="text-xs font-medium text-slate-400">অ্যাকাউন্ট যাচাইকৃত হিসেবে চিহ্নিত করুন</span>
+            <span className="text-xs font-medium text-slate-400">অ্যাকাউন্ট ভেরিফায়েড হিসেবে চিহ্নিত করুন</span>
           </label>
 
           <div className="flex justify-end gap-2.5 pt-2">

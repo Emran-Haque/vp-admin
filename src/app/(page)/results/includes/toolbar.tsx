@@ -63,10 +63,10 @@ export default function Toolbar({
             সকল স্ট্যাটাস
           </option>
           <option value="passed" className="bg-gray-800 text-white">
-            উত্তীর্ণ
+            পাস
           </option>
           <option value="failed" className="bg-gray-800 text-white">
-            অনুত্তীর্ণ
+            ফেল
           </option>
         </select>
         <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-white" />

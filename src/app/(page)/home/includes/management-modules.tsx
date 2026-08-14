@@ -49,7 +49,7 @@ const modules: Module[] = [
 export default function ManagementModules() {
   return (
     <section>
-      <SectionHeader title="ব্যবস্থাপনা মডিউল" description="বিদ্যমান কন্টেন্ট দেখুন ও সম্পাদনা করুন" />
+      <SectionHeader title="ম্যানেজমেন্ট মডিউল" description="বিদ্যমান কন্টেন্ট দেখুন ও সম্পাদনা করুন" />
 
       <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {modules.map(({ title, description, href, icon: Icon, iconWrap, iconColor }) => (

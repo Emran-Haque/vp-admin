@@ -244,7 +244,7 @@ export default function AddModeratorModal({ onClose }: { onClose: () => void }) 
               className="flex cursor-pointer items-center gap-1.5 rounded-[10px] bg-gradient-to-br from-blue-500 to-blue-600 px-4 py-2 text-xs font-bold text-white shadow-[0px_4px_12px_0px_rgba(0,200,150,0.19)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <ShieldCheck size={14} />
-              {isPromoting ? "প্রক্রিয়াধীন…" : "মডারেটর করুন"}
+              {isPromoting ? "করা হচ্ছে…" : "মডারেটর করুন"}
             </button>
           )}
         </div>

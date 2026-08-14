@@ -31,7 +31,7 @@ export default function Stats() {
       text: "text-blue-500",
     },
     {
-      label: "অপেক্ষমান অর্ডার",
+      label: "পেন্ডিং অর্ডার",
       value: data?.ecommerce.pending_orders ?? placeholder,
       icon: Clock,
       card: "border-amber-500/40 bg-amber-500/10",

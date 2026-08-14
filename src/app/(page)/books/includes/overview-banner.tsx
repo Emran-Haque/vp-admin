@@ -23,7 +23,7 @@ export default function OverviewBanner({ onAddClick, onManageCategoriesClick }: 
             <Package size={32} className="text-cyan-500" strokeWidth={2} />
           </span>
           <div>
-            <h1 className="text-2xl font-bold leading-9 text-blue-50">বই ব্যবস্থাপনা</h1>
+            <h1 className="text-2xl font-bold leading-9 text-blue-50">বই ম্যানেজমেন্ট</h1>
             <p className="mt-1 text-base text-slate-400">সকল বইয়ের তথ্য, মূল্য ও স্টক এক জায়গায় পরিচালনা করুন</p>
           </div>
         </div>

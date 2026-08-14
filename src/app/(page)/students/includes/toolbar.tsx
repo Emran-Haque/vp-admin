@@ -12,7 +12,7 @@ type Option = { value: string; label: string };
 const STATUS_OPTIONS: Option[] = [
   { value: "active", label: "সক্রিয়" },
   { value: "inactive", label: "নিষ্ক্রিয়" },
-  { value: "pending", label: "অপেক্ষমাণ" },
+  { value: "pending", label: "পেন্ডিং" },
 ];
 
 type Props = {

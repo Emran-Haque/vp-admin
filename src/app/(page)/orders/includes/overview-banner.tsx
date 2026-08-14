@@ -10,7 +10,7 @@ export default function OverviewBanner() {
           <ReceiptText size={32} className="text-cyan-500" strokeWidth={2} />
         </span>
         <div>
-          <h1 className="text-2xl font-bold leading-9 text-blue-50">অর্ডার ব্যবস্থাপনা</h1>
+          <h1 className="text-2xl font-bold leading-9 text-blue-50">অর্ডার ম্যানেজমেন্ট</h1>
           <p className="mt-1 text-base text-slate-400">সকল অর্ডারের পেমেন্ট ও ডেলিভারি স্ট্যাটাস পরিচালনা করুন</p>
         </div>
       </div>

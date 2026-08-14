@@ -88,7 +88,7 @@ export default function ResultsTable({ rows, isLoading, isError, error }: Props)
                       row.passed ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"
                     }`}
                   >
-                    {row.passed ? "উত্তীর্ণ" : "অনুত্তীর্ণ"}
+                    {row.passed ? "পাস" : "ফেল"}
                   </span>
                 </td>
 

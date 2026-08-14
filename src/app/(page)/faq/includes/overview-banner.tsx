@@ -20,9 +20,9 @@ export default function OverviewBanner({ onAddClick }: { onAddClick: () => void 
           <HelpCircle size={28} className="text-white" />
         </span>
         <div>
-          <h1 className="text-2xl font-bold leading-8 text-blue-50">FAQ ব্যবস্থাপনা</h1>
+          <h1 className="text-2xl font-bold leading-8 text-blue-50">FAQ ম্যানেজমেন্ট</h1>
           <p className="mt-1 text-sm text-slate-400">
-            সাধারণ প্রশ্ন ও উত্তর (FAQ), কোর্স সম্পর্কিত FAQ এবং বইয়ের FAQ সমূহের ব্যবস্থাপনা করুন
+            সাধারণ প্রশ্ন ও উত্তর (FAQ), কোর্স সম্পর্কিত FAQ এবং বইয়ের FAQ সমূহের ম্যানেজ করুন
           </p>
         </div>
       </div>

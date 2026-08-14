@@ -1,5 +1,5 @@
 export const orderStatuses = [
-  { value: "pending", label: "অপেক্ষমান" },
+  { value: "pending", label: "পেন্ডিং" },
   { value: "confirmed", label: "নিশ্চিত" },
   { value: "processing", label: "প্রক্রিয়াধীন" },
   { value: "shipped", label: "পাঠানো হয়েছে" },
@@ -7,8 +7,8 @@ export const orderStatuses = [
 ];
 
 export const paymentStatuses = [
-  { value: "pending", label: "অপেক্ষমান" },
-  { value: "paid", label: "পরিশোধিত" },
+  { value: "pending", label: "পেন্ডিং" },
+  { value: "paid", label: "পেইড" },
   { value: "failed", label: "ব্যর্থ" },
   { value: "refunded", label: "ফেরত" },
 ];

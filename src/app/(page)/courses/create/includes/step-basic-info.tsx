@@ -257,7 +257,7 @@ export default function StepBasicInfo({ value, onChange, files, onFilesChange, e
                 className="flex items-center gap-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 px-2.5 py-1 text-xs font-bold text-blue-300 hover:bg-blue-500/20"
               >
                 <FolderCog size={13} />
-                ক্যাটাগরি ব্যবস্থাপনা
+                ক্যাটাগরি ম্যানেজমেন্ট
               </button>
             </div>
             <select

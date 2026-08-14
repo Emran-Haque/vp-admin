@@ -20,7 +20,7 @@ export default function OverviewBanner({ onAddClick }: { onAddClick: () => void 
           <Star size={28} className="fill-white text-white" />
         </span>
         <div>
-          <h1 className="text-2xl font-bold leading-8 text-blue-50">শিক্ষার্থী রিভিউ ব্যবস্থাপনা</h1>
+          <h1 className="text-2xl font-bold leading-8 text-blue-50">শিক্ষার্থী রিভিউ ম্যানেজমেন্ট</h1>
           <p className="mt-1 text-sm text-slate-400">
             শিক্ষার্থীদের মতামত, রেটিং ও স্থান অর্জনের রিভিউ সমূহের তালিকা নিয়ন্ত্রণ করুন
           </p>

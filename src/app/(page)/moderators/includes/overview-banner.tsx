@@ -11,7 +11,7 @@ export default function OverviewBanner({ onAddClick }: { onAddClick: () => void 
             <ShieldCheck size={32} className="text-violet-500" strokeWidth={2} />
           </span>
           <div>
-            <h1 className="text-2xl font-bold leading-9 text-blue-50">মডারেটর ব্যবস্থাপনা</h1>
+            <h1 className="text-2xl font-bold leading-9 text-blue-50">মডারেটর ম্যানেজমেন্ট</h1>
             <p className="mt-1 text-base text-slate-400">
               নতুন মডারেটর যোগ করুন এবং তাদের অ্যাক্সেসের অনুমতি নির্ধারণ করুন
             </p>

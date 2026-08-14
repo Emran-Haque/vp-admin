@@ -16,7 +16,7 @@ export default function OverviewBanner({ onAddClick }: { onAddClick: () => void 
             <Users size={32} className="text-cyan-500" strokeWidth={2} />
           </span>
           <div>
-            <h1 className="text-2xl font-bold leading-9 text-blue-50">শিক্ষার্থী ব্যবস্থাপনা</h1>
+            <h1 className="text-2xl font-bold leading-9 text-blue-50">শিক্ষার্থী ম্যানেজমেন্ট</h1>
             <p className="mt-1 text-base text-slate-400">
               সকল শিক্ষার্থীর তথ্য, ব্যাচ ও অগ্রগতি এক জায়গায় দেখুন
             </p>
