@@ -35,6 +35,11 @@ export default function StepBasicInfo({ value, onChange }: Props) {
     addMinutes(combineDateTime(value.examDate, value.startTime), Number(value.duration) || 0)
   );
 
+  // A window is only applied when BOTH a date and a start time exist; then the
+  // backend restricts students to that window. Empty = open anytime (practice).
+  const isScheduled = Boolean(value.examDate && value.startTime);
+  const toBn = (s: string) => s.replace(/[0-9]/g, (d) => "০১২৩৪৫৬৭৮৯"[Number(d)]);
+
   return (
     <section className="rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
       <div className="flex items-start gap-3.5">
@@ -186,6 +191,25 @@ export default function StepBasicInfo({ value, onChange }: Props) {
           </div>
           <p className="mt-1.5 text-sm text-slate-400">শুরু সময় ও সময়কাল (মিনিট) থেকে হিসাব করা হয়</p>
         </div>
+      </div>
+
+      <div
+        className={`mt-5 flex items-start gap-2.5 rounded-xl border px-4 py-3 text-sm ${
+          isScheduled
+            ? "border-cyan-500/30 bg-cyan-500/10 text-cyan-100"
+            : "border-slate-700 bg-gray-800/40 text-slate-300"
+        }`}
+      >
+        <Clock size={16} className="mt-0.5 shrink-0" />
+        {isScheduled ? (
+          <p className="m-0 leading-6">
+            <span className="font-semibold">নির্ধারিত সময়:</span> {toBn(value.examDate)} · {toBn(value.startTime)}–{toBn(endTimePreview)}। এই সময়ের মধ্যেই শিক্ষার্থীরা পরীক্ষা দিতে পারবে; সময় শেষ হলে পরীক্ষা বন্ধ হয়ে যাবে।
+          </p>
+        ) : (
+          <p className="m-0 leading-6">
+            <span className="font-semibold">সময় নির্ধারণ করা হয়নি।</span> প্রকাশের পর পরীক্ষাটি যেকোনো সময় খোলা থাকবে। নির্দিষ্ট সময়ে সীমাবদ্ধ করতে তারিখ ও শুরু সময় দিন।
+          </p>
+        )}
       </div>
 
       <div className="mt-6 rounded-2xl border border-slate-800 bg-gray-800/40 p-5">
