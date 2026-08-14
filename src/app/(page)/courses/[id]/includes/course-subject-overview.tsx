@@ -36,6 +36,7 @@ import {
   useDeleteExamMutation,
   type Exam,
 } from "@/redux/api/examsApi";
+import { useGetCourseMaterialsQuery } from "@/redux/api/courseMaterialsApi";
 import {
   useGetResourcesQuery,
   useDeleteResourceMutation,
@@ -117,6 +118,8 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
   const { data: examsData, isLoading: examsLoading } = useGetExamsQuery({
     course: courseId,
   });
+  const { data: materialsData, isLoading: materialsLoading } =
+    useGetCourseMaterialsQuery({ course: courseId });
 
   const subjects = useMemo(() => subjectsData?.results ?? [], [subjectsData?.results]);
   const classes = useMemo(() => classesData?.results ?? [], [classesData?.results]);
@@ -128,13 +131,30 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
     () => assignmentsData?.results ?? [],
     [assignmentsData?.results],
   );
-  const exams = useMemo(() => examsData?.results ?? [], [examsData?.results]);
+  // Exams linked as free-preview course materials (added in the create/edit
+  // "materials" step) are course-level previews with no subject on purpose — so
+  // they must not be treated as regular subject exams nor flagged as
+  // "subjectless content" that needs fixing.
+  const freePreviewExamIds = useMemo(
+    () =>
+      new Set(
+        (materialsData?.results ?? [])
+          .filter((material) => material.kind === "mcq" && material.quiz != null)
+          .map((material) => material.quiz as number),
+      ),
+    [materialsData?.results],
+  );
+  const exams = useMemo(
+    () => (examsData?.results ?? []).filter((exam) => !freePreviewExamIds.has(exam.id)),
+    [examsData?.results, freePreviewExamIds],
+  );
   const isLoading =
     subjectsLoading ||
     classesLoading ||
     resourcesLoading ||
     assignmentsLoading ||
-    examsLoading;
+    examsLoading ||
+    materialsLoading;
 
   const selectedSubject =
     subjects.find((subject) => subject.id === selectedSubjectId) ?? subjects[0] ?? null;
