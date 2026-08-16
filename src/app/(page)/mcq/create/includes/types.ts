@@ -13,6 +13,10 @@ export type ExamBasicInfo = {
   negativeMark: string;
   examDate: string;
   startTime: string;
+  /** Deadline the whole exam closes for everyone ("YYYY-MM-DDTHH:MM", or "" for
+   *  no deadline). Independent of `duration` — a student who starts near it is
+   *  cut off at the deadline. */
+  deadline: string;
   resultPublishAt: string;
   leaderboardPublishAt: string;
   description: string;

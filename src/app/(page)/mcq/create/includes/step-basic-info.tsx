@@ -3,7 +3,6 @@
 import { ClipboardList, Clock, Megaphone, Trophy } from "lucide-react";
 import { useGetCoursesQuery } from "@/redux/api/coursesApi";
 import { useGetCourseSubjectsQuery } from "@/redux/api/courseSubjectsApi";
-import { combineDateTime, addMinutes, formatTimeOfDay } from "@/lib/exam-datetime";
 import type { ExamBasicInfo, ExamStatus } from "./types";
 
 type Props = {
@@ -31,14 +30,10 @@ export default function StepBasicInfo({ value, onChange }: Props) {
     onChange({ ...value, [key]: val });
   };
 
-  const endTimePreview = formatTimeOfDay(
-    addMinutes(combineDateTime(value.examDate, value.startTime), Number(value.duration) || 0)
-  );
-
-  // A window is only applied when BOTH a date and a start time exist; then the
-  // backend restricts students to that window. Empty = open anytime (practice).
-  const isScheduled = Boolean(value.examDate && value.startTime);
+  const hasStart = Boolean(value.examDate && value.startTime);
+  const hasDeadline = Boolean(value.deadline);
   const toBn = (s: string) => s.replace(/[0-9]/g, (d) => "০১২৩৪৫৬৭৮৯"[Number(d)]);
+  const fmtDeadline = (dt: string) => (dt ? toBn(dt.replace("T", " · ")) : "");
 
   return (
     <section className="rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
@@ -184,32 +179,45 @@ export default function StepBasicInfo({ value, onChange }: Props) {
         </div>
 
         <div>
-          <label className="block pb-2 text-base font-medium text-blue-50">শেষ সময় (স্বয়ংক্রিয়)</label>
-          <div className="flex items-center gap-2 rounded-xl border border-slate-800 bg-gray-800/60 px-4 py-3 text-base text-slate-400">
-            <Clock size={16} />
-            {endTimePreview}
-          </div>
-          <p className="mt-1.5 text-sm text-slate-400">শুরু সময় ও সময়কাল (মিনিট) থেকে হিসাব করা হয়</p>
+          <label className="block pb-2 text-base font-medium text-blue-50">শেষ সময় / ডেডলাইন (ঐচ্ছিক)</label>
+          <input
+            type="datetime-local"
+            value={value.deadline}
+            onChange={(e) => set("deadline", e.target.value)}
+            className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 focus:outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100"
+          />
+          <p className="mt-1.5 text-sm text-slate-400">এই সময়ে পরীক্ষা সবার জন্য বন্ধ হবে। খালি রাখলে ডেডলাইন থাকবে না।</p>
         </div>
       </div>
 
       <div
-        className={`mt-5 flex items-start gap-2.5 rounded-xl border px-4 py-3 text-sm ${
-          isScheduled
+        className={`mt-5 rounded-xl border px-4 py-3 text-sm ${
+          hasDeadline || hasStart
             ? "border-cyan-500/30 bg-cyan-500/10 text-cyan-100"
             : "border-slate-700 bg-gray-800/40 text-slate-300"
         }`}
       >
-        <Clock size={16} className="mt-0.5 shrink-0" />
-        {isScheduled ? (
-          <p className="m-0 leading-6">
-            <span className="font-semibold">নির্ধারিত সময়:</span> {toBn(value.examDate)} · {toBn(value.startTime)}–{toBn(endTimePreview)}। এই সময়ের মধ্যেই শিক্ষার্থীরা পরীক্ষা দিতে পারবে; সময় শেষ হলে পরীক্ষা বন্ধ হয়ে যাবে।
-          </p>
-        ) : (
-          <p className="m-0 leading-6">
-            <span className="font-semibold">সময় নির্ধারণ করা হয়নি।</span> প্রকাশের পর পরীক্ষাটি যেকোনো সময় খোলা থাকবে। নির্দিষ্ট সময়ে সীমাবদ্ধ করতে তারিখ ও শুরু সময় দিন।
-          </p>
-        )}
+        <div className="flex items-start gap-2.5">
+          <Clock size={16} className="mt-0.5 shrink-0" />
+          {hasDeadline || hasStart ? (
+            <div className="leading-6">
+              <p className="m-0">
+                <span className="font-semibold">খোলা:</span>{" "}
+                {hasStart ? `${toBn(value.examDate)} · ${toBn(value.startTime)}` : "প্রকাশের পর সাথে সাথে"}
+                {"  ·  "}
+                <span className="font-semibold">বন্ধ:</span>{" "}
+                {hasDeadline ? fmtDeadline(value.deadline) : "ডেডলাইন নেই"}
+              </p>
+              <p className="m-0 mt-1 text-cyan-100/80">
+                শিক্ষার্থী পরীক্ষা শুরুর পর {toBn(value.duration || "0")} মিনিট সময় পাবে — তবে ডেডলাইন পার হলে পরীক্ষা তখনই বন্ধ হয়ে যাবে (তখন কম সময় পাবে)।
+              </p>
+            </div>
+          ) : (
+            <p className="m-0 leading-6">
+              <span className="font-semibold">সময় নির্ধারণ করা হয়নি।</span> প্রকাশের পর পরীক্ষাটি যেকোনো সময় খোলা থাকবে। নির্দিষ্ট সময়ে সীমাবদ্ধ করতে শুরু সময় বা ডেডলাইন দিন।
+            </p>
+          )}
+        </div>
       </div>
 
       <div className="mt-6 rounded-2xl border border-slate-800 bg-gray-800/40 p-5">

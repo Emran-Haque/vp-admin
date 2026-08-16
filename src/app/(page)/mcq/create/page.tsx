@@ -14,7 +14,7 @@ import {
   usePublishExamMutation,
   usePublishExamResultMutation,
 } from "@/redux/api/examsApi";
-import { combineDateTime, addMinutes, localDateTimeToIso } from "@/lib/exam-datetime";
+import { combineDateTime, localDateTimeToIso } from "@/lib/exam-datetime";
 import { extractErrorMessage } from "@/lib/api-error";
 import type { ExamBasicInfo, Question } from "./includes/types";
 
@@ -29,6 +29,7 @@ const emptyBasicInfo: ExamBasicInfo = {
   negativeMark: "0.25",
   examDate: "",
   startTime: "",
+  deadline: "",
   resultPublishAt: "",
   leaderboardPublishAt: "",
   description: "",
@@ -56,7 +57,9 @@ export default function Page() {
 
     const durationMinutes = Number(basicInfo.duration) || 0;
     const startDateTime = combineDateTime(basicInfo.examDate, basicInfo.startTime);
-    const endDateTime = addMinutes(startDateTime, durationMinutes);
+    // Deadline is set independently of duration; the backend caps each student's
+    // attempt at this time (start near it → less time).
+    const endDateTime = localDateTimeToIso(basicInfo.deadline);
 
     let exam;
     try {

@@ -9,7 +9,6 @@ import {
   Megaphone,
   Trophy,
 } from "lucide-react";
-import { combineDateTime, addMinutes, formatTimeOfDay } from "@/lib/exam-datetime";
 import type { ExamBasicInfo } from "./types";
 
 function formatLocalDateTime(value: string): string {
@@ -23,10 +22,6 @@ export default function ExamSummary({ value, questionCount }: { value: ExamBasic
     ? `${value.examDate}${value.startTime ? ` ${value.startTime}` : ""}`
     : "নির্ধারিত নয়";
 
-  const endTime = formatTimeOfDay(
-    addMinutes(combineDateTime(value.examDate, value.startTime), Number(value.duration) || 0)
-  );
-
   const rows = [
     { icon: FileText, label: "নাম", value: value.name || "—" },
     { icon: Sparkles, label: "বিষয়", value: value.subjectName || "—" },
@@ -35,7 +30,7 @@ export default function ExamSummary({ value, questionCount }: { value: ExamBasic
     { icon: Users, label: "পাস মার্ক", value: value.passMark ? `${value.passMark}%` : "—" },
     { icon: TriangleAlert, label: "নেগেটিভ", value: value.negativeMark || "0" },
     { icon: Calendar, label: "শুরু", value: dateValue },
-    { icon: Clock, label: "শেষ", value: value.startTime ? endTime : "—" },
+    { icon: Clock, label: "ডেডলাইন", value: formatLocalDateTime(value.deadline) },
     { icon: Megaphone, label: "ফলাফল প্রকাশ", value: formatLocalDateTime(value.resultPublishAt) },
     { icon: Trophy, label: "লিডারবোর্ড প্রকাশ", value: formatLocalDateTime(value.leaderboardPublishAt) },
   ];

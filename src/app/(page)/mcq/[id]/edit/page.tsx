@@ -23,7 +23,7 @@ import {
 import { useGetCourseSubjectsQuery } from "@/redux/api/courseSubjectsApi";
 import {
   combineDateTime,
-  addMinutes,
+  localDateTimeToIso,
   isoToTimeInput,
   isoToLocalDateTimeInput,
 } from "@/lib/exam-datetime";
@@ -92,6 +92,7 @@ export default function Page() {
       negativeMark: exam.negative_mark_per_wrong,
       examDate: exam.exam_date,
       startTime: isoToTimeInput(exam.start_time),
+      deadline: isoToLocalDateTimeInput(exam.end_time),
       resultPublishAt: isoToLocalDateTimeInput(exam.result_publish_at),
       leaderboardPublishAt: isoToLocalDateTimeInput(exam.leaderboard_publish_at),
       description: exam.instructions,
@@ -154,7 +155,7 @@ export default function Page() {
 
     const durationMinutes = Number(basicInfo.duration) || 0;
     const startDateTime = combineDateTime(basicInfo.examDate, basicInfo.startTime);
-    const endDateTime = addMinutes(startDateTime, durationMinutes);
+    const endDateTime = localDateTimeToIso(basicInfo.deadline);
 
     try {
       await updateExam({

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Eye, ListChecks, AlertTriangle, CheckCircle2, Megaphone, Trophy, Clock, CalendarClock } from "lucide-react";
-import { combineDateTime, addMinutes, formatTimeOfDay } from "@/lib/exam-datetime";
 import type { ExamBasicInfo, Question } from "./types";
 
 function formatLocalDateTime(value: string): string {
@@ -20,10 +19,6 @@ type Props = {
 };
 
 export default function StepReview({ basicInfo, questions, published, isPublishing, error }: Props) {
-  const endTime = formatTimeOfDay(
-    addMinutes(combineDateTime(basicInfo.examDate, basicInfo.startTime), Number(basicInfo.duration) || 0)
-  );
-
   const previewStats: { label: string; value: string }[] = [
     { label: "বিষয়", value: basicInfo.subjectName || "—" },
     { label: "সময়", value: basicInfo.duration ? `${basicInfo.duration} মিনিট` : "—" },
@@ -107,9 +102,9 @@ export default function StepReview({ basicInfo, questions, published, isPublishi
               <Clock size={16} className="text-blue-500" />
             </span>
             <div>
-              <p className="text-sm text-slate-400">পরীক্ষা শেষ (স্বয়ংক্রিয়)</p>
+              <p className="text-sm text-slate-400">ডেডলাইন</p>
               <p className="mt-0.5 text-sm font-semibold text-blue-50">
-                {basicInfo.examDate && basicInfo.startTime ? `${basicInfo.examDate} ${endTime}` : "—"}
+                {formatLocalDateTime(basicInfo.deadline)}
               </p>
             </div>
           </div>
