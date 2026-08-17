@@ -1,0 +1,461 @@
+[browser] called `injectEndpoints` to override already-existing endpointName getExams without specifying `overrideExisting: true` 
+    at module evaluation (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  422 |       invalidatesTags: (_result, _error, { batchId }) => [
+  423 |         { type: "ExamBatches", id: batchId },
+> 424 |         { type: "ExamBatches", id: "LIST" },
+      |                                    ^
+  425 |       ],
+  426 |     }),
+  427 |     getExamBatchEnrollments: builder.query<ExamBatchEnrollment[], number>({ (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+[browser] called `injectEndpoints` to override already-existing endpointName getExam without specifying `overrideExisting: true` 
+    at module evaluation (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  422 |       invalidatesTags: (_result, _error, { batchId }) => [
+  423 |         { type: "ExamBatches", id: batchId },
+> 424 |         { type: "ExamBatches", id: "LIST" },
+      |                                    ^
+  425 |       ],
+  426 |     }),
+  427 |     getExamBatchEnrollments: builder.query<ExamBatchEnrollment[], number>({ (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+[browser] called `injectEndpoints` to override already-existing endpointName createExam without specifying `overrideExisting: true` 
+    at module evaluation (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  422 |       invalidatesTags: (_result, _error, { batchId }) => [
+  423 |         { type: "ExamBatches", id: batchId },
+> 424 |         { type: "ExamBatches", id: "LIST" },
+      |                                    ^
+  425 |       ],
+  426 |     }),
+  427 |     getExamBatchEnrollments: builder.query<ExamBatchEnrollment[], number>({ (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+[browser] called `injectEndpoints` to override already-existing endpointName updateExam without specifying `overrideExisting: true` 
+    at module evaluation (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  422 |       invalidatesTags: (_result, _error, { batchId }) => [
+  423 |         { type: "ExamBatches", id: batchId },
+> 424 |         { type: "ExamBatches", id: "LIST" },
+      |                                    ^
+  425 |       ],
+  426 |     }),
+  427 |     getExamBatchEnrollments: builder.query<ExamBatchEnrollment[], number>({ (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+[browser] called `injectEndpoints` to override already-existing endpointName deleteExam without specifying `overrideExisting: true` 
+    at module evaluation (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  422 |       invalidatesTags: (_result, _error, { batchId }) => [
+  423 |         { type: "ExamBatches", id: batchId },
+> 424 |         { type: "ExamBatches", id: "LIST" },
+      |                                    ^
+  425 |       ],
+  426 |     }),
+  427 |     getExamBatchEnrollments: builder.query<ExamBatchEnrollment[], number>({ (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+[browser] called `injectEndpoints` to override already-existing endpointName getExamQuestions without specifying `overrideExisting: true` 
+    at module evaluation (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  422 |       invalidatesTags: (_result, _error, { batchId }) => [
+  423 |         { type: "ExamBatches", id: batchId },
+> 424 |         { type: "ExamBatches", id: "LIST" },
+      |                                    ^
+  425 |       ],
+  426 |     }),
+  427 |     getExamBatchEnrollments: builder.query<ExamBatchEnrollment[], number>({ (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+[browser] called `injectEndpoints` to override already-existing endpointName addExamQuestion without specifying `overrideExisting: true` 
+    at module evaluation (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  422 |       invalidatesTags: (_result, _error, { batchId }) => [
+  423 |         { type: "ExamBatches", id: batchId },
+> 424 |         { type: "ExamBatches", id: "LIST" },
+      |                                    ^
+  425 |       ],
+  426 |     }),
+  427 |     getExamBatchEnrollments: builder.query<ExamBatchEnrollment[], number>({ (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+[browser] called `injectEndpoints` to override already-existing endpointName updateQuestion without specifying `overrideExisting: true` 
+    at module evaluation (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  422 |       invalidatesTags: (_result, _error, { batchId }) => [
+  423 |         { type: "ExamBatches", id: batchId },
+> 424 |         { type: "ExamBatches", id: "LIST" },
+      |                                    ^
+  425 |       ],
+  426 |     }),
+  427 |     getExamBatchEnrollments: builder.query<ExamBatchEnrollment[], number>({ (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+[browser] called `injectEndpoints` to override already-existing endpointName deleteQuestion without specifying `overrideExisting: true` 
+    at module evaluation (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  422 |       invalidatesTags: (_result, _error, { batchId }) => [
+  423 |         { type: "ExamBatches", id: batchId },
+> 424 |         { type: "ExamBatches", id: "LIST" },
+      |                                    ^
+  425 |       ],
+  426 |     }),
+  427 |     getExamBatchEnrollments: builder.query<ExamBatchEnrollment[], number>({ (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+[browser] called `injectEndpoints` to override already-existing endpointName publishExam without specifying `overrideExisting: true` 
+    at module evaluation (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  422 |       invalidatesTags: (_result, _error, { batchId }) => [
+  423 |         { type: "ExamBatches", id: batchId },
+> 424 |         { type: "ExamBatches", id: "LIST" },
+      |                                    ^
+  425 |       ],
+  426 |     }),
+  427 |     getExamBatchEnrollments: builder.query<ExamBatchEnrollment[], number>({ (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+[browser] called `injectEndpoints` to override already-existing endpointName publishExamResult without specifying `overrideExisting: true` 
+    at module evaluation (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  422 |       invalidatesTags: (_result, _error, { batchId }) => [
+  423 |         { type: "ExamBatches", id: batchId },
+> 424 |         { type: "ExamBatches", id: "LIST" },
+      |                                    ^
+  425 |       ],
+  426 |     }),
+  427 |     getExamBatchEnrollments: builder.query<ExamBatchEnrollment[], number>({ (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+[browser] called `injectEndpoints` to override already-existing endpointName recalculateLeaderboard without specifying `overrideExisting: true` 
+    at module evaluation (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  422 |       invalidatesTags: (_result, _error, { batchId }) => [
+  423 |         { type: "ExamBatches", id: batchId },
+> 424 |         { type: "ExamBatches", id: "LIST" },
+      |                                    ^
+  425 |       ],
+  426 |     }),
+  427 |     getExamBatchEnrollments: builder.query<ExamBatchEnrollment[], number>({ (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+[browser] called `injectEndpoints` to override already-existing endpointName getExamLeaderboard without specifying `overrideExisting: true` 
+    at module evaluation (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  422 |       invalidatesTags: (_result, _error, { batchId }) => [
+  423 |         { type: "ExamBatches", id: batchId },
+> 424 |         { type: "ExamBatches", id: "LIST" },
+      |                                    ^
+  425 |       ],
+  426 |     }),
+  427 |     getExamBatchEnrollments: builder.query<ExamBatchEnrollment[], number>({ (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+[browser] called `injectEndpoints` to override already-existing endpointName getExamAnalytics without specifying `overrideExisting: true` 
+    at module evaluation (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  422 |       invalidatesTags: (_result, _error, { batchId }) => [
+  423 |         { type: "ExamBatches", id: batchId },
+> 424 |         { type: "ExamBatches", id: "LIST" },
+      |                                    ^
+  425 |       ],
+  426 |     }),
+  427 |     getExamBatchEnrollments: builder.query<ExamBatchEnrollment[], number>({ (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+[browser] called `injectEndpoints` to override already-existing endpointName getExamAttempts without specifying `overrideExisting: true` 
+    at module evaluation (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  422 |       invalidatesTags: (_result, _error, { batchId }) => [
+  423 |         { type: "ExamBatches", id: batchId },
+> 424 |         { type: "ExamBatches", id: "LIST" },
+      |                                    ^
+  425 |       ],
+  426 |     }),
+  427 |     getExamBatchEnrollments: builder.query<ExamBatchEnrollment[], number>({ (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+[browser] called `injectEndpoints` to override already-existing endpointName getExamBatches without specifying `overrideExisting: true` 
+    at module evaluation (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  422 |       invalidatesTags: (_result, _error, { batchId }) => [
+  423 |         { type: "ExamBatches", id: batchId },
+> 424 |         { type: "ExamBatches", id: "LIST" },
+      |                                    ^
+  425 |       ],
+  426 |     }),
+  427 |     getExamBatchEnrollments: builder.query<ExamBatchEnrollment[], number>({ (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+[browser] called `injectEndpoints` to override already-existing endpointName getExamBatch without specifying `overrideExisting: true` 
+    at module evaluation (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  422 |       invalidatesTags: (_result, _error, { batchId }) => [
+  423 |         { type: "ExamBatches", id: batchId },
+> 424 |         { type: "ExamBatches", id: "LIST" },
+      |                                    ^
+  425 |       ],
+  426 |     }),
+  427 |     getExamBatchEnrollments: builder.query<ExamBatchEnrollment[], number>({ (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+[browser] called `injectEndpoints` to override already-existing endpointName createExamBatch without specifying `overrideExisting: true` 
+    at module evaluation (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  422 |       invalidatesTags: (_result, _error, { batchId }) => [
+  423 |         { type: "ExamBatches", id: batchId },
+> 424 |         { type: "ExamBatches", id: "LIST" },
+      |                                    ^
+  425 |       ],
+  426 |     }),
+  427 |     getExamBatchEnrollments: builder.query<ExamBatchEnrollment[], number>({ (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+[browser] called `injectEndpoints` to override already-existing endpointName updateExamBatch without specifying `overrideExisting: true` 
+    at module evaluation (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  422 |       invalidatesTags: (_result, _error, { batchId }) => [
+  423 |         { type: "ExamBatches", id: batchId },
+> 424 |         { type: "ExamBatches", id: "LIST" },
+      |                                    ^
+  425 |       ],
+  426 |     }),
+  427 |     getExamBatchEnrollments: builder.query<ExamBatchEnrollment[], number>({ (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+[browser] called `injectEndpoints` to override already-existing endpointName addExamToBatch without specifying `overrideExisting: true` 
+    at module evaluation (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  422 |       invalidatesTags: (_result, _error, { batchId }) => [
+  423 |         { type: "ExamBatches", id: batchId },
+> 424 |         { type: "ExamBatches", id: "LIST" },
+      |                                    ^
+  425 |       ],
+  426 |     }),
+  427 |     getExamBatchEnrollments: builder.query<ExamBatchEnrollment[], number>({ (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+[browser] called `injectEndpoints` to override already-existing endpointName removeExamFromBatch without specifying `overrideExisting: true` 
+    at module evaluation (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  422 |       invalidatesTags: (_result, _error, { batchId }) => [
+  423 |         { type: "ExamBatches", id: batchId },
+> 424 |         { type: "ExamBatches", id: "LIST" },
+      |                                    ^
+  425 |       ],
+  426 |     }),
+  427 |     getExamBatchEnrollments: builder.query<ExamBatchEnrollment[], number>({ (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+[browser] called `injectEndpoints` to override already-existing endpointName getExamBatchEnrollments without specifying `overrideExisting: true` 
+    at module evaluation (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  422 |       invalidatesTags: (_result, _error, { batchId }) => [
+  423 |         { type: "ExamBatches", id: batchId },
+> 424 |         { type: "ExamBatches", id: "LIST" },
+      |                                    ^
+  425 |       ],
+  426 |     }),
+  427 |     getExamBatchEnrollments: builder.query<ExamBatchEnrollment[], number>({ (.next\dev\static\chunks\_0lbn7l0._.js:56:159)
+[browser] called `injectEndpoints` to override already-existing endpointName getExams without specifying `overrideExisting: true` 
+    at module evaluation (src/redux/api/examsApi.ts:263:33)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  261 | };
+  262 |
+> 263 | export const examsApi = baseApi.injectEndpoints({
+      |                                 ^
+  264 |   endpoints: (builder) => ({
+  265 |     getExams: builder.query<Paginated<Exam>, ExamListParams | void>({
+  266 |       query: (params) => ({ url: "admin/exams/", params: params ?? undefined }), (src/redux/api/examsApi.ts:263:33)
+[browser] called `injectEndpoints` to override already-existing endpointName getExam without specifying `overrideExisting: true` 
+    at module evaluation (src/redux/api/examsApi.ts:263:33)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  261 | };
+  262 |
+> 263 | export const examsApi = baseApi.injectEndpoints({
+      |                                 ^
+  264 |   endpoints: (builder) => ({
+  265 |     getExams: builder.query<Paginated<Exam>, ExamListParams | void>({
+  266 |       query: (params) => ({ url: "admin/exams/", params: params ?? undefined }), (src/redux/api/examsApi.ts:263:33)
+[browser] called `injectEndpoints` to override already-existing endpointName createExam without specifying `overrideExisting: true` 
+    at module evaluation (src/redux/api/examsApi.ts:263:33)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  261 | };
+  262 |
+> 263 | export const examsApi = baseApi.injectEndpoints({
+      |                                 ^
+  264 |   endpoints: (builder) => ({
+  265 |     getExams: builder.query<Paginated<Exam>, ExamListParams | void>({
+  266 |       query: (params) => ({ url: "admin/exams/", params: params ?? undefined }), (src/redux/api/examsApi.ts:263:33)
+[browser] called `injectEndpoints` to override already-existing endpointName updateExam without specifying `overrideExisting: true` 
+    at module evaluation (src/redux/api/examsApi.ts:263:33)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  261 | };
+  262 |
+> 263 | export const examsApi = baseApi.injectEndpoints({
+      |                                 ^
+  264 |   endpoints: (builder) => ({
+  265 |     getExams: builder.query<Paginated<Exam>, ExamListParams | void>({
+  266 |       query: (params) => ({ url: "admin/exams/", params: params ?? undefined }), (src/redux/api/examsApi.ts:263:33)
+[browser] called `injectEndpoints` to override already-existing endpointName deleteExam without specifying `overrideExisting: true` 
+    at module evaluation (src/redux/api/examsApi.ts:263:33)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  261 | };
+  262 |
+> 263 | export const examsApi = baseApi.injectEndpoints({
+      |                                 ^
+  264 |   endpoints: (builder) => ({
+  265 |     getExams: builder.query<Paginated<Exam>, ExamListParams | void>({
+  266 |       query: (params) => ({ url: "admin/exams/", params: params ?? undefined }), (src/redux/api/examsApi.ts:263:33)
+[browser] called `injectEndpoints` to override already-existing endpointName getExamQuestions without specifying `overrideExisting: true` 
+    at module evaluation (src/redux/api/examsApi.ts:263:33)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  261 | };
+  262 |
+> 263 | export const examsApi = baseApi.injectEndpoints({
+      |                                 ^
+  264 |   endpoints: (builder) => ({
+  265 |     getExams: builder.query<Paginated<Exam>, ExamListParams | void>({
+  266 |       query: (params) => ({ url: "admin/exams/", params: params ?? undefined }), (src/redux/api/examsApi.ts:263:33)
+[browser] called `injectEndpoints` to override already-existing endpointName addExamQuestion without specifying `overrideExisting: true` 
+    at module evaluation (src/redux/api/examsApi.ts:263:33)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  261 | };
+  262 |
+> 263 | export const examsApi = baseApi.injectEndpoints({
+      |                                 ^
+  264 |   endpoints: (builder) => ({
+  265 |     getExams: builder.query<Paginated<Exam>, ExamListParams | void>({
+  266 |       query: (params) => ({ url: "admin/exams/", params: params ?? undefined }), (src/redux/api/examsApi.ts:263:33)
+[browser] called `injectEndpoints` to override already-existing endpointName updateQuestion without specifying `overrideExisting: true` 
+    at module evaluation (src/redux/api/examsApi.ts:263:33)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  261 | };
+  262 |
+> 263 | export const examsApi = baseApi.injectEndpoints({
+      |                                 ^
+  264 |   endpoints: (builder) => ({
+  265 |     getExams: builder.query<Paginated<Exam>, ExamListParams | void>({
+  266 |       query: (params) => ({ url: "admin/exams/", params: params ?? undefined }), (src/redux/api/examsApi.ts:263:33)
+[browser] called `injectEndpoints` to override already-existing endpointName deleteQuestion without specifying `overrideExisting: true` 
+    at module evaluation (src/redux/api/examsApi.ts:263:33)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  261 | };
+  262 |
+> 263 | export const examsApi = baseApi.injectEndpoints({
+      |                                 ^
+  264 |   endpoints: (builder) => ({
+  265 |     getExams: builder.query<Paginated<Exam>, ExamListParams | void>({
+  266 |       query: (params) => ({ url: "admin/exams/", params: params ?? undefined }), (src/redux/api/examsApi.ts:263:33)
+[browser] called `injectEndpoints` to override already-existing endpointName publishExam without specifying `overrideExisting: true` 
+    at module evaluation (src/redux/api/examsApi.ts:263:33)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  261 | };
+  262 |
+> 263 | export const examsApi = baseApi.injectEndpoints({
+      |                                 ^
+  264 |   endpoints: (builder) => ({
+  265 |     getExams: builder.query<Paginated<Exam>, ExamListParams | void>({
+  266 |       query: (params) => ({ url: "admin/exams/", params: params ?? undefined }), (src/redux/api/examsApi.ts:263:33)
+[browser] called `injectEndpoints` to override already-existing endpointName publishExamResult without specifying `overrideExisting: true` 
+    at module evaluation (src/redux/api/examsApi.ts:263:33)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  261 | };
+  262 |
+> 263 | export const examsApi = baseApi.injectEndpoints({
+      |                                 ^
+  264 |   endpoints: (builder) => ({
+  265 |     getExams: builder.query<Paginated<Exam>, ExamListParams | void>({
+  266 |       query: (params) => ({ url: "admin/exams/", params: params ?? undefined }), (src/redux/api/examsApi.ts:263:33)
+[browser] called `injectEndpoints` to override already-existing endpointName recalculateLeaderboard without specifying `overrideExisting: true` 
+    at module evaluation (src/redux/api/examsApi.ts:263:33)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  261 | };
+  262 |
+> 263 | export const examsApi = baseApi.injectEndpoints({
+      |                                 ^
+  264 |   endpoints: (builder) => ({
+  265 |     getExams: builder.query<Paginated<Exam>, ExamListParams | void>({
+  266 |       query: (params) => ({ url: "admin/exams/", params: params ?? undefined }), (src/redux/api/examsApi.ts:263:33)
+[browser] called `injectEndpoints` to override already-existing endpointName getExamLeaderboard without specifying `overrideExisting: true` 
+    at module evaluation (src/redux/api/examsApi.ts:263:33)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  261 | };
+  262 |
+> 263 | export const examsApi = baseApi.injectEndpoints({
+      |                                 ^
+  264 |   endpoints: (builder) => ({
+  265 |     getExams: builder.query<Paginated<Exam>, ExamListParams | void>({
+  266 |       query: (params) => ({ url: "admin/exams/", params: params ?? undefined }), (src/redux/api/examsApi.ts:263:33)
+[browser] called `injectEndpoints` to override already-existing endpointName getExamAnalytics without specifying `overrideExisting: true` 
+    at module evaluation (src/redux/api/examsApi.ts:263:33)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  261 | };
+  262 |
+> 263 | export const examsApi = baseApi.injectEndpoints({
+      |                                 ^
+  264 |   endpoints: (builder) => ({
+  265 |     getExams: builder.query<Paginated<Exam>, ExamListParams | void>({
+  266 |       query: (params) => ({ url: "admin/exams/", params: params ?? undefined }), (src/redux/api/examsApi.ts:263:33)
+[browser] called `injectEndpoints` to override already-existing endpointName getExamAttempts without specifying `overrideExisting: true` 
+    at module evaluation (src/redux/api/examsApi.ts:263:33)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  261 | };
+  262 |
+> 263 | export const examsApi = baseApi.injectEndpoints({
+      |                                 ^
+  264 |   endpoints: (builder) => ({
+  265 |     getExams: builder.query<Paginated<Exam>, ExamListParams | void>({
+  266 |       query: (params) => ({ url: "admin/exams/", params: params ?? undefined }), (src/redux/api/examsApi.ts:263:33)
+[browser] called `injectEndpoints` to override already-existing endpointName getExamBatches without specifying `overrideExisting: true` 
+    at module evaluation (src/redux/api/examsApi.ts:263:33)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  261 | };
+  262 |
+> 263 | export const examsApi = baseApi.injectEndpoints({
+      |                                 ^
+  264 |   endpoints: (builder) => ({
+  265 |     getExams: builder.query<Paginated<Exam>, ExamListParams | void>({
+  266 |       query: (params) => ({ url: "admin/exams/", params: params ?? undefined }), (src/redux/api/examsApi.ts:263:33)
+[browser] called `injectEndpoints` to override already-existing endpointName getExamBatch without specifying `overrideExisting: true` 
+    at module evaluation (src/redux/api/examsApi.ts:263:33)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  261 | };
+  262 |
+> 263 | export const examsApi = baseApi.injectEndpoints({
+      |                                 ^
+  264 |   endpoints: (builder) => ({
+  265 |     getExams: builder.query<Paginated<Exam>, ExamListParams | void>({
+  266 |       query: (params) => ({ url: "admin/exams/", params: params ?? undefined }), (src/redux/api/examsApi.ts:263:33)
+[browser] called `injectEndpoints` to override already-existing endpointName createExamBatch without specifying `overrideExisting: true` 
+    at module evaluation (src/redux/api/examsApi.ts:263:33)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  261 | };
+  262 |
+> 263 | export const examsApi = baseApi.injectEndpoints({
+      |                                 ^
+  264 |   endpoints: (builder) => ({
+  265 |     getExams: builder.query<Paginated<Exam>, ExamListParams | void>({
+  266 |       query: (params) => ({ url: "admin/exams/", params: params ?? undefined }), (src/redux/api/examsApi.ts:263:33)
+[browser] called `injectEndpoints` to override already-existing endpointName updateExamBatch without specifying `overrideExisting: true` 
+    at module evaluation (src/redux/api/examsApi.ts:263:33)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  261 | };
+  262 |
+> 263 | export const examsApi = baseApi.injectEndpoints({
+      |                                 ^
+  264 |   endpoints: (builder) => ({
+  265 |     getExams: builder.query<Paginated<Exam>, ExamListParams | void>({
+  266 |       query: (params) => ({ url: "admin/exams/", params: params ?? undefined }), (src/redux/api/examsApi.ts:263:33)
+[browser] called `injectEndpoints` to override already-existing endpointName addExamToBatch without specifying `overrideExisting: true` 
+    at module evaluation (src/redux/api/examsApi.ts:263:33)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  261 | };
+  262 |
+> 263 | export const examsApi = baseApi.injectEndpoints({
+      |                                 ^
+  264 |   endpoints: (builder) => ({
+  265 |     getExams: builder.query<Paginated<Exam>, ExamListParams | void>({
+  266 |       query: (params) => ({ url: "admin/exams/", params: params ?? undefined }), (src/redux/api/examsApi.ts:263:33)
+[browser] called `injectEndpoints` to override already-existing endpointName updateBatchExam without specifying `overrideExisting: true` 
+    at module evaluation (src/redux/api/examsApi.ts:263:33)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  261 | };
+  262 |
+> 263 | export const examsApi = baseApi.injectEndpoints({
+      |                                 ^
+  264 |   endpoints: (builder) => ({
+  265 |     getExams: builder.query<Paginated<Exam>, ExamListParams | void>({
+  266 |       query: (params) => ({ url: "admin/exams/", params: params ?? undefined }), (src/redux/api/examsApi.ts:263:33)
+[browser] called `injectEndpoints` to override already-existing endpointName removeExamFromBatch without specifying `overrideExisting: true` 
+    at module evaluation (src/redux/api/examsApi.ts:263:33)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  261 | };
+  262 |
+> 263 | export const examsApi = baseApi.injectEndpoints({
+      |                                 ^
+  264 |   endpoints: (builder) => ({
+  265 |     getExams: builder.query<Paginated<Exam>, ExamListParams | void>({
+  266 |       query: (params) => ({ url: "admin/exams/", params: params ?? undefined }), (src/redux/api/examsApi.ts:263:33)
+[browser] called `injectEndpoints` to override already-existing endpointName importRoutine without specifying `overrideExisting: true` 
+    at module evaluation (src/redux/api/examsApi.ts:263:33)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  261 | };
+  262 |
+> 263 | export const examsApi = baseApi.injectEndpoints({
+      |                                 ^
+  264 |   endpoints: (builder) => ({
+  265 |     getExams: builder.query<Paginated<Exam>, ExamListParams | void>({
+  266 |       query: (params) => ({ url: "admin/exams/", params: params ?? undefined }), (src/redux/api/examsApi.ts:263:33)
+[browser] called `injectEndpoints` to override already-existing endpointName getExamBatchEnrollments without specifying `overrideExisting: true` 
+    at module evaluation (src/redux/api/examsApi.ts:263:33)
+    at module evaluation (src/redux/api/examsApi.ts:424:36)
+  261 | };
+  262 |
+> 263 | export const examsApi = baseApi.injectEndpoints({
+      |                                 ^
+  264 |   endpoints: (builder) => ({
+  265 |     getExams: builder.query<Paginated<Exam>, ExamListParams | void>({
+  266 |       query: (params) => ({ url: "admin/exams/", params: params ?? undefined }), (src/redux/api/examsApi.ts:263:33)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.

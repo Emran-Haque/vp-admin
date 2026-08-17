@@ -56,7 +56,7 @@ export default function Page() {
     { skip: !examId || !exam || exam.status !== "published" }
   );
   const { data: courseSubjectsData } = useGetCourseSubjectsQuery(
-    { course: exam?.course },
+    { course: exam?.course ?? undefined },
     { skip: !exam?.course }
   );
 
@@ -87,7 +87,8 @@ export default function Page() {
 
     setBasicInfo({
       name: exam.title,
-      course: String(exam.course),
+      // Batch/routine exams have no course — keep it empty rather than "null".
+      course: exam.course != null ? String(exam.course) : "",
       subject: exam.subject != null ? String(exam.subject) : "",
       subjectName,
       duration: String(exam.duration_minutes),

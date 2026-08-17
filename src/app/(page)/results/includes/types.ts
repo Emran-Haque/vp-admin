@@ -20,7 +20,7 @@ export function toResultRow(
   coursesById: Map<number, Course>
 ): ResultRow {
   const exam = examsById.get(attempt.exam);
-  const course = exam ? coursesById.get(exam.course) : undefined;
+  const course = exam && exam.course != null ? coursesById.get(exam.course) : undefined;
 
   return {
     id: attempt.id,

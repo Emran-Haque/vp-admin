@@ -45,3 +45,65 @@ Creating turbopack project { dir: 'E:\\ViyaderPathshala\\vp-admin', testMode: tr
  GET /orders 200 in 68ms (next.js: 13ms, application-code: 55ms)
 ✓ Compiled in 902ms
  GET /orders 200 in 304ms (next.js: 188ms, application-code: 116ms)
+○ Compiling /books ...
+ GET /books 200 in 3.8s (next.js: 3.7s, application-code: 87ms)
+ GET /exam-batches 200 in 118ms (next.js: 56ms, application-code: 63ms)
+ GET /exam-batches 200 in 394ms (next.js: 10ms, application-code: 384ms)
+ GET /mcq 200 in 772ms (next.js: 655ms, application-code: 117ms)
+ GET /exam-batches 200 in 93ms (next.js: 18ms, application-code: 75ms)
+ GET /exam-batches 200 in 136ms (next.js: 11ms, application-code: 126ms)
+✓ Compiled in 291ms
+ GET /exam-batches 200 in 367ms (next.js: 172ms, application-code: 195ms)
+ GET /exam-batches 200 in 113ms (next.js: 11ms, application-code: 101ms)
+ GET /exam-batches 200 in 44ms (next.js: 7ms, application-code: 37ms)
+✓ Compiled in 164ms
+ GET /exam-batches 200 in 348ms (next.js: 230ms, application-code: 118ms)
+ GET /exam-batches 200 in 81ms (next.js: 8ms, application-code: 73ms)
+ GET /exam-batches 200 in 41ms (next.js: 7ms, application-code: 34ms)
+✓ Compiled in 228ms
+✓ Compiled in 203ms
+✓ Compiled in 190ms
+✓ Compiled in 446ms
+✓ Compiled in 1469ms
+ GET /exam-batches 200 in 281ms (next.js: 157ms, application-code: 124ms)
+ GET /exam-batches 200 in 70ms (next.js: 11ms, application-code: 60ms)
+✓ Compiled in 316ms
+ GET /exam-batches 200 in 207ms (next.js: 153ms, application-code: 54ms)
+✓ Compiled in 676ms
+ GET /exam-batches 200 in 216ms (next.js: 149ms, application-code: 66ms)
+✓ Compiled in 133ms
+ GET /exam-batches 200 in 212ms (next.js: 156ms, application-code: 55ms)
+✓ Compiled in 158ms
+ GET /exam-batches 200 in 199ms (next.js: 143ms, application-code: 55ms)
+✓ Compiled in 338ms
+ GET /exam-batches 200 in 196ms (next.js: 142ms, application-code: 53ms)
+✓ Compiled in 269ms
+ GET /exam-batches 200 in 186ms (next.js: 126ms, application-code: 60ms)
+✓ Compiled in 337ms
+ GET /exam-batches 200 in 175ms (next.js: 122ms, application-code: 53ms)
+✓ Compiled in 380ms
+ GET /exam-batches 200 in 180ms (next.js: 126ms, application-code: 53ms)
+ GET /exam-batches 200 in 1047ms (next.js: 18ms, application-code: 1029ms)
+ GET /exam-batches 200 in 106ms (next.js: 10ms, application-code: 96ms)
+ GET /mcq 200 in 290ms (next.js: 218ms, application-code: 72ms)
+ GET /exam-batches 200 in 67ms (next.js: 12ms, application-code: 55ms)
+ GET /mcq 200 in 44ms (next.js: 10ms, application-code: 34ms)
+ GET /home 200 in 400ms (next.js: 302ms, application-code: 98ms)
+○ Compiling /students ...
+ GET /courses 200 in 434ms (next.js: 345ms, application-code: 89ms)
+ GET /students 200 in 4.7s (next.js: 4.6s, application-code: 92ms)
+ GET /students 200 in 65ms (next.js: 11ms, application-code: 54ms)
+ GET /courses 200 in 393ms (next.js: 13ms, application-code: 379ms)
+ GET /exam-batches 200 in 80ms (next.js: 14ms, application-code: 67ms)
+ GET /mcq/20/edit 200 in 4.0s (next.js: 3.9s, application-code: 123ms)
+ GET /mcq/20/edit 200 in 65ms (next.js: 15ms, application-code: 49ms)
+✓ Compiled in 652ms
+ GET /exam-batches 200 in 211ms (next.js: 156ms, application-code: 55ms)
+✓ Compiled in 364ms
+ GET /exam-batches 200 in 475ms (next.js: 167ms, application-code: 308ms)
+✓ Compiled in 612ms
+ GET /exam-batches 200 in 284ms (next.js: 124ms, application-code: 160ms)
+ GET /exam-batches 200 in 106ms (next.js: 9ms, application-code: 97ms)
+ GET /exam-batches 200 in 48ms (next.js: 8ms, application-code: 40ms)
+✓ Compiled in 330ms
+ GET /exam-batches 200 in 180ms (next.js: 124ms, application-code: 56ms)

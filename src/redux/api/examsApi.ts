@@ -3,7 +3,8 @@ import type { Paginated } from "./types";
 
 export type Exam = {
   id: number;
-  course: number;
+  /** null for standalone exam-batch (routine) exams — they have no course. */
+  course: number | null;
   course_class: number | null;
   title: string;
   slug: string;
@@ -184,8 +185,35 @@ export type ExamBatchExam = {
   total_questions: number;
   total_marks: string;
   duration_minutes: number;
+  marks_per_question: string;
   ordering: number;
   note: string;
+  subject_label: string;
+  planned_questions: number;
+};
+
+export type RoutineImportQuestion = {
+  question_text: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  correct_option: string;
+  explanation?: string;
+};
+
+export type RoutineImportExam = {
+  title: string;
+  subject_label?: string;
+  exam_date?: string | null;
+  start_time?: string | null;
+  end_time?: string | null;
+  duration_minutes?: number;
+  marks_per_question?: string;
+  negative_mark_per_wrong?: string;
+  planned_questions?: number;
+  /** Empty for schedule-only routine rows — questions are added per tile later. */
+  questions: RoutineImportQuestion[];
 };
 
 export type ExamBatch = {
@@ -361,8 +389,21 @@ export const examsApi = baseApi.injectEndpoints({
         { type: "ExamBatches", id: "LIST" },
       ],
     }),
-    addExamToBatch: builder.mutation<ExamBatchExam, { batch: number; exam: number; ordering?: number; note?: string }>({
+    addExamToBatch: builder.mutation<
+      ExamBatchExam,
+      { batch: number; exam: number; ordering?: number; note?: string; subject_label?: string }
+    >({
       query: (body) => ({ url: "admin/exam-batch-exams/", method: "POST", body }),
+      invalidatesTags: (_result, _error, { batch }) => [
+        { type: "ExamBatches", id: batch },
+        { type: "ExamBatches", id: "LIST" },
+      ],
+    }),
+    updateBatchExam: builder.mutation<
+      ExamBatchExam,
+      { id: number; batch: number; data: Partial<Pick<ExamBatchExam, "ordering" | "note" | "subject_label">> }
+    >({
+      query: ({ id, data }) => ({ url: `admin/exam-batch-exams/${id}/`, method: "PATCH", body: data }),
       invalidatesTags: (_result, _error, { batch }) => [
         { type: "ExamBatches", id: batch },
         { type: "ExamBatches", id: "LIST" },
@@ -372,6 +413,20 @@ export const examsApi = baseApi.injectEndpoints({
       query: ({ id }) => ({ url: `admin/exam-batch-exams/${id}/`, method: "DELETE" }),
       invalidatesTags: (_result, _error, { batch }) => [
         { type: "ExamBatches", id: batch },
+        { type: "ExamBatches", id: "LIST" },
+      ],
+    }),
+    importRoutine: builder.mutation<
+      { created: number; batch: ExamBatch },
+      { batchId: number; publish: boolean; exams: RoutineImportExam[] }
+    >({
+      query: ({ batchId, publish, exams }) => ({
+        url: `admin/exam-batches/${batchId}/import-routine/`,
+        method: "POST",
+        body: { publish, exams },
+      }),
+      invalidatesTags: (_result, _error, { batchId }) => [
+        { type: "ExamBatches", id: batchId },
         { type: "ExamBatches", id: "LIST" },
       ],
     }),
@@ -405,6 +460,8 @@ export const {
   useCreateExamBatchMutation,
   useUpdateExamBatchMutation,
   useAddExamToBatchMutation,
+  useUpdateBatchExamMutation,
   useRemoveExamFromBatchMutation,
+  useImportRoutineMutation,
   useGetExamBatchEnrollmentsQuery,
 } = examsApi;
