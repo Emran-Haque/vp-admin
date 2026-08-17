@@ -158,9 +158,11 @@ export type ExamAttemptListParams = {
   exam?: number;
   course?: number;
   status?: string;
+  completed?: boolean;
   search?: string;
   ordering?: string;
   page?: number;
+  page_size?: number;
 };
 
 export const examsApi = baseApi.injectEndpoints({
