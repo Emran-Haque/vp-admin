@@ -20,6 +20,8 @@ export type Exam = {
   end_time: string;
   status: "draft" | "published" | "closed" | string;
   result_status: "hidden" | "pending" | "published" | string;
+  is_result_published?: boolean;
+  is_leaderboard_visible?: boolean;
   result_publish_at: string | null;
   leaderboard_publish_at: string | null;
   auto_submit_on_time_end: boolean;
@@ -35,6 +37,7 @@ export type ExamListParams = {
   result_status?: string;
   search?: string;
   page?: number;
+  page_size?: number;
 };
 
 export type CreateExamInput = Partial<
@@ -86,8 +89,8 @@ export type ClassQuiz = {
 };
 
 export type PublishResultInput = {
-  result_publish_at?: string;
-  leaderboard_publish_at?: string;
+  result_publish_at?: string | null;
+  leaderboard_publish_at?: string | null;
 };
 
 export type PublishResultOutput = {
@@ -163,6 +166,76 @@ export type ExamAttemptListParams = {
   ordering?: string;
   page?: number;
   page_size?: number;
+};
+
+export type ExamBatchExam = {
+  id: number;
+  batch: number;
+  exam: number;
+  exam_title: string;
+  exam_status: string;
+  exam_date: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  result_status: string;
+  is_result_published: boolean;
+  result_publish_at: string | null;
+  leaderboard_publish_at: string | null;
+  total_questions: number;
+  total_marks: string;
+  duration_minutes: number;
+  ordering: number;
+  note: string;
+};
+
+export type ExamBatch = {
+  id: number;
+  title: string;
+  slug: string;
+  description: string;
+  short_description: string;
+  thumbnail: string | null;
+  price: string;
+  old_price: string | null;
+  discount: string;
+  is_published: boolean;
+  start_date: string | null;
+  end_date: string | null;
+  routine_note: string;
+  exam_count: number;
+  enrolled_count: number;
+  is_enrolled: boolean;
+  exams: ExamBatchExam[];
+  created_at: string;
+  updated_at: string;
+};
+
+export type ExamBatchInput = Partial<
+  Pick<
+    ExamBatch,
+    | "title"
+    | "description"
+    | "short_description"
+    | "price"
+    | "old_price"
+    | "discount"
+    | "is_published"
+    | "start_date"
+    | "end_date"
+    | "routine_note"
+  >
+> & { title: string };
+
+export type ExamBatchEnrollment = {
+  id: number;
+  student: number;
+  student_name: string;
+  student_email: string;
+  batch: number;
+  batch_title: string;
+  source: string;
+  enrolled_at: string;
+  is_active: boolean;
 };
 
 export const examsApi = baseApi.injectEndpoints({
@@ -263,6 +336,49 @@ export const examsApi = baseApi.injectEndpoints({
       query: (params) => ({ url: "admin/exam-attempts/", params: params ?? undefined }),
       providesTags: ["ExamAttempts"],
     }),
+    getExamBatches: builder.query<Paginated<ExamBatch>, { search?: string; page?: number } | void>({
+      query: (params) => ({ url: "admin/exam-batches/", params: params ?? undefined }),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.results.map((batch) => ({ type: "ExamBatches" as const, id: batch.id })),
+              { type: "ExamBatches" as const, id: "LIST" },
+            ]
+          : [{ type: "ExamBatches" as const, id: "LIST" }],
+    }),
+    getExamBatch: builder.query<ExamBatch, number>({
+      query: (id) => `admin/exam-batches/${id}/`,
+      providesTags: (_result, _error, id) => [{ type: "ExamBatches", id }],
+    }),
+    createExamBatch: builder.mutation<ExamBatch, ExamBatchInput>({
+      query: (body) => ({ url: "admin/exam-batches/", method: "POST", body }),
+      invalidatesTags: [{ type: "ExamBatches", id: "LIST" }],
+    }),
+    updateExamBatch: builder.mutation<ExamBatch, { id: number; data: Partial<ExamBatchInput> }>({
+      query: ({ id, data }) => ({ url: `admin/exam-batches/${id}/`, method: "PATCH", body: data }),
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: "ExamBatches", id },
+        { type: "ExamBatches", id: "LIST" },
+      ],
+    }),
+    addExamToBatch: builder.mutation<ExamBatchExam, { batch: number; exam: number; ordering?: number; note?: string }>({
+      query: (body) => ({ url: "admin/exam-batch-exams/", method: "POST", body }),
+      invalidatesTags: (_result, _error, { batch }) => [
+        { type: "ExamBatches", id: batch },
+        { type: "ExamBatches", id: "LIST" },
+      ],
+    }),
+    removeExamFromBatch: builder.mutation<void, { id: number; batch: number }>({
+      query: ({ id }) => ({ url: `admin/exam-batch-exams/${id}/`, method: "DELETE" }),
+      invalidatesTags: (_result, _error, { batch }) => [
+        { type: "ExamBatches", id: batch },
+        { type: "ExamBatches", id: "LIST" },
+      ],
+    }),
+    getExamBatchEnrollments: builder.query<ExamBatchEnrollment[], number>({
+      query: (id) => `admin/exam-batches/${id}/enrollments/`,
+      providesTags: (_result, _error, id) => [{ type: "ExamBatches", id: `enrollments-${id}` }],
+    }),
   }),
   overrideExisting: false,
 });
@@ -284,4 +400,11 @@ export const {
   useGetExamLeaderboardQuery,
   useGetExamAnalyticsQuery,
   useGetExamAttemptsQuery,
+  useGetExamBatchesQuery,
+  useGetExamBatchQuery,
+  useCreateExamBatchMutation,
+  useUpdateExamBatchMutation,
+  useAddExamToBatchMutation,
+  useRemoveExamFromBatchMutation,
+  useGetExamBatchEnrollmentsQuery,
 } = examsApi;

@@ -1,0 +1,38 @@
+
+> vp-admin@0.1.0 dev
+> next dev -p 3100
+
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3100
+- Network:       http://192.168.0.101:3100
+✓ Ready in 1688ms
+Creating turbopack project { dir: 'E:\\ViyaderPathshala\\vp-admin', testMode: true }
+
+○ Compiling /mcq ...
+ GET /mcq 200 in 136ms (next.js: 17ms, application-code: 118ms)
+ GET /mcq 200 in 528ms (next.js: 185ms, application-code: 342ms)
+ GET /login 200 in 434ms (next.js: 204ms, application-code: 230ms)
+ GET /mcq 200 in 152ms (next.js: 46ms, application-code: 106ms)
+ GET /mcq 200 in 237ms (next.js: 41ms, application-code: 196ms)
+✓ Compiled in 1091ms
+ GET /login 200 in 441ms (next.js: 342ms, application-code: 99ms)
+✓ Compiled in 785ms
+○ Compiling /exam-batches ...
+ GET /exam-batches 200 in 5.0s (next.js: 4.6s, application-code: 351ms)
+ GET /exam-batches 200 in 539ms (next.js: 174ms, application-code: 365ms)
+ GET /login 200 in 1718ms (next.js: 911ms, application-code: 807ms)
+ GET /login 200 in 94ms (next.js: 9ms, application-code: 85ms)
+ GET /home 200 in 471ms (next.js: 337ms, application-code: 135ms)
+ GET /exam-batches 200 in 55ms (next.js: 13ms, application-code: 42ms)
+✓ Compiled in 1160ms
+ GET /exam-batches 200 in 1388ms (next.js: 984ms, application-code: 404ms)
+ GET /login 200 in 297ms (next.js: 199ms, application-code: 98ms)
+✓ Compiled in 377ms
+ GET /login 200 in 300ms (next.js: 175ms, application-code: 125ms)
+✓ Compiled in 1609ms
+ GET /login 200 in 218ms (next.js: 137ms, application-code: 81ms)
+✓ Compiled in 246ms
+ GET /login 200 in 191ms (next.js: 127ms, application-code: 64ms)
+ GET /exam-batches 200 in 979ms (next.js: 299ms, application-code: 680ms)
+✓ Compiled in 1480ms
+ GET /login 200 in 498ms (next.js: 312ms, application-code: 186ms)

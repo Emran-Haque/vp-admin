@@ -29,11 +29,12 @@ import { PageLoader } from "@/components/loaders";
 
 const resultStatusStyles: Record<string, { label: string; className: string }> = {
   published: { label: "ফলাফল প্রকাশিত", className: "border-emerald-500/40 bg-emerald-500/10 text-emerald-500" },
-  pending: { label: "ফলাফল বাকি", className: "border-amber-500/40 bg-amber-500/10 text-amber-500" },
-  hidden: { label: "নির্ধারিত", className: "border-cyan-500/40 bg-cyan-500/10 text-cyan-500" },
+  pending: { label: "ফলাফল নির্ধারিত", className: "border-amber-500/40 bg-amber-500/10 text-amber-500" },
+  hidden: { label: "ফলাফল গোপন", className: "border-cyan-500/40 bg-cyan-500/10 text-cyan-500" },
 };
 
 function resultStatusOf(exam: Exam) {
+  if (exam.is_result_published) return resultStatusStyles.published;
   return resultStatusStyles[exam.result_status] ?? resultStatusStyles.hidden;
 }
 
@@ -93,7 +94,7 @@ export default function ExamList() {
                 {status.label}
               </span>
 
-              {exam.result_status === "pending" && hasPermission("can_publish_result") && (
+              {!exam.is_result_published && exam.result_status !== "published" && hasPermission("can_publish_result") && (
                 <button
                   type="button"
                   onClick={() => publishResult({ id: exam.id })}

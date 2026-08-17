@@ -8,13 +8,13 @@ export function extractErrorMessage(error: unknown): string {
     };
 
     if (err.status === "FETCH_ERROR" || err.status === "TIMEOUT_ERROR" || err.status === "CUSTOM_ERROR") {
-      return typeof err.error === "string" ? err.error : "Could not connect to the server.";
+      return typeof err.error === "string" ? err.error : "সার্ভারের সাথে সংযোগ করা যায়নি।";
     }
 
     if (err.status === "PARSING_ERROR") {
       return typeof err.originalStatus === "number"
-        ? `Backend returned a non-JSON response (${err.originalStatus}). Please make sure the latest backend code is deployed and migrations are run.`
-        : "Backend returned a non-JSON response. Please make sure the latest backend code is deployed.";
+        ? `ব্যাকএন্ড থেকে JSON response পাওয়া যায়নি (${err.originalStatus})। সর্বশেষ ব্যাকএন্ড কোড deploy করা আছে এবং migration run করা হয়েছে কিনা নিশ্চিত করুন।`
+        : "ব্যাকএন্ড থেকে JSON response পাওয়া যায়নি। সর্বশেষ ব্যাকএন্ড কোড deploy করা আছে কিনা নিশ্চিত করুন।";
     }
 
     if (typeof err.status === "number") {
@@ -41,5 +41,5 @@ export function extractErrorMessage(error: unknown): string {
     if (typeof message === "string") return message;
   }
 
-  return "Unknown error";
+  return "অজানা সমস্যা হয়েছে।";
 }

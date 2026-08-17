@@ -12,7 +12,6 @@ type Props = {
 
 const statusOptions: { value: ExamStatus; label: string }[] = [
   { value: "draft", label: "ড্রাফট" },
-  { value: "scheduled", label: "নির্ধারিত" },
   { value: "published", label: "প্রকাশিত" },
 ];
 
@@ -252,7 +251,7 @@ export default function StepBasicInfo({ value, onChange }: Props) {
               onChange={(e) => set("leaderboardPublishAt", e.target.value)}
               className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 focus:outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100"
             />
-            <p className="mt-1.5 text-sm text-slate-400">খালি রাখলে লিডারবোর্ড ম্যানুয়ালি প্রকাশ করতে হবে</p>
+            <p className="mt-1.5 text-sm text-slate-400">খালি রাখলে ফলাফল প্রকাশের সাথে লিডারবোর্ড দেখা যাবে</p>
           </div>
         </div>
 
@@ -273,13 +272,13 @@ export default function StepBasicInfo({ value, onChange }: Props) {
                 <span className="font-semibold">Leaderboard:</span>{" "}
                 {value.leaderboardPublishAt
                   ? fmtDateTime(value.leaderboardPublishAt)
-                  : "Manual publish"}
+                  : "ফলাফলের সাথে"}
               </p>
             </div>
           ) : (
             <p className="m-0 leading-6">
-              <span className="font-semibold">Manual publish mode.</span> Result ba
-              leaderboard time set na korle admin theke manually publish korte hobe.
+              <span className="font-semibold">ম্যানুয়াল ফলাফল মোড।</span> ফলাফলের সময়
+              না দিলে admin থেকে manually publish করতে হবে।
             </p>
           )}
         </div>

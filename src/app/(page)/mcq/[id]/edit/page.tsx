@@ -100,12 +100,7 @@ export default function Page() {
       resultPublishAt: isoToLocalDateTimeInput(exam.result_publish_at),
       leaderboardPublishAt: isoToLocalDateTimeInput(exam.leaderboard_publish_at),
       description: exam.instructions,
-      status:
-        exam.status === "scheduled"
-          ? "scheduled"
-          : exam.status === "published" || exam.status === "closed"
-            ? "published"
-            : "draft",
+      status: exam.status === "published" || exam.status === "closed" ? "published" : "draft",
     });
 
     const loadedQuestions: Question[] = questionsData.map((q) => ({
@@ -252,13 +247,17 @@ export default function Page() {
 
     const resultPublishAt = localDateTimeToIso(basicInfo.resultPublishAt);
     const leaderboardPublishAt = localDateTimeToIso(basicInfo.leaderboardPublishAt);
-    if (resultPublishAt || leaderboardPublishAt) {
+    const resultScheduleChanged =
+      basicInfo.resultPublishAt !== isoToLocalDateTimeInput(exam?.result_publish_at);
+    const leaderboardScheduleChanged =
+      basicInfo.leaderboardPublishAt !== isoToLocalDateTimeInput(exam?.leaderboard_publish_at);
+    if (resultScheduleChanged || leaderboardScheduleChanged) {
       try {
         await publishExamResult({
           id: examId,
           data: {
-            ...(resultPublishAt ? { result_publish_at: resultPublishAt } : {}),
-            ...(leaderboardPublishAt ? { leaderboard_publish_at: leaderboardPublishAt } : {}),
+            ...(resultScheduleChanged ? { result_publish_at: resultPublishAt ?? null } : {}),
+            ...(leaderboardScheduleChanged ? { leaderboard_publish_at: leaderboardPublishAt ?? null } : {}),
           },
         }).unwrap();
       } catch (err) {
