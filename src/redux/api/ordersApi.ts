@@ -3,9 +3,10 @@ import type { Paginated } from "./types";
 
 export type OrderItem = {
   id: number;
-  item_type: "book" | "course";
+  item_type: "book" | "course" | "mcq_batch";
   book: number | null;
   course: number | null;
+  exam_batch: number | null;
   title_snapshot: string;
   price: string;
   quantity: number;

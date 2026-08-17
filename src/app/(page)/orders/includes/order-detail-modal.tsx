@@ -6,6 +6,12 @@ import { useUpdateOrderStatusMutation, type Order } from "@/redux/api/ordersApi"
 import { orderStatuses, paymentStatuses } from "./status-config";
 import { usePermissions } from "@/hooks/use-permissions";
 
+function itemTypeLabel(itemType: string) {
+  if (itemType === "course") return "কোর্স";
+  if (itemType === "mcq_batch") return "পরীক্ষা ব্যাচ";
+  return "বই";
+}
+
 export default function OrderDetailModal({ order, onClose }: { order: Order; onClose: () => void }) {
   const [paymentStatus, setPaymentStatus] = useState(order.payment_status);
   const [orderStatus, setOrderStatus] = useState(order.order_status);
@@ -90,7 +96,7 @@ export default function OrderDetailModal({ order, onClose }: { order: Order; onC
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-slate-200">{item.title_snapshot}</p>
                     <p className="text-xs text-slate-500">
-                      {item.item_type === "book" ? "বই" : "কোর্স"} • ৳{item.price} × {item.quantity}
+                      {itemTypeLabel(item.item_type)} • ৳{item.price} × {item.quantity}
                     </p>
                   </div>
                   <span className="shrink-0 font-semibold text-blue-50">৳{item.line_total}</span>
@@ -196,7 +202,7 @@ export default function OrderDetailModal({ order, onClose }: { order: Order; onC
 
           {paymentStatus === "paid" && order.payment_status !== "paid" && (
             <p className="text-xs text-amber-500">
-              পেমেন্ট &quot;পেইড&quot; করলে কোর্স আইটেম স্বয়ংক্রিয়ভাবে এনরোল হবে এবং বইয়ের স্টক কমে যাবে।
+              পেমেন্ট &quot;পেইড&quot; করলে কোর্স/পরীক্ষা ব্যাচের অ্যাক্সেস স্বয়ংক্রিয়ভাবে চালু হবে এবং বইয়ের স্টক কমে যাবে।
             </p>
           )}
         </div>

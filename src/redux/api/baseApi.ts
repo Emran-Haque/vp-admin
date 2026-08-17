@@ -2,14 +2,7 @@ import { createApi, fetchBaseQuery, type BaseQueryFn, type FetchArgs, type Fetch
 import type { RootState } from "../store";
 import { logout } from "../slices/authSlice";
 
-const DEFAULT_API_BASE_URL =
-  process.env.NODE_ENV === "development"
-    ? "http://127.0.0.1:8000/api/v1/"
-    : "https://api.vaiyaderpathshala.com/api/v1/";
-
-const API_BASE_URL = (
-  process.env.NEXT_PUBLIC_API_BASE_URL || DEFAULT_API_BASE_URL
-).replace(/\/?$/, "/");
+const API_BASE_URL = "https://api.vaiyaderpathshala.com/api/v1/";
 
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: API_BASE_URL,

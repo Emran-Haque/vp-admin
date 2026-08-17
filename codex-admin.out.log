@@ -36,3 +36,12 @@ Creating turbopack project { dir: 'E:\\ViyaderPathshala\\vp-admin', testMode: tr
  GET /exam-batches 200 in 979ms (next.js: 299ms, application-code: 680ms)
 ✓ Compiled in 1480ms
  GET /login 200 in 498ms (next.js: 312ms, application-code: 186ms)
+✓ Compiled in 440ms
+ GET /login 200 in 435ms (next.js: 313ms, application-code: 122ms)
+ GET /home 200 in 365ms (next.js: 216ms, application-code: 149ms)
+ GET /exam-batches 200 in 284ms (next.js: 205ms, application-code: 79ms)
+ GET /exam-batches 200 in 352ms (next.js: 11ms, application-code: 341ms)
+ GET /orders 200 in 3.1s (next.js: 3.0s, application-code: 120ms)
+ GET /orders 200 in 68ms (next.js: 13ms, application-code: 55ms)
+✓ Compiled in 902ms
+ GET /orders 200 in 304ms (next.js: 188ms, application-code: 116ms)
