@@ -17,6 +17,8 @@ import {
   useAddExamQuestionMutation,
   useUpdateQuestionMutation,
   useDeleteQuestionMutation,
+  usePublishExamMutation,
+  usePublishExamResultMutation,
   useGetExamAttemptsQuery,
   useRecalculateLeaderboardMutation,
 } from "@/redux/api/examsApi";
@@ -62,6 +64,8 @@ export default function Page() {
   const [addExamQuestion] = useAddExamQuestionMutation();
   const [updateQuestion] = useUpdateQuestionMutation();
   const [deleteQuestion] = useDeleteQuestionMutation();
+  const [publishExam] = usePublishExamMutation();
+  const [publishExamResult] = usePublishExamResultMutation();
   const [recalculateLeaderboard] = useRecalculateLeaderboardMutation();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -96,7 +100,12 @@ export default function Page() {
       resultPublishAt: isoToLocalDateTimeInput(exam.result_publish_at),
       leaderboardPublishAt: isoToLocalDateTimeInput(exam.leaderboard_publish_at),
       description: exam.instructions,
-      status: exam.status === "published" || exam.status === "closed" ? "published" : "draft",
+      status:
+        exam.status === "scheduled"
+          ? "scheduled"
+          : exam.status === "published" || exam.status === "closed"
+            ? "published"
+            : "draft",
     });
 
     const loadedQuestions: Question[] = questionsData.map((q) => ({
@@ -170,6 +179,7 @@ export default function Page() {
           exam_date: basicInfo.examDate || undefined,
           start_time: startDateTime,
           end_time: endDateTime,
+          ...(basicInfo.status !== "published" ? { status: basicInfo.status } : {}),
         },
       }).unwrap();
     } catch (err) {
@@ -225,6 +235,34 @@ export default function Page() {
         }
       } catch (err) {
         setSaveError(`প্রশ্ন ${i + 1} সংরক্ষণ করা যায়নি: ${extractErrorMessage(err)}`);
+        setIsSaving(false);
+        return;
+      }
+    }
+
+    if (basicInfo.status === "published" && exam?.status !== "published") {
+      try {
+        await publishExam(examId).unwrap();
+      } catch (err) {
+        setSaveError(`পরীক্ষা publish করা যায়নি: ${extractErrorMessage(err)}`);
+        setIsSaving(false);
+        return;
+      }
+    }
+
+    const resultPublishAt = localDateTimeToIso(basicInfo.resultPublishAt);
+    const leaderboardPublishAt = localDateTimeToIso(basicInfo.leaderboardPublishAt);
+    if (resultPublishAt || leaderboardPublishAt) {
+      try {
+        await publishExamResult({
+          id: examId,
+          data: {
+            ...(resultPublishAt ? { result_publish_at: resultPublishAt } : {}),
+            ...(leaderboardPublishAt ? { leaderboard_publish_at: leaderboardPublishAt } : {}),
+          },
+        }).unwrap();
+      } catch (err) {
+        setSaveError(`Result/leaderboard schedule save করা যায়নি: ${extractErrorMessage(err)}`);
         setIsSaving(false);
         return;
       }

@@ -74,6 +74,7 @@ export default function Page() {
         exam_date: basicInfo.examDate || undefined,
         start_time: startDateTime,
         end_time: endDateTime,
+        status: basicInfo.status === "published" ? "draft" : basicInfo.status,
       }).unwrap();
     } catch (err) {
       console.error("Failed to create exam:", err);
@@ -106,7 +107,7 @@ export default function Page() {
       }
     }
 
-    if (questions.length > 0) {
+    if (basicInfo.status === "published" && questions.length > 0) {
       try {
         await publishExam(exam.id).unwrap();
       } catch (err) {

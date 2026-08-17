@@ -44,7 +44,6 @@ export type CreateExamInput = Partial<
     | "slug"
     | "created_by"
     | "published_by"
-    | "status"
     | "total_questions"
     | "total_marks"
     // result/leaderboard publish scheduling is not accepted by admin/exams/ — use publishExamResult

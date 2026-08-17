@@ -34,6 +34,8 @@ export default function StepBasicInfo({ value, onChange }: Props) {
   const hasDeadline = Boolean(value.deadline);
   const toBn = (s: string) => s.replace(/[0-9]/g, (d) => "০১২৩৪৫৬৭৮৯"[Number(d)]);
   const fmtDeadline = (dt: string) => (dt ? toBn(dt.replace("T", " · ")) : "");
+  const fmtDateTime = (dt: string) => (dt ? toBn(dt.replace("T", " · ")) : "");
+  const hasResultSchedule = Boolean(value.resultPublishAt || value.leaderboardPublishAt);
 
   return (
     <section className="rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
@@ -252,6 +254,34 @@ export default function StepBasicInfo({ value, onChange }: Props) {
             />
             <p className="mt-1.5 text-sm text-slate-400">খালি রাখলে লিডারবোর্ড ম্যানুয়ালি প্রকাশ করতে হবে</p>
           </div>
+        </div>
+
+        <div
+          className={`mt-5 rounded-xl border px-4 py-3 text-sm ${
+            hasResultSchedule
+              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-100"
+              : "border-slate-700 bg-gray-800/40 text-slate-300"
+          }`}
+        >
+          {hasResultSchedule ? (
+            <div className="grid gap-2 leading-6 sm:grid-cols-2">
+              <p className="m-0">
+                <span className="font-semibold">Result:</span>{" "}
+                {value.resultPublishAt ? fmtDateTime(value.resultPublishAt) : "Manual publish"}
+              </p>
+              <p className="m-0">
+                <span className="font-semibold">Leaderboard:</span>{" "}
+                {value.leaderboardPublishAt
+                  ? fmtDateTime(value.leaderboardPublishAt)
+                  : "Manual publish"}
+              </p>
+            </div>
+          ) : (
+            <p className="m-0 leading-6">
+              <span className="font-semibold">Manual publish mode.</span> Result ba
+              leaderboard time set na korle admin theke manually publish korte hobe.
+            </p>
+          )}
         </div>
       </div>
 
