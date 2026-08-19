@@ -9,6 +9,7 @@ import {
   Pencil,
   Plus,
   Trash2,
+  UserPlus,
   Users,
 } from "lucide-react";
 import {
@@ -23,6 +24,8 @@ import ErrorState from "@/components/error-state";
 import AddRoutineExamModal from "./add-routine-exam-modal";
 import RoutineCsvImport from "./routine-csv-import";
 import RoutineMcqEditor from "./routine-mcq-editor";
+import JoinRequestsPanel from "./join-requests-panel";
+import EditRoutineExamModal from "./edit-routine-exam-modal";
 
 const bn = (n: number | string) => String(n).replace(/[0-9]/g, (d) => "০১২৩৪৫৬৭৮৯"[Number(d)]);
 
@@ -56,7 +59,9 @@ export default function BatchManageView({
   const [deleteExam] = useDeleteExamMutation();
   const [showAdd, setShowAdd] = useState(false);
   const [showStudents, setShowStudents] = useState(false);
+  const [showJoinRequests, setShowJoinRequests] = useState(false);
   const [editingExam, setEditingExam] = useState<{ id: number; title: string } | null>(null);
+  const [editingRow, setEditingRow] = useState<ExamBatchExam | null>(null);
 
   if (editingExam) {
     return (
@@ -106,6 +111,9 @@ export default function BatchManageView({
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => setShowJoinRequests((s) => !s)} className="inline-flex h-11 items-center gap-2 rounded-xl border border-cyan-500/30 px-4 text-sm font-bold text-cyan-100 hover:bg-white/5">
+              <UserPlus size={16} /> জয়েন রিকোয়েস্ট
+            </button>
             <button type="button" onClick={() => setShowStudents((s) => !s)} className="inline-flex h-11 items-center gap-2 rounded-xl border border-cyan-500/30 px-4 text-sm font-bold text-cyan-100 hover:bg-white/5">
               <Users size={16} /> শিক্ষার্থী
             </button>
@@ -116,6 +124,7 @@ export default function BatchManageView({
         </div>
       </section>
 
+      {showJoinRequests ? <JoinRequestsPanel batchId={batchId} /> : null}
       {showStudents ? <EnrollmentPanel batchId={batchId} /> : null}
 
       <section className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
@@ -193,7 +202,16 @@ export default function BatchManageView({
                             </button>
                             <button
                               type="button"
+                              onClick={() => setEditingRow(item)}
+                              title="রুটিন এডিট"
+                              className="grid size-9 place-items-center rounded-lg border border-slate-700 text-blue-50 hover:bg-white/5"
+                            >
+                              <Pencil size={14} />
+                            </button>
+                            <button
+                              type="button"
                               onClick={() => removeRow(item)}
+                              title="মুছে ফেলুন"
                               className="grid size-9 place-items-center rounded-lg border border-red-600/40 bg-red-600/10 text-red-500 hover:bg-red-600/20"
                             >
                               <Trash2 size={14} />
@@ -215,6 +233,17 @@ export default function BatchManageView({
           batchId={batchId}
           onClose={() => setShowAdd(false)}
           onAdded={() => setShowAdd(false)}
+        />
+      ) : null}
+
+      {editingRow ? (
+        <EditRoutineExamModal
+          item={editingRow}
+          onClose={() => setEditingRow(null)}
+          onSaved={() => {
+            setEditingRow(null);
+            void refetch();
+          }}
         />
       ) : null}
     </div>

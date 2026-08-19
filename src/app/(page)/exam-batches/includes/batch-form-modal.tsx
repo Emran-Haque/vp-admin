@@ -1,13 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, Save, X } from "lucide-react";
+import { AlertTriangle, ImagePlus, Save, X } from "lucide-react";
 import {
   useCreateExamBatchMutation,
   useUpdateExamBatchMutation,
   type ExamBatch,
 } from "@/redux/api/examsApi";
 import { extractErrorMessage } from "@/lib/api-error";
+
+const API_ORIGIN = "https://api.vaiyaderpathshala.com";
+
+function resolveMediaUrl(value: string | null) {
+  if (!value) return "";
+  if (/^https?:\/\//i.test(value)) return value;
+  try {
+    return new URL(value.startsWith("/") ? value : `/${value}`, API_ORIGIN).toString();
+  } catch {
+    return value;
+  }
+}
 
 type BatchForm = {
   title: string;
@@ -61,10 +73,15 @@ export default function BatchFormModal({
   onSaved: (saved: ExamBatch) => void;
 }) {
   const [form, setForm] = useState<BatchForm>(batch ? formFromBatch(batch) : emptyForm);
+  const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [createBatch, { isLoading: isCreating }] = useCreateExamBatchMutation();
   const [updateBatch, { isLoading: isUpdating }] = useUpdateExamBatchMutation();
   const isBusy = isCreating || isUpdating;
+
+  const previewUrl = thumbnail
+    ? URL.createObjectURL(thumbnail)
+    : resolveMediaUrl(batch?.thumbnail ?? null);
 
   const set = <K extends keyof BatchForm>(key: K, value: BatchForm[K]) =>
     setForm((current) => ({ ...current, [key]: value }));
@@ -72,16 +89,35 @@ export default function BatchFormModal({
   const save = async () => {
     if (!form.title.trim()) return;
     setError(null);
-    const payload = {
-      ...form,
-      old_price: form.old_price || null,
-      start_date: form.start_date || null,
-      end_date: form.end_date || null,
-    };
     try {
-      const saved = batch
-        ? await updateBatch({ id: batch.id, data: payload }).unwrap()
-        : await createBatch(payload).unwrap();
+      let saved: ExamBatch;
+      if (thumbnail) {
+        // Multipart when a new thumbnail is picked.
+        const fd = new FormData();
+        fd.append("title", form.title);
+        fd.append("short_description", form.short_description);
+        fd.append("description", form.description);
+        fd.append("price", form.price || "0");
+        fd.append("discount", form.discount || "0");
+        fd.append("is_published", String(form.is_published));
+        if (form.old_price) fd.append("old_price", form.old_price);
+        if (form.start_date) fd.append("start_date", form.start_date);
+        if (form.end_date) fd.append("end_date", form.end_date);
+        fd.append("thumbnail", thumbnail);
+        saved = batch
+          ? await updateBatch({ id: batch.id, data: fd }).unwrap()
+          : await createBatch(fd).unwrap();
+      } else {
+        const payload = {
+          ...form,
+          old_price: form.old_price || null,
+          start_date: form.start_date || null,
+          end_date: form.end_date || null,
+        };
+        saved = batch
+          ? await updateBatch({ id: batch.id, data: payload }).unwrap()
+          : await createBatch(payload).unwrap();
+      }
       onSaved(saved);
     } catch (err) {
       setError(extractErrorMessage(err));
@@ -119,6 +155,21 @@ export default function BatchFormModal({
               <p className="text-xs text-red-400">{error}</p>
             </div>
           ) : null}
+
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-slate-400">কভার ছবি</label>
+            <label className="group relative flex h-36 cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-dashed border-slate-700 bg-gray-800/50 hover:border-cyan-500/50">
+              {previewUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={previewUrl} alt="থাম্বনেইল" className="absolute inset-0 h-full w-full object-cover" />
+              ) : null}
+              <div className={`relative z-10 flex flex-col items-center gap-1.5 rounded-xl px-4 py-2 text-center ${previewUrl ? "bg-black/50 text-white" : "text-slate-400"}`}>
+                <ImagePlus size={22} />
+                <span className="text-xs font-bold">{previewUrl ? "ছবি পরিবর্তন করুন" : "কভার ছবি আপলোড করুন"}</span>
+              </div>
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => setThumbnail(e.target.files?.[0] ?? null)} />
+            </label>
+          </div>
 
           <div>
             <label className="mb-1.5 block text-xs font-semibold text-slate-400">ব্যাচের নাম *</label>

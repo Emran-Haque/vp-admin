@@ -16,9 +16,9 @@ export type Exam = {
   marks_per_question: string;
   negative_mark_per_wrong: string;
   pass_mark_percentage: string;
-  exam_date: string;
-  start_time: string;
-  end_time: string;
+  exam_date: string | null;
+  start_time: string | null;
+  end_time: string | null;
   status: "draft" | "published" | "closed" | string;
   result_status: "hidden" | "pending" | "published" | string;
   is_result_published?: boolean;
@@ -186,6 +186,7 @@ export type ExamBatchExam = {
   total_marks: string;
   duration_minutes: number;
   marks_per_question: string;
+  negative_mark_per_wrong: string;
   ordering: number;
   note: string;
   subject_label: string;
@@ -253,6 +254,18 @@ export type ExamBatchInput = Partial<
     | "routine_note"
   >
 > & { title: string };
+
+export type ExamBatchJoinRequest = {
+  id: number;
+  batch: number;
+  student: number;
+  student_name: string;
+  student_email: string;
+  /** The name the student uses on Facebook (to be added to the group). */
+  name: string;
+  is_added: boolean;
+  created_at: string;
+};
 
 export type ExamBatchEnrollment = {
   id: number;
@@ -378,16 +391,27 @@ export const examsApi = baseApi.injectEndpoints({
       query: (id) => `admin/exam-batches/${id}/`,
       providesTags: (_result, _error, id) => [{ type: "ExamBatches", id }],
     }),
-    createExamBatch: builder.mutation<ExamBatch, ExamBatchInput>({
+    createExamBatch: builder.mutation<ExamBatch, ExamBatchInput | FormData>({
       query: (body) => ({ url: "admin/exam-batches/", method: "POST", body }),
       invalidatesTags: [{ type: "ExamBatches", id: "LIST" }],
     }),
-    updateExamBatch: builder.mutation<ExamBatch, { id: number; data: Partial<ExamBatchInput> }>({
+    updateExamBatch: builder.mutation<ExamBatch, { id: number; data: Partial<ExamBatchInput> | FormData }>({
       query: ({ id, data }) => ({ url: `admin/exam-batches/${id}/`, method: "PATCH", body: data }),
       invalidatesTags: (_result, _error, { id }) => [
         { type: "ExamBatches", id },
         { type: "ExamBatches", id: "LIST" },
       ],
+    }),
+    getBatchJoinRequests: builder.query<ExamBatchJoinRequest[], number>({
+      query: (batchId) => `admin/exam-batches/${batchId}/join-requests/`,
+      providesTags: (_result, _error, batchId) => [{ type: "ExamBatches", id: `join-${batchId}` }],
+    }),
+    updateJoinRequest: builder.mutation<
+      ExamBatchJoinRequest,
+      { id: number; batchId: number; data: { is_added?: boolean } }
+    >({
+      query: ({ id, data }) => ({ url: `admin/exam-batch-join-requests/${id}/`, method: "PATCH", body: data }),
+      invalidatesTags: (_result, _error, { batchId }) => [{ type: "ExamBatches", id: `join-${batchId}` }],
     }),
     addExamToBatch: builder.mutation<
       ExamBatchExam,
@@ -401,7 +425,7 @@ export const examsApi = baseApi.injectEndpoints({
     }),
     updateBatchExam: builder.mutation<
       ExamBatchExam,
-      { id: number; batch: number; data: Partial<Pick<ExamBatchExam, "ordering" | "note" | "subject_label">> }
+      { id: number; batch: number; data: Partial<Pick<ExamBatchExam, "ordering" | "note" | "subject_label" | "planned_questions">> }
     >({
       query: ({ id, data }) => ({ url: `admin/exam-batch-exams/${id}/`, method: "PATCH", body: data }),
       invalidatesTags: (_result, _error, { batch }) => [
@@ -464,4 +488,6 @@ export const {
   useRemoveExamFromBatchMutation,
   useImportRoutineMutation,
   useGetExamBatchEnrollmentsQuery,
+  useGetBatchJoinRequestsQuery,
+  useUpdateJoinRequestMutation,
 } = examsApi;

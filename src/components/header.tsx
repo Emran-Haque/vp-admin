@@ -1,10 +1,13 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { Menu, Bell, User, X, Mail, Phone, Shield, Pencil, Check, type LucideIcon } from "lucide-react";
+import { Menu, Bell, User, X, Mail, Phone, Shield, Pencil, Check, LogOut, type LucideIcon } from "lucide-react";
 import { navItems } from "./nav-items";
-import { useAppSelector } from "@/redux/hooks";
+import { useNavPermissions } from "@/hooks/use-nav-permissions";
+import { logout } from "@/redux/slices/authSlice";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { useGetAdminDashboardQuery } from "@/redux/api/dashboardApi";
 import { useGetProfileQuery, useUpdateProfileMutation } from "@/redux/api/authApi";
 import { extractErrorMessage } from "@/lib/api-error";
@@ -19,11 +22,20 @@ const ROLE_LABELS: Record<string, string> = {
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
+  const dispatch = useAppDispatch();
   const current = navItems.find((item) => item.href === pathname);
   const user = useAppSelector((state) => state.auth.user);
   const isSuperAdmin = user?.role === "super_admin";
+  const { visibleNavItems } = useNavPermissions();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    router.replace("/login");
+  };
 
   // Live unread count (replaces the old hardcoded badge). Reuses the cached
   // admin-dashboard query the home page already loads.
@@ -60,7 +72,9 @@ export default function Header() {
       <div className="flex items-center gap-3.5">
         <button
           type="button"
-          className="flex size-9 items-center justify-center rounded-[10px] border border-white/5 bg-white/5"
+          onClick={() => setMobileNavOpen(true)}
+          className="flex size-9 items-center justify-center rounded-[10px] border border-white/5 bg-white/5 md:hidden"
+          aria-label="মেনু"
         >
           <Menu size={16} className="text-white" />
         </button>
@@ -180,6 +194,63 @@ export default function Header() {
                 label="ভূমিকা"
                 value={ROLE_LABELS[user?.role ?? ""] ?? user?.role ?? "—"}
               />
+            </div>
+          </aside>
+        </>
+      ) : null}
+
+      {mobileNavOpen ? (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/50 md:hidden"
+            onClick={() => setMobileNavOpen(false)}
+          />
+          <aside className="fixed left-0 top-0 z-50 flex h-full w-[280px] max-w-[85vw] flex-col border-r border-white/10 bg-gray-950 md:hidden">
+            <div className="flex h-16 items-center justify-between border-b border-white/5 px-5">
+              <span className="text-sm font-bold text-white">মেনু</span>
+              <button
+                type="button"
+                onClick={() => setMobileNavOpen(false)}
+                className="flex size-8 items-center justify-center rounded-lg bg-white/5 text-slate-400"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-3">
+              {visibleNavItems.map((item) => {
+                const isActive = pathname === item.href;
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileNavOpen(false)}
+                    className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm ${
+                      isActive
+                        ? "bg-gradient-to-br from-teal-500/20 to-blue-500/10 font-semibold text-slate-200"
+                        : "text-white/90 hover:bg-white/5"
+                    }`}
+                  >
+                    <span
+                      className={`flex size-8 items-center justify-center rounded-lg ${
+                        isActive ? "bg-white" : "bg-white/5"
+                      }`}
+                    >
+                      <Icon size={16} className={isActive ? "text-blue-500" : "text-white"} />
+                    </span>
+                    <span className="flex-1">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+            <div className="border-t border-white/5 p-3">
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex w-full items-center gap-2.5 rounded-[10px] border border-red-500/20 bg-red-500/5 px-3.5 py-2.5 text-xs font-medium text-red-500"
+              >
+                <LogOut size={14} /> লগআউট
+              </button>
             </div>
           </aside>
         </>

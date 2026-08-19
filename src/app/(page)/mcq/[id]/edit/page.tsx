@@ -95,7 +95,7 @@ export default function Page() {
       totalQuestions: String(exam.total_questions),
       passMark: exam.pass_mark_percentage,
       negativeMark: exam.negative_mark_per_wrong,
-      examDate: exam.exam_date,
+      examDate: exam.exam_date ?? "",
       startTime: isoToTimeInput(exam.start_time),
       deadline: isoToLocalDateTimeInput(exam.end_time),
       resultPublishAt: isoToLocalDateTimeInput(exam.result_publish_at),
