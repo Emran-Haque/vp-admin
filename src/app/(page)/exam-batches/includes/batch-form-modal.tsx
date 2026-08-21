@@ -25,6 +25,7 @@ type BatchForm = {
   title: string;
   short_description: string;
   description: string;
+  promo_video_url: string;
   price: string;
   old_price: string;
   discount: string;
@@ -37,6 +38,7 @@ const emptyForm: BatchForm = {
   title: "",
   short_description: "",
   description: "",
+  promo_video_url: "",
   price: "0.00",
   old_price: "",
   discount: "0.00",
@@ -50,6 +52,7 @@ function formFromBatch(batch: ExamBatch): BatchForm {
     title: batch.title,
     short_description: batch.short_description || "",
     description: batch.description || "",
+    promo_video_url: batch.promo_video_url || "",
     price: batch.price || "0.00",
     old_price: batch.old_price || "",
     discount: batch.discount || "0.00",
@@ -97,6 +100,7 @@ export default function BatchFormModal({
         fd.append("title", form.title);
         fd.append("short_description", form.short_description);
         fd.append("description", form.description);
+        fd.append("promo_video_url", form.promo_video_url);
         fd.append("price", form.price || "0");
         fd.append("discount", form.discount || "0");
         fd.append("is_published", String(form.is_published));
@@ -182,6 +186,10 @@ export default function BatchFormModal({
           <div>
             <label className="mb-1.5 block text-xs font-semibold text-slate-400">বিস্তারিত বিবরণ</label>
             <textarea className={`${fieldClass} min-h-24`} placeholder="ব্যাচ সম্পর্কে বিস্তারিত" value={form.description} onChange={(e) => set("description", e.target.value)} />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-slate-400">প্রমো ভিডিও URL</label>
+            <input className={fieldClass} placeholder="YouTube / Facebook / Drive / Vimeo link" value={form.promo_video_url} onChange={(e) => set("promo_video_url", e.target.value)} />
           </div>
           <div className="grid grid-cols-3 gap-2 max-[520px]:grid-cols-1">
             <div>

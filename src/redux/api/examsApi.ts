@@ -224,6 +224,7 @@ export type ExamBatch = {
   description: string;
   short_description: string;
   thumbnail: string | null;
+  promo_video_url: string;
   price: string;
   old_price: string | null;
   discount: string;
@@ -245,6 +246,7 @@ export type ExamBatchInput = Partial<
     | "title"
     | "description"
     | "short_description"
+    | "promo_video_url"
     | "price"
     | "old_price"
     | "discount"
