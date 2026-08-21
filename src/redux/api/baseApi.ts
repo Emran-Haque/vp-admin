@@ -2,7 +2,15 @@ import { createApi, fetchBaseQuery, type BaseQueryFn, type FetchArgs, type Fetch
 import type { RootState } from "../store";
 import { logout } from "../slices/authSlice";
 
-const API_BASE_URL = "https://api.vaiyaderpathshala.com/api/v1/";
+export const API_BASE_URL = "https://api.vaiyaderpathshala.com/api/v1/";
+
+export function getMediaUrl(path: string | null | undefined): string | null {
+  if (!path) return null;
+  if (/^https?:\/\//i.test(path)) return path;
+  const baseUrl = API_BASE_URL.replace(/\/api\/v1\/?$/, "");
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  return `${baseUrl}${cleanPath}`;
+}
 
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: API_BASE_URL,

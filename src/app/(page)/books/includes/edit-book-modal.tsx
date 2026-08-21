@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { X, Save, AlertTriangle, Upload, BookOpen, FileText, ExternalLink, HelpCircle, Plus, Trash2 } from "lucide-react";
 import { useUpdateBookMutation, useGetBookCategoriesQuery, type Book } from "@/redux/api/booksApi";
+import { getMediaUrl } from "@/redux/api/baseApi";
 import {
   useGetFaqsQuery,
   useCreateFaqMutation,
@@ -130,7 +131,7 @@ export default function EditBookModal({ book, onClose }: { book: Book; onClose: 
   };
 
   const canSave = title.trim() && category;
-  const coverPreview = coverImage ? URL.createObjectURL(coverImage) : book.cover_image;
+  const coverPreview = coverImage ? URL.createObjectURL(coverImage) : getMediaUrl(book.cover_image);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-800/95 p-4">

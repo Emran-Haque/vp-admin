@@ -2,6 +2,7 @@
 
 import { BookOpen, Star, Pencil, Trash2, User, Building2 } from "lucide-react";
 import { useGetBooksQuery, useDeleteBookMutation, type Book } from "@/redux/api/booksApi";
+import { getMediaUrl } from "@/redux/api/baseApi";
 import { usePermissions } from "@/hooks/use-permissions";
 import ErrorState from "@/components/error-state";
 import { PageLoader } from "@/components/loaders";
@@ -44,7 +45,7 @@ export default function BookList({ search, category, availability, onEdit }: Pro
             <div className="relative h-40 w-full bg-gray-800">
               {book.cover_image ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={book.cover_image} alt={book.title} className="h-full w-full object-cover" />
+                <img src={getMediaUrl(book.cover_image) ?? ""} alt={book.title} className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
                   <BookOpen size={32} className="text-slate-600" />
