@@ -5,6 +5,13 @@ import { X, Save, AlertTriangle, Upload, BookOpen, FileText, HelpCircle, Plus, T
 import { useCreateBookMutation, useGetBookCategoriesQuery } from "@/redux/api/booksApi";
 import { useCreateFaqMutation } from "@/redux/api/contentApi";
 import type { FaqDraft } from "@/app/(page)/courses/create/includes/types";
+import RichTextEditor from "@/components/rich-text-editor";
+import IncludesEditor from "@/components/includes-editor";
+import { serializeIncludes, type IncludeDraft } from "@/lib/rich-text";
+
+/** Matches the public site's default heading when `includes_title` is blank. */
+const DEFAULT_INCLUDES_TITLE = "এই বইয়ে যা থাকছে";
+
 
 export default function AddBookModal({ onClose }: { onClose: () => void }) {
   const [title, setTitle] = useState("");
@@ -24,6 +31,8 @@ export default function AddBookModal({ onClose }: { onClose: () => void }) {
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [samplePreviewFile, setSamplePreviewFile] = useState<File | null>(null);
   const [faqs, setFaqs] = useState<FaqDraft[]>([]);
+  const [includes, setIncludes] = useState<IncludeDraft[]>(() => []);
+  const [includesTitle, setIncludesTitle] = useState("");
 
   const coverInputRef = useRef<HTMLInputElement>(null);
   const sampleInputRef = useRef<HTMLInputElement>(null);
@@ -64,6 +73,10 @@ export default function AddBookModal({ onClose }: { onClose: () => void }) {
     if (sampleDriveLink) formData.append("sample_preview_drive_link", sampleDriveLink);
     if (coverImage) formData.append("cover_image", coverImage);
     if (samplePreviewFile) formData.append("sample_preview_file", samplePreviewFile);
+    formData.append("includes_title", includesTitle);
+    // Multipart cannot carry a nested list, so it goes as JSON text; the
+    // API's IncludesField accepts either form.
+    formData.append("includes", JSON.stringify(serializeIncludes(includes)));
 
     try {
       const createdBook = await createBook(formData).unwrap();
@@ -168,12 +181,11 @@ export default function AddBookModal({ onClose }: { onClose: () => void }) {
 
           <div>
             <label className="block pb-1.5 text-xs font-semibold text-slate-400">বিবরণ</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+            <RichTextEditor
+              minHeight={180}
               placeholder="বইটি নিয়ে সংক্ষিপ্ত বিবরণ লিখুন..."
-              rows={3}
-              className="w-full resize-none rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 placeholder:text-slate-200/50 focus:outline-none"
+              onChange={setDescription}
+              value={description}
             />
           </div>
 
@@ -303,6 +315,15 @@ export default function AddBookModal({ onClose }: { onClose: () => void }) {
               />
             </div>
           </div>
+
+          <IncludesEditor
+            items={includes}
+            label="এই বইয়ে যা থাকছে"
+            onItemsChange={setIncludes}
+            onTitleChange={setIncludesTitle}
+            title={includesTitle}
+            titlePlaceholder={DEFAULT_INCLUDES_TITLE}
+          />
 
           {/* FAQ section */}
           <div className="mt-1 flex flex-col gap-3 rounded-[14px] border border-white/10 bg-white/5 p-4">

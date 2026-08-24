@@ -4,6 +4,11 @@ import { useState } from "react";
 import { Plus, Trash2, BookMarked, HelpCircle, Users } from "lucide-react";
 import { useGetTeachersQuery } from "@/redux/api/contentApi";
 import type { SubjectDraft, FaqDraft } from "./types";
+import IncludesEditor from "@/components/includes-editor";
+import type { IncludeDraft } from "@/lib/rich-text";
+
+/** Matches the public site's default heading when `includes_title` is blank. */
+const DEFAULT_INCLUDES_TITLE = "এই কোর্সে যা থাকছে";
 
 type Props = {
   subjects: SubjectDraft[];
@@ -12,6 +17,10 @@ type Props = {
   onFaqsChange: (faqs: FaqDraft[]) => void;
   teacherIds: string[];
   onTeacherIdsChange: (teacherIds: string[]) => void;
+  includes: IncludeDraft[];
+  onIncludesChange: (includes: IncludeDraft[]) => void;
+  includesTitle: string;
+  onIncludesTitleChange: (value: string) => void;
 };
 
 export default function StepSubjectsFaqs({
@@ -21,6 +30,10 @@ export default function StepSubjectsFaqs({
   onFaqsChange,
   teacherIds,
   onTeacherIdsChange,
+  includes,
+  onIncludesChange,
+  includesTitle,
+  onIncludesTitleChange,
 }: Props) {
   const [subjectName, setSubjectName] = useState("");
   const [subjectDescription, setSubjectDescription] = useState("");
@@ -239,6 +252,16 @@ export default function StepSubjectsFaqs({
           {faqs.length === 0 && <p className="text-sm text-slate-400">এখনো কোনো FAQ যোগ হয়নি</p>}
         </div>
       </section>
+
+      <IncludesEditor
+        items={includes}
+        label="এই কোর্সে যা থাকছে"
+        onItemsChange={onIncludesChange}
+        onTitleChange={onIncludesTitleChange}
+        title={includesTitle}
+        titlePlaceholder={DEFAULT_INCLUDES_TITLE}
+        variant="section"
+      />
     </div>
   );
 }

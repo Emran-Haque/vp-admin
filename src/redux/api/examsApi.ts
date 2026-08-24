@@ -1,5 +1,5 @@
 import { baseApi } from "./baseApi";
-import type { Paginated } from "./types";
+import type { IncludeItem, IncludePayloadItem, Paginated } from "./types";
 
 export type Exam = {
   id: number;
@@ -232,6 +232,8 @@ export type ExamBatch = {
   start_date: string | null;
   end_date: string | null;
   routine_note: string;
+  includes_title: string;
+  includes: IncludeItem[];
   exam_count: number;
   enrolled_count: number;
   is_enrolled: boolean;
@@ -254,8 +256,9 @@ export type ExamBatchInput = Partial<
     | "start_date"
     | "end_date"
     | "routine_note"
+    | "includes_title"
   >
-> & { title: string };
+> & { title: string; includes?: IncludePayloadItem[] };
 
 export type ExamBatchJoinRequest = {
   id: number;

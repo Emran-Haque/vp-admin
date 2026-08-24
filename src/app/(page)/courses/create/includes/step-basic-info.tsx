@@ -5,6 +5,8 @@ import { Upload, X, FileText, Image as ImageIcon, FolderCog } from "lucide-react
 import { useGetCourseCategoriesQuery } from "@/redux/api/coursesApi";
 import type { BasicInfo, CourseFiles } from "./types";
 import ManageCourseCategoriesModal from "./manage-categories-modal";
+import AutoTextarea from "@/components/auto-textarea";
+import RichTextEditor from "@/components/rich-text-editor";
 
 type ExistingCourseFiles = {
   thumbnail: string | null;
@@ -216,34 +218,34 @@ export default function StepBasicInfo({ value, onChange, files, onFilesChange, e
 
         <div className="pt-6">
           <label className="block pb-1.5 text-base font-medium text-blue-50">সংক্ষিপ্ত বিবরণ</label>
-          <textarea
-            value={value.shortDescription}
-            onChange={(e) => set("shortDescription", e.target.value)}
-            placeholder="কোর্সে কী কী থাকবে তা সংক্ষেপে লিখুন"
-            rows={2}
+          <AutoTextarea
             className="w-full resize-none rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 placeholder:text-slate-400 focus:outline-none"
+            maxRows={6}
+            minRows={2}
+            onChange={(next) => set("shortDescription", next)}
+            placeholder="কোর্সে কী কী থাকবে তা সংক্ষেপে লিখুন"
+            value={value.shortDescription}
           />
         </div>
 
         <div className="pt-6">
           <label className="block pb-1.5 text-base font-medium text-blue-50">বিস্তারিত বিবরণ</label>
-          <textarea
-            value={value.fullDescription}
-            onChange={(e) => set("fullDescription", e.target.value)}
+          <RichTextEditor
             placeholder="কোর্সটি নিয়ে বিস্তারিত লিখুন"
-            rows={4}
-            className="w-full resize-none rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 placeholder:text-slate-400 focus:outline-none"
+            onChange={(next) => set("fullDescription", next)}
+            value={value.fullDescription}
           />
         </div>
 
         <div className="pt-6">
           <label className="block pb-1.5 text-base font-medium text-blue-50">এই কোর্সটি কেন প্রয়োজন</label>
-          <textarea
-            value={value.whyNeeded}
-            onChange={(e) => set("whyNeeded", e.target.value)}
-            placeholder="শিক্ষার্থীরা কেন এই কোর্সটি নেবে তা লিখুন"
-            rows={3}
+          <AutoTextarea
             className="w-full resize-none rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 placeholder:text-slate-400 focus:outline-none"
+            maxRows={14}
+            minRows={3}
+            onChange={(next) => set("whyNeeded", next)}
+            placeholder="শিক্ষার্থীরা কেন এই কোর্সটি নেবে তা লিখুন"
+            value={value.whyNeeded}
           />
         </div>
 

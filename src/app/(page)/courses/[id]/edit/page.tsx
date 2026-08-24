@@ -43,6 +43,7 @@ import {
   type ExamQuestion,
 } from "@/redux/api/examsApi";
 import { extractErrorMessage } from "@/lib/api-error";
+import { draftsFromIncludes, serializeIncludes, type IncludeDraft } from "@/lib/rich-text";
 import ErrorState from "@/components/error-state";
 import type { BasicInfo, CourseFiles, MaterialDraft, QuizQuestion, SubjectDraft, FaqDraft } from "../../create/includes/types";
 
@@ -60,7 +61,9 @@ function toBasicInfo(course: Course): BasicInfo {
     category: String(course.category),
     level: course.level,
     price: course.price,
-    oldPrice: course.old_price,
+    // Nullable in the database; a null here would flip the input to
+    // uncontrolled and warn, so normalise to a blank string.
+    oldPrice: course.old_price ?? "",
     discount: course.discount,
     isFree: course.is_free,
     verificationRequired: course.verification_required,
@@ -169,6 +172,8 @@ export default function Page() {
   const [materials, setMaterials] = useState<MaterialDraft[]>([]);
   const [subjects, setSubjects] = useState<SubjectDraft[]>([]);
   const [faqs, setFaqs] = useState<FaqDraft[]>([]);
+  const [includes, setIncludes] = useState<IncludeDraft[]>([]);
+  const [includesTitle, setIncludesTitle] = useState("");
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -187,6 +192,8 @@ export default function Page() {
     initializedRef.current = true;
 
     setBasicInfo(toBasicInfo(course));
+    setIncludes(draftsFromIncludes(course.includes));
+    setIncludesTitle(course.includes_title || "");
 
     const courseSubjects = subjectsData.results;
     setSubjects(courseSubjects.map((s) => ({ id: String(s.id), name: s.name, description: s.description })));
@@ -250,6 +257,10 @@ export default function Page() {
     formData.append("short_description", basicInfo.shortDescription);
     formData.append("full_description", basicInfo.fullDescription);
     formData.append("why_needed", basicInfo.whyNeeded);
+    formData.append("includes_title", includesTitle);
+    // Multipart cannot carry a nested list, so it goes as JSON text; the
+    // API's IncludesField accepts either form.
+    formData.append("includes", JSON.stringify(serializeIncludes(includes)));
     formData.append("level", basicInfo.level);
     formData.append("price", basicInfo.isFree ? "0" : basicInfo.price || "0");
     if (basicInfo.oldPrice) formData.append("old_price", basicInfo.oldPrice);
@@ -585,6 +596,10 @@ export default function Page() {
           onFaqsChange={setFaqs}
           teacherIds={basicInfo.teacherIds}
           onTeacherIdsChange={(teacherIds) => setBasicInfo({ ...basicInfo, teacherIds })}
+          includes={includes}
+          onIncludesChange={setIncludes}
+          includesTitle={includesTitle}
+          onIncludesTitleChange={setIncludesTitle}
         />
       )}
       {step === 4 && (

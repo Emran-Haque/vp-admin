@@ -1,5 +1,5 @@
 import { baseApi } from "./baseApi";
-import type { Paginated } from "./types";
+import type { IncludeItem, IncludePayloadItem, Paginated } from "./types";
 
 export type Course = {
   id: number;
@@ -15,7 +15,8 @@ export type Course = {
   syllabus_pdf: string | null;
   syllabus_drive_link: string;
   price: string;
-  old_price: string;
+  /** Null when no discount is set. */
+  old_price: string | null;
   discount: string;
   is_free: boolean;
   is_published: boolean;
@@ -35,6 +36,8 @@ export type Course = {
   telegram_group_connect_code: string | null;
   telegram_group_connected_at: string | null;
   teachers: number[];
+  includes_title: string;
+  includes: IncludeItem[];
 };
 
 export type CourseListParams = {
@@ -45,7 +48,10 @@ export type CourseListParams = {
   page?: number;
 };
 
-export type CreateCourseInput = Partial<Omit<Course, "id" | "slug" | "enrollment_count">> & {
+export type CreateCourseInput = Partial<
+  Omit<Course, "id" | "slug" | "enrollment_count" | "includes">
+> & {
+  includes?: IncludePayloadItem[];
   title: string;
   category: number;
 };

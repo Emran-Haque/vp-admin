@@ -1,5 +1,5 @@
 import { baseApi } from "./baseApi";
-import type { Paginated } from "./types";
+import type { IncludeItem, IncludePayloadItem, Paginated } from "./types";
 
 export type Book = {
   id: number;
@@ -10,11 +10,13 @@ export type Book = {
   description: string;
   cover_image: string | null;
   price: string;
-  old_price: string;
+  /** Null when no discount is set. */
+  old_price: string | null;
   discount: string;
   author: string;
   publisher: string;
-  page_count: number;
+  /** Null when the admin left it blank. */
+  page_count: number | null;
   stock: number;
   is_available: boolean;
   in_stock: boolean;
@@ -22,6 +24,8 @@ export type Book = {
   sample_preview_drive_link: string;
   promo_video_url: string;
   is_featured: boolean;
+  includes_title: string;
+  includes: IncludeItem[];
   created_at: string;
   updated_at: string;
 };
@@ -35,10 +39,14 @@ export type BookListParams = {
 };
 
 export type CreateBookInput = Partial<
-  Omit<Book, "id" | "slug" | "category_name" | "in_stock" | "created_at" | "updated_at">
+  Omit<
+    Book,
+    "id" | "slug" | "category_name" | "in_stock" | "created_at" | "updated_at" | "includes"
+  >
 > & {
   title: string;
   category: number;
+  includes?: IncludePayloadItem[];
 };
 
 export type UpdateBookInput = Partial<CreateBookInput>;

@@ -19,6 +19,7 @@ import {
   usePublishExamMutation,
 } from "@/redux/api/examsApi";
 import { extractErrorMessage } from "@/lib/api-error";
+import { serializeIncludes, type IncludeDraft } from "@/lib/rich-text";
 import type { BasicInfo, CourseFiles, MaterialDraft, QuizQuestion, SubjectDraft, FaqDraft } from "./includes/types";
 
 const optionLetters = ["A", "B", "C", "D"] as const;
@@ -65,6 +66,8 @@ export default function Page() {
   const [materials, setMaterials] = useState<MaterialDraft[]>([]);
   const [subjects, setSubjects] = useState<SubjectDraft[]>([]);
   const [faqs, setFaqs] = useState<FaqDraft[]>([]);
+  const [includes, setIncludes] = useState<IncludeDraft[]>([]);
+  const [includesTitle, setIncludesTitle] = useState("");
 
   // Once the course is first saved (draft or published) we keep updating the same
   // record instead of creating a new one on every subsequent draft save.
@@ -110,6 +113,10 @@ export default function Page() {
     formData.append("short_description", basicInfo.shortDescription);
     formData.append("full_description", basicInfo.fullDescription);
     formData.append("why_needed", basicInfo.whyNeeded);
+    formData.append("includes_title", includesTitle);
+    // Multipart cannot carry a nested list, so it goes as JSON text; the
+    // API's IncludesField accepts either form.
+    formData.append("includes", JSON.stringify(serializeIncludes(includes)));
     formData.append("level", basicInfo.level);
     formData.append("price", basicInfo.isFree ? "0" : basicInfo.price || "0");
     if (basicInfo.oldPrice) formData.append("old_price", basicInfo.oldPrice);
@@ -339,6 +346,10 @@ export default function Page() {
           onFaqsChange={setFaqs}
           teacherIds={basicInfo.teacherIds}
           onTeacherIdsChange={(teacherIds) => setBasicInfo({ ...basicInfo, teacherIds })}
+          includes={includes}
+          onIncludesChange={setIncludes}
+          includesTitle={includesTitle}
+          onIncludesTitleChange={setIncludesTitle}
         />
       )}
       {step === 4 && (

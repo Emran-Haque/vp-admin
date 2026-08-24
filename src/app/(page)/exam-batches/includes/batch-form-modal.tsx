@@ -8,6 +8,12 @@ import {
   type ExamBatch,
 } from "@/redux/api/examsApi";
 import { extractErrorMessage } from "@/lib/api-error";
+import RichTextEditor from "@/components/rich-text-editor";
+import IncludesEditor from "@/components/includes-editor";
+import { draftsFromIncludes, serializeIncludes, type IncludeDraft } from "@/lib/rich-text";
+
+/** Matches the public site's default heading when `includes_title` is blank. */
+const DEFAULT_INCLUDES_TITLE = "এই ব্যাচে যা থাকছে";
 
 const API_ORIGIN = "https://api.vaiyaderpathshala.com";
 
@@ -32,6 +38,7 @@ type BatchForm = {
   start_date: string;
   end_date: string;
   is_published: boolean;
+  includes_title: string;
 };
 
 const emptyForm: BatchForm = {
@@ -45,6 +52,7 @@ const emptyForm: BatchForm = {
   start_date: "",
   end_date: "",
   is_published: false,
+  includes_title: "",
 };
 
 function formFromBatch(batch: ExamBatch): BatchForm {
@@ -59,6 +67,7 @@ function formFromBatch(batch: ExamBatch): BatchForm {
     start_date: batch.start_date || "",
     end_date: batch.end_date || "",
     is_published: batch.is_published,
+    includes_title: batch.includes_title || "",
   };
 }
 
@@ -77,6 +86,7 @@ export default function BatchFormModal({
 }) {
   const [form, setForm] = useState<BatchForm>(batch ? formFromBatch(batch) : emptyForm);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
+  const [includes, setIncludes] = useState<IncludeDraft[]>(() => draftsFromIncludes(batch?.includes));
   const [error, setError] = useState<string | null>(null);
   const [createBatch, { isLoading: isCreating }] = useCreateExamBatchMutation();
   const [updateBatch, { isLoading: isUpdating }] = useUpdateExamBatchMutation();
@@ -94,6 +104,7 @@ export default function BatchFormModal({
     setError(null);
     try {
       let saved: ExamBatch;
+      const includePayload = serializeIncludes(includes);
       if (thumbnail) {
         // Multipart when a new thumbnail is picked.
         const fd = new FormData();
@@ -108,6 +119,10 @@ export default function BatchFormModal({
         if (form.start_date) fd.append("start_date", form.start_date);
         if (form.end_date) fd.append("end_date", form.end_date);
         fd.append("thumbnail", thumbnail);
+        fd.append("includes_title", form.includes_title);
+        // Multipart cannot carry a nested list, so it goes as JSON text; the
+        // API's IncludesField accepts either form.
+        fd.append("includes", JSON.stringify(includePayload));
         saved = batch
           ? await updateBatch({ id: batch.id, data: fd }).unwrap()
           : await createBatch(fd).unwrap();
@@ -117,6 +132,7 @@ export default function BatchFormModal({
           old_price: form.old_price || null,
           start_date: form.start_date || null,
           end_date: form.end_date || null,
+          includes: includePayload,
         };
         saved = batch
           ? await updateBatch({ id: batch.id, data: payload }).unwrap()
@@ -185,7 +201,12 @@ export default function BatchFormModal({
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold text-slate-400">বিস্তারিত বিবরণ</label>
-            <textarea className={`${fieldClass} min-h-24`} placeholder="ব্যাচ সম্পর্কে বিস্তারিত" value={form.description} onChange={(e) => set("description", e.target.value)} />
+            <RichTextEditor
+              minHeight={200}
+              placeholder="ব্যাচ সম্পর্কে বিস্তারিত"
+              onChange={(next) => set("description", next)}
+              value={form.description}
+            />
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-semibold text-slate-400">প্রমো ভিডিও URL</label>
@@ -215,6 +236,15 @@ export default function BatchFormModal({
               <input className={fieldClass} type="date" value={form.end_date} onChange={(e) => set("end_date", e.target.value)} />
             </div>
           </div>
+          <IncludesEditor
+            items={includes}
+            label="এই ব্যাচে যা থাকছে"
+            onItemsChange={setIncludes}
+            onTitleChange={(value) => set("includes_title", value)}
+            title={form.includes_title}
+            titlePlaceholder={DEFAULT_INCLUDES_TITLE}
+          />
+
           <label className="flex items-center gap-2 rounded-xl border border-slate-800 bg-gray-800/50 px-4 py-3 text-sm font-semibold text-slate-200">
             <input type="checkbox" checked={form.is_published} onChange={(e) => set("is_published", e.target.checked)} />
             শিক্ষার্থীদের জন্য প্রকাশ করুন (তালিকা ও ক্রয় অপশনে দেখাবে)
