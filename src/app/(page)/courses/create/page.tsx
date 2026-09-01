@@ -19,6 +19,7 @@ import {
   usePublishExamMutation,
 } from "@/redux/api/examsApi";
 import { extractErrorMessage } from "@/lib/api-error";
+import { offerPreview } from "@/lib/offer-pricing";
 import { serializeIncludes, type IncludeDraft } from "@/lib/rich-text";
 import type { BasicInfo, CourseFiles, MaterialDraft, QuizQuestion, SubjectDraft, FaqDraft } from "./includes/types";
 
@@ -32,8 +33,7 @@ const emptyBasicInfo: BasicInfo = {
   category: "",
   level: "",
   price: "",
-  oldPrice: "",
-  discount: "",
+  discountAmount: "",
   isFree: false,
   verificationRequired: false,
   duration: "",
@@ -118,9 +118,9 @@ export default function Page() {
     // API's IncludesField accepts either form.
     formData.append("includes", JSON.stringify(serializeIncludes(includes)));
     formData.append("level", basicInfo.level);
-    formData.append("price", basicInfo.isFree ? "0" : basicInfo.price || "0");
-    if (basicInfo.oldPrice) formData.append("old_price", basicInfo.oldPrice);
-    if (basicInfo.discount) formData.append("discount", basicInfo.discount);
+    const pricing = offerPreview(basicInfo.price, basicInfo.discountAmount);
+    formData.append("price", basicInfo.isFree ? "0" : String(pricing.salePrice));
+    formData.append("discount_amount", basicInfo.isFree ? "0" : String(pricing.discountAmount));
     formData.append("is_free", String(basicInfo.isFree));
     formData.append("verification_required", String(basicInfo.verificationRequired));
     formData.append("is_published", String(isPublished));

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import ImageSizeHint from "@/components/image-size-hint";
 import { X, Save, AlertTriangle, Upload, BookOpen, FileText, HelpCircle, Plus, Trash2 } from "lucide-react";
 import { useCreateBookMutation, useGetBookCategoriesQuery } from "@/redux/api/booksApi";
 import { useCreateFaqMutation } from "@/redux/api/contentApi";
@@ -8,6 +9,16 @@ import type { FaqDraft } from "@/app/(page)/courses/create/includes/types";
 import RichTextEditor from "@/components/rich-text-editor";
 import IncludesEditor from "@/components/includes-editor";
 import { serializeIncludes, type IncludeDraft } from "@/lib/rich-text";
+import { formatBanglaMoney, offerPreview } from "@/lib/offer-pricing";
+import {
+  appendBookFeatureImages,
+  BookFeaturesEditor,
+  BookSummaryPointsEditor,
+  serializeBookFeatures,
+  serializeSummaryPoints,
+  type BookFeatureDraft,
+  type BookSummaryPointDraft,
+} from "./book-section-editors";
 
 /** Matches the public site's default heading when `includes_title` is blank. */
 const DEFAULT_INCLUDES_TITLE = "এই বইয়ে যা থাকছে";
@@ -22,8 +33,7 @@ export default function AddBookModal({ onClose }: { onClose: () => void }) {
   const [pageCount, setPageCount] = useState("");
   const [stock, setStock] = useState("0");
   const [price, setPrice] = useState("");
-  const [oldPrice, setOldPrice] = useState("");
-  const [discount, setDiscount] = useState("");
+  const [discountAmount, setDiscountAmount] = useState("");
   const [isAvailable, setIsAvailable] = useState(true);
   const [isFeatured, setIsFeatured] = useState(false);
   const [promoVideoUrl, setPromoVideoUrl] = useState("");
@@ -33,6 +43,8 @@ export default function AddBookModal({ onClose }: { onClose: () => void }) {
   const [faqs, setFaqs] = useState<FaqDraft[]>([]);
   const [includes, setIncludes] = useState<IncludeDraft[]>(() => []);
   const [includesTitle, setIncludesTitle] = useState("");
+  const [summaryPoints, setSummaryPoints] = useState<BookSummaryPointDraft[]>([]);
+  const [bookFeatures, setBookFeatures] = useState<BookFeatureDraft[]>([]);
 
   const coverInputRef = useRef<HTMLInputElement>(null);
   const sampleInputRef = useRef<HTMLInputElement>(null);
@@ -56,6 +68,7 @@ export default function AddBookModal({ onClose }: { onClose: () => void }) {
   };
 
   const handleSave = async () => {
+    const pricing = offerPreview(price, discountAmount);
     const formData = new FormData();
     formData.append("title", title);
     formData.append("category", category);
@@ -64,9 +77,8 @@ export default function AddBookModal({ onClose }: { onClose: () => void }) {
     formData.append("publisher", publisher);
     if (pageCount) formData.append("page_count", pageCount);
     formData.append("stock", stock || "0");
-    formData.append("price", price || "0");
-    if (oldPrice) formData.append("old_price", oldPrice);
-    if (discount) formData.append("discount", discount);
+    formData.append("price", String(pricing.salePrice));
+    formData.append("discount_amount", String(pricing.discountAmount));
     formData.append("is_available", String(isAvailable));
     formData.append("is_featured", String(isFeatured));
     if (promoVideoUrl) formData.append("promo_video_url", promoVideoUrl);
@@ -77,6 +89,9 @@ export default function AddBookModal({ onClose }: { onClose: () => void }) {
     // Multipart cannot carry a nested list, so it goes as JSON text; the
     // API's IncludesField accepts either form.
     formData.append("includes", JSON.stringify(serializeIncludes(includes)));
+    formData.append("summary_points", JSON.stringify(serializeSummaryPoints(summaryPoints)));
+    formData.append("features", JSON.stringify(serializeBookFeatures(bookFeatures)));
+    appendBookFeatureImages(formData, bookFeatures);
 
     try {
       const createdBook = await createBook(formData).unwrap();
@@ -101,6 +116,7 @@ export default function AddBookModal({ onClose }: { onClose: () => void }) {
   };
 
   const canSave = title.trim() && category;
+  const pricingPreview = offerPreview(price, discountAmount);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-800/95 p-4">
@@ -148,6 +164,7 @@ export default function AddBookModal({ onClose }: { onClose: () => void }) {
                 onChange={(e) => setCoverImage(e.target.files?.[0] ?? null)}
               />
             </label>
+            <ImageSizeHint kind="bookCover" />
           </div>
 
           <div>
@@ -231,9 +248,9 @@ export default function AddBookModal({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3.5">
+          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
             <div>
-              <label className="block pb-1.5 text-xs font-semibold text-slate-400">মূল্য (৳)</label>
+              <label className="block pb-1.5 text-xs font-semibold text-slate-400">বইয়ের মূল দাম লিখুন (৳)</label>
               <input
                 type="number"
                 value={price}
@@ -242,23 +259,24 @@ export default function AddBookModal({ onClose }: { onClose: () => void }) {
               />
             </div>
             <div>
-              <label className="block pb-1.5 text-xs font-semibold text-slate-400">পুরাতন মূল্য</label>
+              <label className="block pb-1.5 text-xs font-semibold text-slate-400">কত টাকা ছাড় দেবেন? (৳)</label>
               <input
                 type="number"
-                value={oldPrice}
-                onChange={(e) => setOldPrice(e.target.value)}
+                value={discountAmount}
+                onChange={(e) => setDiscountAmount(e.target.value)}
                 className="w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
               />
             </div>
-            <div>
-              <label className="block pb-1.5 text-xs font-semibold text-slate-400">ছাড় (%)</label>
-              <input
-                type="number"
-                value={discount}
-                onChange={(e) => setDiscount(e.target.value)}
-                className="w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
-              />
-            </div>
+          </div>
+
+          <div className="rounded-[12px] border border-blue-500/20 bg-blue-500/10 p-3 text-sm leading-6 text-slate-300">
+            <p className="font-semibold text-blue-100">ওয়েবসাইটে দাম এভাবে দেখাবে</p>
+            <p className="mt-1">
+              ছাড়ের পর দাম {formatBanglaMoney(pricingPreview.salePrice)} · ছাড়{" "}
+              {formatBanglaMoney(pricingPreview.discountAmount)} (
+              {pricingPreview.percent.toLocaleString("bn-BD", { maximumFractionDigits: 2 })}%)
+              {pricingPreview.hasOffer ? ` · আগের দাম ${formatBanglaMoney(pricingPreview.oldPrice)}` : ""}
+            </p>
           </div>
 
           <div>
@@ -325,6 +343,9 @@ export default function AddBookModal({ onClose }: { onClose: () => void }) {
             titlePlaceholder={DEFAULT_INCLUDES_TITLE}
           />
 
+          <BookSummaryPointsEditor items={summaryPoints} onChange={setSummaryPoints} />
+          <BookFeaturesEditor items={bookFeatures} onChange={setBookFeatures} />
+
           {/* FAQ section */}
           <div className="mt-1 flex flex-col gap-3 rounded-[14px] border border-white/10 bg-white/5 p-4">
             <div className="flex items-center justify-between">
@@ -376,24 +397,30 @@ export default function AddBookModal({ onClose }: { onClose: () => void }) {
             )}
           </div>
 
-          <div className="flex items-center gap-6">
-            <label className="flex cursor-pointer items-center gap-2.5">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label className="flex cursor-pointer items-start gap-3 rounded-[14px] border border-white/10 bg-white/5 p-4">
               <input
                 type="checkbox"
                 checked={isAvailable}
                 onChange={(e) => setIsAvailable(e.target.checked)}
-                className="size-4 cursor-pointer accent-blue-500"
+                className="mt-1 size-4 cursor-pointer accent-blue-500"
               />
-              <span className="text-xs font-medium text-slate-400">বইটি উপলব্ধ রাখুন</span>
+              <span>
+                <span className="block text-sm font-semibold text-slate-100">ওয়েবসাইটে বইটি দেখান</span>
+                <span className="mt-1 block text-xs leading-5 text-slate-400">বন্ধ করলে বইটি স্টোর ও ডিটেইল পেজে দেখা যাবে না।</span>
+              </span>
             </label>
-            <label className="flex cursor-pointer items-center gap-2.5">
+            <label className="flex cursor-pointer items-start gap-3 rounded-[14px] border border-white/10 bg-white/5 p-4">
               <input
                 type="checkbox"
                 checked={isFeatured}
                 onChange={(e) => setIsFeatured(e.target.checked)}
-                className="size-4 cursor-pointer accent-blue-500"
+                className="mt-1 size-4 cursor-pointer accent-blue-500"
               />
-              <span className="text-xs font-medium text-slate-400">ফিচার্ড হিসেবে দেখান</span>
+              <span>
+                <span className="block text-sm font-semibold text-slate-100">বিশেষ বই হিসেবে হাইলাইট করুন</span>
+                <span className="mt-1 block text-xs leading-5 text-slate-400">চালু করলে বইটি ফিচার্ড/প্রাধান্য পাওয়া তালিকায় দেখাবে।</span>
+              </span>
             </label>
           </div>
         </div>

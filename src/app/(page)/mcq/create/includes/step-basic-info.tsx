@@ -12,7 +12,16 @@ type Props = {
 
 const statusOptions: { value: ExamStatus; label: string }[] = [
   { value: "draft", label: "ড্রাফট" },
-  { value: "published", label: "প্রকাশিত" },
+  { value: "published", label: "পাবলিশড" },
+];
+
+const NEGATIVE_MODES: {
+  key: ExamBasicInfo["negativeMode"];
+  label: string;
+  hint: string;
+}[] = [
+  { key: "flat", label: "স্থির নম্বর", hint: "সব প্রশ্নে সমান" },
+  { key: "percentage", label: "শতাংশ", hint: "প্রশ্নের নম্বর অনুযায়ী" },
 ];
 
 export default function StepBasicInfo({ value, onChange }: Props) {
@@ -43,8 +52,8 @@ export default function StepBasicInfo({ value, onChange }: Props) {
           <ClipboardList size={24} className="text-blue-500" />
         </span>
         <div>
-          <h2 className="text-xl font-bold leading-8 text-blue-50">পরীক্ষার মৌলিক তথ্য</h2>
-          <p className="mt-0.5 text-base text-slate-400">পরীক্ষার নাম, বিষয় এবং সময়সূচি নির্ধারণ করুন</p>
+          <h2 className="text-xl font-bold leading-8 text-blue-50">পরীক্ষার বেসিক ইনফো</h2>
+          <p className="mt-0.5 text-base text-slate-400">পরীক্ষার নাম, বিষয় আর সময় ঠিক করুন</p>
         </div>
       </div>
 
@@ -70,7 +79,7 @@ export default function StepBasicInfo({ value, onChange }: Props) {
           onChange={(e) => onChange({ ...value, course: e.target.value, subject: "", subjectName: "" })}
           className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3.5 text-base text-blue-50 focus:outline-none"
         >
-          <option value="">নির্বাচন করুন</option>
+          <option value="">সিলেক্ট করুন</option>
           {courses.map((c) => (
             <option key={c.id} value={c.id}>
               {c.title}
@@ -94,7 +103,7 @@ export default function StepBasicInfo({ value, onChange }: Props) {
             }}
             className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3.5 text-base text-blue-50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <option value="">নির্বাচন করুন</option>
+            <option value="">সিলেক্ট করুন</option>
             {courseSubjects.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
@@ -102,7 +111,7 @@ export default function StepBasicInfo({ value, onChange }: Props) {
             ))}
           </select>
           <p className="mt-1.5 text-sm text-slate-400">
-            {value.course ? "নির্বাচিত কোর্সের বিষয়সমূহ" : "প্রথমে কোর্স নির্বাচন করুন"}
+            {value.course ? "সিলেক্ট করা কোর্সের বিষয়গুলো" : "আগে কোর্স সিলেক্ট করুন"}
           </p>
         </div>
 
@@ -146,16 +155,90 @@ export default function StepBasicInfo({ value, onChange }: Props) {
 
       <div className="grid grid-cols-1 gap-6 pt-6 sm:grid-cols-2">
         <div>
-          <label className="block pb-2 text-base font-medium text-blue-50">নেগেটিভ মার্ক (প্রতি ভুলে)</label>
+          <label className="block pb-2 text-base font-medium text-blue-50">
+            প্রতি প্রশ্নের ডিফল্ট নম্বর
+          </label>
           <input
             type="number"
-            step="0.01"
-            value={value.negativeMark}
-            onChange={(e) => set("negativeMark", e.target.value)}
+            min="1"
+            step="1"
+            value={value.marksPerQuestion}
+            onChange={(e) => set("marksPerQuestion", e.target.value)}
             className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 focus:outline-none"
           />
-          <p className="mt-1.5 text-sm text-slate-400">0 দিলে নেগেটিভ মার্কিং থাকবে না</p>
+          <p className="mt-1.5 text-sm text-slate-400">
+            নতুন প্রশ্ন এই নম্বর নিয়েই অ্যাড হবে। আলাদা নম্বরের প্রশ্ন (যেমন চবি C ইউনিটে ২ নম্বরের
+            প্রশ্ন) পরের ধাপে প্রতিটি প্রশ্নে আলাদা করে দেওয়া যাবে।
+          </p>
         </div>
+
+        <div>
+          <label className="block pb-2 text-base font-medium text-blue-50">
+            নেগেটিভ মার্কিং পদ্ধতি
+          </label>
+          <div className="flex gap-2.5">
+            {NEGATIVE_MODES.map((mode) => {
+              const isActive = value.negativeMode === mode.key;
+              return (
+                <button
+                  key={mode.key}
+                  type="button"
+                  onClick={() => set("negativeMode", mode.key)}
+                  className={`flex-1 cursor-pointer rounded-xl border px-3.5 py-3 text-left text-sm font-semibold transition ${
+                    isActive
+                      ? "border-blue-500 bg-blue-500/10 text-blue-50"
+                      : "border-slate-800 bg-gray-800 text-slate-400 hover:bg-white/5"
+                  }`}
+                >
+                  {mode.label}
+                  <span className="mt-0.5 block text-xs font-normal text-slate-400">
+                    {mode.hint}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 pt-6 sm:grid-cols-2">
+        {value.negativeMode === "percentage" ? (
+          <div>
+            <label className="block pb-2 text-base font-medium text-blue-50">
+              নেগেটিভ মার্ক (প্রশ্নের নম্বরের %)
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={value.negativePercentage}
+              onChange={(e) => set("negativePercentage", e.target.value)}
+              className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 focus:outline-none"
+            />
+            <p className="mt-1.5 text-sm text-slate-400">
+              চবি C ইউনিটের নিয়ম: ২৫% — ১ নম্বরের প্রশ্নে ভুল হলে ০.২৫ এবং ২ নম্বরের প্রশ্নে ভুল
+              হলে ০.৫০ কাটা যাবে। 0 দিলে নেগেটিভ মার্কিং থাকবে না।
+            </p>
+          </div>
+        ) : (
+          <div>
+            <label className="block pb-2 text-base font-medium text-blue-50">
+              নেগেটিভ মার্ক (প্রতি ভুলে)
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={value.negativeMark}
+              onChange={(e) => set("negativeMark", e.target.value)}
+              className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 focus:outline-none"
+            />
+            <p className="mt-1.5 text-sm text-slate-400">
+              প্রশ্নের নম্বর যাই হোক, প্রতিটি ভুল উত্তরে এই নম্বরটিই কাটা যাবে। 0 দিলে নেগেটিভ
+              মার্কিং থাকবে না।
+            </p>
+          </div>
+        )}
 
         <div>
           <label className="block pb-2 text-base font-medium text-blue-50">পরীক্ষার তারিখ</label>
@@ -180,14 +263,14 @@ export default function StepBasicInfo({ value, onChange }: Props) {
         </div>
 
         <div>
-          <label className="block pb-2 text-base font-medium text-blue-50">শেষ সময় / ডেডলাইন (ঐচ্ছিক)</label>
+          <label className="block pb-2 text-base font-medium text-blue-50">শেষ সময় / ডেডলাইন (অপশনাল)</label>
           <input
             type="datetime-local"
             value={value.deadline}
             onChange={(e) => set("deadline", e.target.value)}
             className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 focus:outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100"
           />
-          <p className="mt-1.5 text-sm text-slate-400">এই সময়ে পরীক্ষা সবার জন্য বন্ধ হবে। খালি রাখলে ডেডলাইন থাকবে না।</p>
+          <p className="mt-1.5 text-sm text-slate-400">এই সময়ে পরীক্ষা সবার জন্য বন্ধ হয়ে যাবে। খালি রাখলে কোনো ডেডলাইন থাকবে না।</p>
         </div>
       </div>
 
@@ -204,32 +287,32 @@ export default function StepBasicInfo({ value, onChange }: Props) {
             <div className="leading-6">
               <p className="m-0">
                 <span className="font-semibold">খোলা:</span>{" "}
-                {hasStart ? `${toBn(value.examDate)} · ${toBn(value.startTime)}` : "প্রকাশের পর সাথে সাথে"}
+                {hasStart ? `${toBn(value.examDate)} · ${toBn(value.startTime)}` : "পাবলিশের সাথে সাথেই"}
                 {"  ·  "}
                 <span className="font-semibold">বন্ধ:</span>{" "}
                 {hasDeadline ? fmtDeadline(value.deadline) : "ডেডলাইন নেই"}
               </p>
               <p className="m-0 mt-1 text-cyan-100/80">
-                শিক্ষার্থী পরীক্ষা শুরুর পর {toBn(value.duration || "0")} মিনিট সময় পাবে — তবে ডেডলাইন পার হলে পরীক্ষা তখনই বন্ধ হয়ে যাবে (তখন কম সময় পাবে)।
+                শিক্ষার্থী পরীক্ষা শুরুর পর {toBn(value.duration || "0")} মিনিট সময় পাবে — তবে ডেডলাইন পার হলে পরীক্ষা তখনই বন্ধ হয়ে যাবে (তখন কম সময় পাবে)।
               </p>
             </div>
           ) : (
             <p className="m-0 leading-6">
-              <span className="font-semibold">সময় নির্ধারণ করা হয়নি।</span> প্রকাশের পর পরীক্ষাটি যেকোনো সময় খোলা থাকবে। নির্দিষ্ট সময়ে সীমাবদ্ধ করতে শুরু সময় বা ডেডলাইন দিন।
+              <span className="font-semibold">সময় সেট করা হয়নি।</span> পাবলিশ করার পর পরীক্ষাটা যেকোনো সময় খোলা থাকবে। নির্দিষ্ট সময়ে বাঁধতে চাইলে শুরুর সময় বা ডেডলাইন দিন।
             </p>
           )}
         </div>
       </div>
 
       <div className="mt-6 rounded-2xl border border-slate-800 bg-gray-800/40 p-5">
-        <p className="text-base font-semibold text-blue-50">ফলাফল ও লিডারবোর্ড প্রকাশের সময়সূচি</p>
-        <p className="mt-0.5 text-sm text-slate-400">কখন ফলাফল ও লিডারবোর্ড শিক্ষার্থীদের কাছে প্রকাশিত হবে তা নির্ধারণ করুন</p>
+        <p className="text-base font-semibold text-blue-50">রেজাল্ট ও লিডারবোর্ড পাবলিশের সময়</p>
+        <p className="mt-0.5 text-sm text-slate-400">রেজাল্ট আর লিডারবোর্ড কখন শিক্ষার্থীরা দেখতে পাবে সেটা ঠিক করুন</p>
 
         <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2">
           <div>
             <label className="flex items-center gap-1.5 pb-2 text-base font-medium text-blue-50">
               <Megaphone size={16} className="text-cyan-500" />
-              ফলাফল প্রকাশের সময়
+              রেজাল্ট পাবলিশের সময়
             </label>
             <input
               type="datetime-local"
@@ -237,13 +320,13 @@ export default function StepBasicInfo({ value, onChange }: Props) {
               onChange={(e) => set("resultPublishAt", e.target.value)}
               className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 focus:outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100"
             />
-            <p className="mt-1.5 text-sm text-slate-400">খালি রাখলে ফলাফল ম্যানুয়ালি প্রকাশ করতে হবে</p>
+            <p className="mt-1.5 text-sm text-slate-400">খালি রাখলে রেজাল্ট ম্যানুয়ালি পাবলিশ করতে হবে</p>
           </div>
 
           <div>
             <label className="flex items-center gap-1.5 pb-2 text-base font-medium text-blue-50">
               <Trophy size={16} className="text-amber-500" />
-              লিডারবোর্ড প্রকাশের সময়
+              লিডারবোর্ড পাবলিশের সময়
             </label>
             <input
               type="datetime-local"
@@ -251,7 +334,7 @@ export default function StepBasicInfo({ value, onChange }: Props) {
               onChange={(e) => set("leaderboardPublishAt", e.target.value)}
               className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 focus:outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100"
             />
-            <p className="mt-1.5 text-sm text-slate-400">খালি রাখলে ফলাফল প্রকাশের সাথে লিডারবোর্ড দেখা যাবে</p>
+            <p className="mt-1.5 text-sm text-slate-400">খালি রাখলে রেজাল্টের সাথেই লিডারবোর্ড দেখা যাবে</p>
           </div>
         </div>
 
@@ -272,31 +355,31 @@ export default function StepBasicInfo({ value, onChange }: Props) {
                 <span className="font-semibold">Leaderboard:</span>{" "}
                 {value.leaderboardPublishAt
                   ? fmtDateTime(value.leaderboardPublishAt)
-                  : "ফলাফলের সাথে"}
+                  : "রেজাল্টের সাথে"}
               </p>
             </div>
           ) : (
             <p className="m-0 leading-6">
-              <span className="font-semibold">ম্যানুয়াল ফলাফল মোড।</span> ফলাফলের সময়
-              না দিলে admin থেকে manually publish করতে হবে।
+              <span className="font-semibold">ম্যানুয়াল রেজাল্ট মোড।</span> রেজাল্টের সময়
+              না দিলে অ্যাডমিন থেকে ম্যানুয়ালি পাবলিশ করতে হবে।
             </p>
           )}
         </div>
       </div>
 
       <div className="pt-6">
-        <label className="block pb-2 text-base font-medium text-blue-50">পরীক্ষার বিবরণ</label>
+        <label className="block pb-2 text-base font-medium text-blue-50">পরীক্ষার ডিসক্রিপশন</label>
         <textarea
           value={value.description}
           onChange={(e) => set("description", e.target.value)}
-          placeholder="শিক্ষার্থীদের জন্য সংক্ষিপ্ত নির্দেশনা..."
+          placeholder="শিক্ষার্থীদের জন্য ছোট একটা নির্দেশনা..."
           rows={3}
           className="w-full resize-none rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 placeholder:text-slate-400 focus:outline-none"
         />
       </div>
 
       <div className="pt-6">
-        <label className="block pb-2 text-base font-medium text-blue-50">পরীক্ষার অবস্থা</label>
+        <label className="block pb-2 text-base font-medium text-blue-50">পরীক্ষার স্ট্যাটাস</label>
         <div className="flex flex-wrap gap-2">
           {statusOptions.map(({ value: v, label }) => (
             <button

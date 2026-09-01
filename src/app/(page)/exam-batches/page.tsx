@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { ClipboardCheck, Plus } from "lucide-react";
+import ConfirmDeleteDialog from "@/components/confirm-delete-dialog";
 import ErrorState from "@/components/error-state";
 import { PageLoader } from "@/components/loaders";
 import { usePermissions } from "@/hooks/use-permissions";
-import { useGetExamBatchesQuery, type ExamBatch } from "@/redux/api/examsApi";
+import { useDeleteExamBatchMutation, useGetExamBatchesQuery, type ExamBatch } from "@/redux/api/examsApi";
 import BatchCard from "./includes/batch-card";
 import BatchFormModal from "./includes/batch-form-modal";
 import BatchManageView from "./includes/batch-manage-view";
@@ -16,14 +17,17 @@ type ModalState = null | "new" | ExamBatch;
 export default function Page() {
   const { hasPermission } = usePermissions();
   const { data, isLoading, isError, error } = useGetExamBatchesQuery();
+  const [deleteExamBatch, { isLoading: isDeleting }] = useDeleteExamBatchMutation();
   const [modal, setModal] = useState<ModalState>(null);
   const [manageId, setManageId] = useState<number | null>(null);
+  const [batchToDelete, setBatchToDelete] = useState<ExamBatch | null>(null);
 
   if (isLoading) return <PageLoader label="পরীক্ষা ব্যাচ লোড হচ্ছে..." />;
   if (isError) return <ErrorState message="পরীক্ষা ব্যাচ আনতে সমস্যা হচ্ছে।" error={error} />;
 
   const batches = data?.results ?? [];
   const canCreate = hasPermission("can_create_exam");
+  const canDelete = hasPermission("can_delete_exam");
 
   // Manage view for one batch.
   if (manageId !== null) {
@@ -85,6 +89,8 @@ export default function Page() {
               batch={batch}
               onManage={() => setManageId(batch.id)}
               onEdit={() => setModal(batch)}
+              onDelete={() => setBatchToDelete(batch)}
+              canDelete={canDelete}
             />
           ))}
         </section>
@@ -97,6 +103,19 @@ export default function Page() {
           onSaved={() => setModal(null)}
         />
       ) : null}
+      <ConfirmDeleteDialog
+        open={Boolean(batchToDelete)}
+        itemType="পরীক্ষা ব্যাচ"
+        itemName={batchToDelete?.title || ""}
+        isLoading={isDeleting}
+        impact="ব্যাচটি মুছে ফেললে রুটিন, এনরোলমেন্ট এবং সংশ্লিষ্ট পরীক্ষার অ্যাক্সেসে প্রভাব পড়তে পারে।"
+        onClose={() => setBatchToDelete(null)}
+        onConfirm={async () => {
+          if (!batchToDelete) return;
+          await deleteExamBatch(batchToDelete.id).unwrap();
+          setBatchToDelete(null);
+        }}
+      />
     </div>
   );
 }

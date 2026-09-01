@@ -27,6 +27,8 @@ import {
   useDeleteClassMutation,
   type CourseClass,
 } from "@/redux/api/classesApi";
+import AssignmentCard from "./assignment-card";
+import ClassCard from "./class-card";
 import {
   useGetCourseSubjectsQuery,
   type CourseSubject,
@@ -352,30 +354,24 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
                 {unassignedItems.lectures.length > 0 ? (
                   <div>
                     <p className="mb-1.5 text-xs font-semibold text-slate-400">লেকচার</p>
-                    <ItemList
+                    <ClassCardList
                       empty=""
-                      items={unassignedItems.lectures.map((item) => ({
-                        id: item.id,
-                        title: item.title,
-                        meta: `${item.videos.length}টি ভিডিও`,
-                        onEdit: () => setEditTarget({ type: "lectures", item }),
-                        onDelete: () => handleDelete("lectures", item.id, item.title),
-                      }))}
+                      items={unassignedItems.lectures}
+                      onDelete={(item) => handleDelete("lectures", item.id, item.title)}
+                      onEdit={(item) => setEditTarget({ type: "lectures", item })}
+                      variant="lecture"
                     />
                   </div>
                 ) : null}
                 {unassignedItems.live.length > 0 ? (
                   <div>
                     <p className="mb-1.5 text-xs font-semibold text-slate-400">লাইভ ক্লাস</p>
-                    <ItemList
+                    <ClassCardList
                       empty=""
-                      items={unassignedItems.live.map((item) => ({
-                        id: item.id,
-                        title: item.title,
-                        meta: item.class_date || "—",
-                        onEdit: () => setEditTarget({ type: "live", item }),
-                        onDelete: () => handleDelete("live", item.id, item.title),
-                      }))}
+                      items={unassignedItems.live}
+                      onDelete={(item) => handleDelete("live", item.id, item.title)}
+                      onEdit={(item) => setEditTarget({ type: "live", item })}
+                      variant="live"
                     />
                   </div>
                 ) : null}
@@ -397,18 +393,13 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
                 {unassignedItems.assignments.length > 0 ? (
                   <div>
                     <p className="mb-1.5 text-xs font-semibold text-slate-400">অ্যাসাইনমেন্ট</p>
-                    <ItemList
+                    <AssignmentCardList
                       empty=""
+                      items={unassignedItems.assignments}
+                      onDelete={(item) => handleDelete("assignments", item.id, item.title)}
+                      onEdit={(item) => setEditTarget({ type: "assignments", item })}
                       onTelegramMessage={setTelegramMessage}
-                      items={unassignedItems.assignments.map((item) => ({
-                        id: item.id,
-                        title: item.title,
-                        meta: `${item.max_marks} নম্বর`,
-                        onView: () => setViewSubmissions(item),
-                        onEdit: () => setEditTarget({ type: "assignments", item }),
-                        onDelete: () => handleDelete("assignments", item.id, item.title),
-                        telegramAssignmentId: item.id,
-                      }))}
+                      onView={(item) => setViewSubmissions(item)}
                     />
                   </div>
                 ) : null}
@@ -621,30 +612,24 @@ function SubjectTabContent({
 
   if (activeTab === "lectures") {
     return (
-      <ItemList
-        empty="এই বিষয়ে এখনো কোনো লেকচার নেই।"
-        items={bundle.classes.map((item) => ({
-          id: item.id,
-          title: item.title,
-          meta: `${item.videos.length}টি ভিডিও · ${item.class_materials.length}টি ম্যাটেরিয়াল`,
-          onEdit: () => onEdit({ type: "lectures", item }),
-          onDelete: () => onDelete("lectures", item.id, item.title),
-        }))}
+      <ClassCardList
+        empty="এই বিষয়ে এখনো কোনো লেকচার নেই।"
+        items={bundle.classes}
+        onDelete={(item) => onDelete("lectures", item.id, item.title)}
+        onEdit={(item) => onEdit({ type: "lectures", item })}
+        variant="lecture"
       />
     );
   }
 
   if (activeTab === "live") {
     return (
-      <ItemList
-        empty="এই বিষয়ে এখনো কোনো লাইভ ক্লাস নেই।"
-        items={bundle.liveClasses.map((item) => ({
-          id: item.id,
-          title: item.title,
-          meta: item.class_date || "তারিখ দেওয়া হয়নি",
-          onEdit: () => onEdit({ type: "live", item }),
-          onDelete: () => onDelete("live", item.id, item.title),
-        }))}
+      <ClassCardList
+        empty="এই বিষয়ে এখনো কোনো লাইভ ক্লাস নেই।"
+        items={bundle.liveClasses}
+        onDelete={(item) => onDelete("live", item.id, item.title)}
+        onEdit={(item) => onEdit({ type: "live", item })}
+        variant="live"
       />
     );
   }
@@ -666,18 +651,13 @@ function SubjectTabContent({
 
   if (activeTab === "assignments") {
     return (
-      <ItemList
-        empty="এই বিষয়ে এখনো কোনো অ্যাসাইনমেন্ট নেই।"
+      <AssignmentCardList
+        empty="এই বিষয়ে এখনো কোনো অ্যাসাইনমেন্ট নেই।"
+        items={bundle.assignments}
+        onDelete={(item) => onDelete("assignments", item.id, item.title)}
+        onEdit={(item) => onEdit({ type: "assignments", item })}
         onTelegramMessage={onTelegramMessage}
-        items={bundle.assignments.map((item) => ({
-          id: item.id,
-          title: item.title,
-          meta: `${item.max_marks} নম্বর · ${item.status}`,
-          onView: () => onViewSubmissions(item),
-          onEdit: () => onEdit({ type: "assignments", item }),
-          onDelete: () => onDelete("assignments", item.id, item.title),
-          telegramAssignmentId: item.id,
-        }))}
+        onView={(item) => onViewSubmissions(item)}
       />
     );
   }
@@ -700,6 +680,89 @@ function SubjectTabContent({
       >
         কোর্সের সব কন্টেন্ট এডিট করুন
       </Link>
+    </div>
+  );
+}
+
+/**
+ * Lecture / live-class list, rendered as the cards a student would see.
+ *
+ * Kept separate from `ItemList` because these two rows carry a poster, a play
+ * target and video metadata that notes, assignments and exams have no use for.
+ */
+function ClassCardList({
+  empty,
+  items,
+  variant,
+  onEdit,
+  onDelete,
+}: {
+  empty: string;
+  items: CourseClass[];
+  variant: "lecture" | "live";
+  onEdit: (item: CourseClass) => void;
+  onDelete: (item: CourseClass) => void;
+}) {
+  if (items.length === 0) {
+    return empty ? (
+      <p className="mt-4 rounded-2xl border border-dashed border-slate-800 p-6 text-center text-sm text-slate-400">
+        {empty}
+      </p>
+    ) : null;
+  }
+
+  return (
+    <div className="mt-4 flex flex-col gap-3">
+      {items.map((item) => (
+        <ClassCard
+          item={item}
+          key={item.id}
+          onDelete={() => onDelete(item)}
+          onEdit={() => onEdit(item)}
+          subjectLabel={variant === "live" ? "লাইভ ক্লাস" : "লেকচার"}
+          variant={variant}
+        />
+      ))}
+    </div>
+  );
+}
+
+/** Assignment list, rendered as scannable cards rather than one-line rows. */
+function AssignmentCardList({
+  empty,
+  items,
+  onView,
+  onEdit,
+  onDelete,
+  onTelegramMessage,
+}: {
+  empty: string;
+  items: Assignment[];
+  onView: (item: Assignment) => void;
+  onEdit: (item: Assignment) => void;
+  onDelete: (item: Assignment) => void;
+  onTelegramMessage: (message: string | null) => void;
+}) {
+  if (items.length === 0) {
+    return empty ? (
+      <p className="mt-4 rounded-2xl border border-dashed border-slate-800 p-6 text-center text-sm text-slate-400">
+        {empty}
+      </p>
+    ) : null;
+  }
+
+  return (
+    <div className="mt-4 flex flex-col gap-3">
+      {items.map((item) => (
+        <AssignmentCard
+          item={item}
+          key={item.id}
+          onDelete={() => onDelete(item)}
+          onEdit={() => onEdit(item)}
+          onTelegramMessage={onTelegramMessage}
+          onView={() => onView(item)}
+        />
+      ))}
     </div>
   );
 }
@@ -795,7 +858,7 @@ function ItemList({
           </Link>
         ) : (
           <div
-            className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-950/25 p-4"
+            className="flex items-start gap-3 rounded-2xl border border-slate-800 bg-slate-950/25 p-4"
             key={item.id}
           >
             {body}

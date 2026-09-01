@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { formatMarks } from "@/lib/marks";
 import {
   ArrowLeft,
   CalendarClock,
@@ -182,7 +183,7 @@ export default function BatchManageView({
                             {item.planned_questions ? `/${bn(item.planned_questions)}` : ""} প্রশ্ন
                           </p>
                           <p className="mt-0.5 text-xs text-slate-500">
-                            প্রতি প্রশ্ন {bn(item.marks_per_question)} নম্বর
+                            প্রতি প্রশ্ন {bn(formatMarks(item.marks_per_question))} নম্বর
                           </p>
                         </td>
                         <td className="px-3 py-3">

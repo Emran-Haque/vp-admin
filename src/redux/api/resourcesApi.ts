@@ -1,12 +1,21 @@
 import { baseApi } from "./baseApi";
 import type { Paginated } from "./types";
 
+/**
+ * How a resource reaches the student.
+ *
+ * `pdf` and `doc` are uploaded files the student downloads; `drive` is a link
+ * that opens. The type decides both which input the admin form shows and which
+ * action the student card offers, so there is nothing else to keep in sync.
+ */
+export type ResourceKind = "pdf" | "doc" | "drive";
+
 export type CourseResource = {
   id: number;
   course: number;
   title: string;
   subject: number | string | null;
-  resource_type: "book" | "note" | "pdf" | "question_bank" | "magazine" | "short_note" | "link";
+  resource_type: ResourceKind;
   file: string | null;
   external_link: string;
   file_size: string;
@@ -47,11 +56,15 @@ export const resourcesApi = baseApi.injectEndpoints({
       query: (id) => `admin/resources/${id}/`,
       providesTags: (_result, _error, id) => [{ type: "Resources", id }],
     }),
-    createResource: builder.mutation<CourseResource, CreateResourceInput>({
+    // FormData whenever a file is attached — JSON cannot carry an upload.
+    createResource: builder.mutation<CourseResource, CreateResourceInput | FormData>({
       query: (body) => ({ url: "admin/resources/", method: "POST", body }),
       invalidatesTags: [{ type: "Resources", id: "LIST" }],
     }),
-    updateResource: builder.mutation<CourseResource, { id: number; data: UpdateResourceInput }>({
+    updateResource: builder.mutation<
+      CourseResource,
+      { id: number; data: UpdateResourceInput | FormData }
+    >({
       query: ({ id, data }) => ({ url: `admin/resources/${id}/`, method: "PATCH", body: data }),
       invalidatesTags: (_result, _error, { id }) => [
         { type: "Resources", id },

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ImageSizeHint from "@/components/image-size-hint";
 import { X, Save, AlertTriangle, Upload, User } from "lucide-react";
 import { useUpdateTeacherMutation, type Teacher } from "@/redux/api/contentApi";
 
@@ -89,6 +90,7 @@ export default function EditTeacherModal({ teacher, onClose }: { teacher: Teache
                 onChange={(e) => setImage(e.target.files?.[0] ?? null)}
               />
             </label>
+            <ImageSizeHint kind="teacherPhoto" />
           </div>
 
           <div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ImageSizeHint from "@/components/image-size-hint";
 import { AlertTriangle, ImagePlus, Save, X } from "lucide-react";
 import {
   useCreateCommunityLinkMutation,
@@ -99,6 +100,7 @@ export default function CommunityFormModal({
               </div>
               <input type="file" accept="image/*" className="hidden" onChange={(e) => setBanner(e.target.files?.[0] ?? null)} />
             </label>
+            <ImageSizeHint className="text-center" kind="communityBanner" />
           </div>
 
           <div>

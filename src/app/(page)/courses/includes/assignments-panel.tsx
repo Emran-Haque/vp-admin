@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { formatMarks } from "@/lib/marks";
 import {
   AlertTriangle,
   ClipboardList,
@@ -145,7 +146,7 @@ export default function AssignmentsPanel({ courseId, compact = false }: Assignme
                       {" • "}
                       শেষ তারিখ {formatDateTime(assignment.due_date)}
                       {" • "}
-                      {assignment.max_marks} নম্বর
+                      {formatMarks(assignment.max_marks)} নম্বর
                     </p>
                     {assignment.description && (
                       <p className="mt-2 line-clamp-2 text-xs text-slate-400">{assignment.description}</p>
@@ -335,7 +336,7 @@ export function AddAssignmentModal({
 
           {initialSubjectName ? (
             <div className="rounded-[10px] border border-blue-500/25 bg-blue-500/10 px-3.5 py-2 text-xs font-semibold text-blue-100">
-              বিষয়: {initialSubjectName}
+              বিষয়: {initialSubjectName}
             </div>
           ) : null}
 
@@ -377,7 +378,7 @@ export function AddAssignmentModal({
                   }}
                   className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
                 >
-                  <option value="">সব ক্লাস / কোনো ক্লাস নয়</option>
+                  <option value="">সব ক্লাস / কোনো ক্লাস নয়</option>
                   {classes.map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.title}
@@ -387,13 +388,13 @@ export function AddAssignmentModal({
               </div>
 
               <div>
-                <label className="block pb-1.5 text-xs font-semibold text-slate-400">বিষয়</label>
+                <label className="block pb-1.5 text-xs font-semibold text-slate-400">বিষয়</label>
                 <select
                   value={subjectId}
                   onChange={(e) => setSubjectId(e.target.value)}
                   className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
                 >
-                  <option value="">কোনো বিষয় নয়</option>
+                  <option value="">কোনো বিষয় নয়</option>
                   {subjectOptions.map((subject) => (
                     <option key={subject.id} value={subject.id}>
                       {subject.name}
@@ -793,7 +794,7 @@ function SubmissionAttachmentCard({ attachment }: { attachment: SubmissionAttach
         objectUrl = URL.createObjectURL(blob);
         if (active) setPreviewUrl(objectUrl);
       } catch {
-        if (active) setError("প্রিভিউ আনা যায়নি");
+        if (active) setError("প্রিভিউ আনা যায়নি");
       } finally {
         if (active) setIsLoadingPreview(false);
       }
@@ -830,7 +831,7 @@ function SubmissionAttachmentCard({ attachment }: { attachment: SubmissionAttach
         window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
       }
     } catch {
-      setError("ফাইল খোলা যায়নি");
+      setError("ফাইল খোলা যায়নি");
     }
   };
 
@@ -845,7 +846,7 @@ function SubmissionAttachmentCard({ attachment }: { attachment: SubmissionAttach
             {attachment.original_filename || `Attachment #${attachment.id}`}
           </p>
           <p className="mt-1 text-[11px] text-slate-500">
-            {attachment.source === "telegram" ? "Telegram" : "ওয়েবসাইট"}
+            {attachment.source === "telegram" ? "Telegram" : "ওয়েবসাইট"}
             {formatFileSize(attachment.file_size) ? ` • ${formatFileSize(attachment.file_size)}` : ""}
           </p>
         </div>

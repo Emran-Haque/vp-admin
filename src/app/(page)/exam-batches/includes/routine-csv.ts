@@ -35,7 +35,27 @@ const HEADER_ALIASES: Record<string, string> = {
   number_of_questions: "questions",
   question_count: "questions",
   "প্রশ্ন সংখ্যা": "questions",
+  negative: "negative",
+  negative_mark: "negative",
+  "নেগেটিভ": "negative",
+  negative_mode: "negative_mode",
+  negative_type: "negative_mode",
+  "নেগেটিভ ধরন": "negative_mode",
 };
+
+/**
+ * Reads the optional `negative_mode` column.
+ *
+ * Anything that looks like a percentage ("percentage", "percent", "%", "শতাংশ")
+ * selects percentage mode; everything else — including a blank cell — keeps the
+ * flat behaviour, so an existing routine CSV imports exactly as it did before.
+ */
+function readNegativeMode(raw: string): "flat" | "percentage" {
+  const value = raw.trim().toLowerCase();
+  return ["percentage", "percent", "%", "pct", "শতাংশ"].includes(value)
+    ? "percentage"
+    : "flat";
+}
 
 function normalizeHeader(header: string): string {
   const key = header.trim().toLowerCase();
@@ -43,10 +63,10 @@ function normalizeHeader(header: string): string {
 }
 
 /** Ready-to-copy sample: one row per exam, schedule only. */
-export const ROUTINE_SAMPLE_CSV = `name,subject,date,start_time,end_time,duration_minutes,mark,questions
-মডেল টেস্ট-১,পদার্থবিজ্ঞান,2026-09-01,10:00,2026-09-01 22:00,30,1,30
-মডেল টেস্ট-২,রসায়ন,2026-09-02,10:00,2026-09-02 22:00,30,1,30
-মডেল টেস্ট-৩,গণিত,2026-09-03,10:00,,25,1,25
+export const ROUTINE_SAMPLE_CSV = `name,subject,date,start_time,end_time,duration_minutes,mark,questions,negative_mode,negative
+মডেল টেস্ট-১,পদার্থবিজ্ঞান,2026-09-01,10:00,2026-09-01 22:00,30,1,30,percentage,25
+মডেল টেস্ট-২,রসায়ন,2026-09-02,10:00,2026-09-02 22:00,30,1,30,percentage,25
+মডেল টেস্ট-৩,গণিত,2026-09-03,10:00,,25,1,25,flat,0.25
 `;
 
 export type RoutineParseResult = {
@@ -79,6 +99,8 @@ export function parseRoutineCsv(file: File): Promise<RoutineParseResult> {
           const date = (row.date || "").trim();
           const startTime = (row.start_time || "").trim();
           const endRaw = (row.end_time || "").trim();
+          const negativeMode = readNegativeMode(row.negative_mode || "");
+          const negativeRaw = (row.negative || "").trim();
           exams.push({
             title,
             subject_label: (row.subject || "").trim(),
@@ -87,6 +109,13 @@ export function parseRoutineCsv(file: File): Promise<RoutineParseResult> {
             end_time: endRaw ? localDateTimeToIso(endRaw.replace(" ", "T")) ?? null : null,
             duration_minutes: Number(row.duration_minutes) || 30,
             marks_per_question: (row.mark || "1").trim() || "1",
+            // `negative` means different things per mode — a fixed deduction in
+            // flat mode, a percentage of each question's marks in percentage
+            // mode — so it is routed to whichever field the mode uses.
+            negative_marking_mode: negativeMode,
+            negative_mark_per_wrong: negativeMode === "flat" ? negativeRaw || "0" : undefined,
+            negative_mark_percentage:
+              negativeMode === "percentage" ? negativeRaw || "25" : undefined,
             planned_questions: Number(row.questions) || 0,
             questions: [],
           });

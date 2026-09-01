@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ImageSizeHint from "@/components/image-size-hint";
 import { AlertTriangle, ImagePlus, Save, X } from "lucide-react";
 import {
   useCreateExamBatchMutation,
@@ -11,6 +12,7 @@ import { extractErrorMessage } from "@/lib/api-error";
 import RichTextEditor from "@/components/rich-text-editor";
 import IncludesEditor from "@/components/includes-editor";
 import { draftsFromIncludes, serializeIncludes, type IncludeDraft } from "@/lib/rich-text";
+import { discountAmountFromLegacy, formatBanglaMoney, offerPreview, originalPriceFromOffer } from "@/lib/offer-pricing";
 
 /** Matches the public site's default heading when `includes_title` is blank. */
 const DEFAULT_INCLUDES_TITLE = "এই ব্যাচে যা থাকছে";
@@ -33,8 +35,7 @@ type BatchForm = {
   description: string;
   promo_video_url: string;
   price: string;
-  old_price: string;
-  discount: string;
+  discount_amount: string;
   start_date: string;
   end_date: string;
   is_published: boolean;
@@ -47,8 +48,7 @@ const emptyForm: BatchForm = {
   description: "",
   promo_video_url: "",
   price: "0.00",
-  old_price: "",
-  discount: "0.00",
+  discount_amount: "0.00",
   start_date: "",
   end_date: "",
   is_published: false,
@@ -61,9 +61,16 @@ function formFromBatch(batch: ExamBatch): BatchForm {
     short_description: batch.short_description || "",
     description: batch.description || "",
     promo_video_url: batch.promo_video_url || "",
-    price: batch.price || "0.00",
-    old_price: batch.old_price || "",
-    discount: batch.discount || "0.00",
+    price: originalPriceFromOffer({
+      price: batch.price,
+      oldPrice: batch.old_price,
+      discountAmount: batch.discount_amount,
+    }) || "0.00",
+    discount_amount: discountAmountFromLegacy({
+      price: batch.price,
+      oldPrice: batch.old_price,
+      discountAmount: batch.discount_amount,
+    }) || "0.00",
     start_date: batch.start_date || "",
     end_date: batch.end_date || "",
     is_published: batch.is_published,
@@ -86,6 +93,7 @@ export default function BatchFormModal({
 }) {
   const [form, setForm] = useState<BatchForm>(batch ? formFromBatch(batch) : emptyForm);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
+  const [videoThumbnail, setVideoThumbnail] = useState<File | null>(null);
   const [includes, setIncludes] = useState<IncludeDraft[]>(() => draftsFromIncludes(batch?.includes));
   const [error, setError] = useState<string | null>(null);
   const [createBatch, { isLoading: isCreating }] = useCreateExamBatchMutation();
@@ -95,9 +103,13 @@ export default function BatchFormModal({
   const previewUrl = thumbnail
     ? URL.createObjectURL(thumbnail)
     : resolveMediaUrl(batch?.thumbnail ?? null);
+  const videoPreviewUrl = videoThumbnail
+    ? URL.createObjectURL(videoThumbnail)
+    : resolveMediaUrl(batch?.promo_video_thumbnail ?? null);
 
   const set = <K extends keyof BatchForm>(key: K, value: BatchForm[K]) =>
     setForm((current) => ({ ...current, [key]: value }));
+  const pricingPreview = offerPreview(form.price, form.discount_amount);
 
   const save = async () => {
     if (!form.title.trim()) return;
@@ -105,20 +117,21 @@ export default function BatchFormModal({
     try {
       let saved: ExamBatch;
       const includePayload = serializeIncludes(includes);
-      if (thumbnail) {
-        // Multipart when a new thumbnail is picked.
+      const offer = offerPreview(form.price, form.discount_amount);
+      if (thumbnail || videoThumbnail) {
+        // Multipart when either image is picked — JSON cannot carry a file.
         const fd = new FormData();
         fd.append("title", form.title);
         fd.append("short_description", form.short_description);
         fd.append("description", form.description);
         fd.append("promo_video_url", form.promo_video_url);
-        fd.append("price", form.price || "0");
-        fd.append("discount", form.discount || "0");
+        fd.append("price", String(offer.salePrice));
+        fd.append("discount_amount", String(offer.discountAmount));
         fd.append("is_published", String(form.is_published));
-        if (form.old_price) fd.append("old_price", form.old_price);
         if (form.start_date) fd.append("start_date", form.start_date);
         if (form.end_date) fd.append("end_date", form.end_date);
-        fd.append("thumbnail", thumbnail);
+        if (thumbnail) fd.append("thumbnail", thumbnail);
+        if (videoThumbnail) fd.append("promo_video_thumbnail", videoThumbnail);
         fd.append("includes_title", form.includes_title);
         // Multipart cannot carry a nested list, so it goes as JSON text; the
         // API's IncludesField accepts either form.
@@ -129,7 +142,8 @@ export default function BatchFormModal({
       } else {
         const payload = {
           ...form,
-          old_price: form.old_price || null,
+          price: String(offer.salePrice),
+          discount_amount: String(offer.discountAmount),
           start_date: form.start_date || null,
           end_date: form.end_date || null,
           includes: includePayload,
@@ -189,6 +203,7 @@ export default function BatchFormModal({
               </div>
               <input type="file" accept="image/*" className="hidden" onChange={(e) => setThumbnail(e.target.files?.[0] ?? null)} />
             </label>
+            <ImageSizeHint kind="examBatchThumbnail" />
           </div>
 
           <div>
@@ -212,19 +227,40 @@ export default function BatchFormModal({
             <label className="mb-1.5 block text-xs font-semibold text-slate-400">প্রমো ভিডিও URL</label>
             <input className={fieldClass} placeholder="YouTube / Facebook / Drive / Vimeo link" value={form.promo_video_url} onChange={(e) => set("promo_video_url", e.target.value)} />
           </div>
-          <div className="grid grid-cols-3 gap-2 max-[520px]:grid-cols-1">
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-slate-400">প্রমো ভিডিও থাম্বনেইল</label>
+            <label className="group relative flex h-32 cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-dashed border-slate-700 bg-gray-800/50 hover:border-cyan-500/50">
+              {videoPreviewUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={videoPreviewUrl} alt="ভিডিও থাম্বনেইল" className="absolute inset-0 h-full w-full object-cover" />
+              ) : null}
+              <div className={`relative z-10 flex flex-col items-center gap-1.5 rounded-xl px-4 py-2 text-center ${videoPreviewUrl ? "bg-black/50 text-white" : "text-slate-400"}`}>
+                <ImagePlus size={20} />
+                <span className="text-xs font-bold">{videoPreviewUrl ? "ছবি পরিবর্তন করুন" : "ভিডিও থাম্বনেইল আপলোড করুন"}</span>
+              </div>
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => setVideoThumbnail(e.target.files?.[0] ?? null)} />
+            </label>
+            <ImageSizeHint kind="promoVideoThumbnail" />
+            <p className="mt-1 text-[11px] leading-5 text-slate-500">
+              প্লে বাটনের পেছনে এই ছবিটি দেখা যাবে। না দিলে কভার ছবিটিই ব্যবহার হবে।
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 max-[520px]:grid-cols-1">
             <div>
-              <label className="mb-1.5 block text-xs font-semibold text-slate-400">মূল্য (৳)</label>
+              <label className="mb-1.5 block text-xs font-semibold text-slate-400">মূল দাম (৳)</label>
               <input className={fieldClass} placeholder="0.00" value={form.price} onChange={(e) => set("price", e.target.value)} />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-semibold text-slate-400">পুরোনো মূল্য</label>
-              <input className={fieldClass} placeholder="—" value={form.old_price} onChange={(e) => set("old_price", e.target.value)} />
+              <label className="mb-1.5 block text-xs font-semibold text-slate-400">ডিসকাউন্ট এমাউন্ট (৳)</label>
+              <input className={fieldClass} placeholder="0" value={form.discount_amount} onChange={(e) => set("discount_amount", e.target.value)} />
             </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold text-slate-400">ছাড় (%)</label>
-              <input className={fieldClass} placeholder="0" value={form.discount} onChange={(e) => set("discount", e.target.value)} />
-            </div>
+          </div>
+          <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-3 text-xs leading-6 text-slate-300">
+            <span className="font-semibold text-cyan-200">অটো হিসাব:</span>{" "}
+            ছাড়ের পর দাম {formatBanglaMoney(pricingPreview.salePrice)} · ছাড়{" "}
+            {formatBanglaMoney(pricingPreview.discountAmount)} (
+            {pricingPreview.percent.toLocaleString("bn-BD", { maximumFractionDigits: 2 })}%)
+            {pricingPreview.hasOffer ? ` · আগের দাম ${formatBanglaMoney(pricingPreview.oldPrice)}` : ""}
           </div>
           <div className="grid grid-cols-2 gap-2 max-[520px]:grid-cols-1">
             <div>

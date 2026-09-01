@@ -28,7 +28,7 @@ export default function WizardFooter({ step, published, onPrev, onNext, onPublis
           href="/mcq"
           className="cursor-pointer rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-base font-semibold text-blue-50 transition-colors duration-200 hover:bg-white/10"
         >
-          বাতিল করুন
+          ক্যানসেল
         </Link>
       ) : (
         <button
@@ -36,7 +36,7 @@ export default function WizardFooter({ step, published, onPrev, onNext, onPublis
           onClick={onPrev}
           className="cursor-pointer rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-base font-semibold text-blue-50 transition-colors duration-200 hover:bg-white/10"
         >
-          পূর্ববর্তী
+          আগের ধাপ
         </button>
       )}
 
@@ -46,7 +46,7 @@ export default function WizardFooter({ step, published, onPrev, onNext, onPublis
           className="flex cursor-pointer items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-base font-semibold text-blue-50 transition-colors duration-200 hover:bg-white/10"
         >
           <Save size={16} />
-          ড্রাফট সংরক্ষণ
+          ড্রাফট সেভ
         </button>
 
         {step < 3 ? (
@@ -55,7 +55,7 @@ export default function WizardFooter({ step, published, onPrev, onNext, onPublis
             onClick={onNext}
             className="flex cursor-pointer items-center gap-2 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 px-6 py-3 text-lg font-semibold text-white shadow-[0px_0px_40px_-10px_rgba(0,229,200,0.50)] transition-all duration-200 hover:brightness-110"
           >
-            পরবর্তী ধাপ
+            পরের ধাপ
             <ArrowRight size={16} />
           </button>
         ) : (
@@ -66,7 +66,7 @@ export default function WizardFooter({ step, published, onPrev, onNext, onPublis
               className="flex items-center gap-2 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 px-6 py-3 text-lg font-semibold text-white shadow-[0px_0px_40px_-10px_rgba(0,229,200,0.50)]"
             >
               <Check size={16} />
-              পরীক্ষা প্রকাশ করুন
+              পরীক্ষা পাবলিশ করুন
             </button>
           )
         )}

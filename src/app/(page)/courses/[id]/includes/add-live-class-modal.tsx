@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import ImageSizeHint from "@/components/image-size-hint";
 import { X, Save, AlertTriangle, Upload } from "lucide-react";
 import {
   useCreateClassMutation,
@@ -248,6 +249,7 @@ export default function AddLiveClassModal({
                 />
               </label>
             )}
+            <ImageSizeHint kind="liveClassThumbnail" />
           </div>
 
           <div className="flex justify-end gap-2.5 pt-2">

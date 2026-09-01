@@ -28,7 +28,7 @@ import ErrorState from "@/components/error-state";
 import { PageLoader } from "@/components/loaders";
 
 const resultStatusStyles: Record<string, { label: string; className: string }> = {
-  published: { label: "ফলাফল প্রকাশিত", className: "border-emerald-500/40 bg-emerald-500/10 text-emerald-500" },
+  published: { label: "রেজাল্ট পাবলিশড", className: "border-emerald-500/40 bg-emerald-500/10 text-emerald-500" },
   pending: { label: "ফলাফল নির্ধারিত", className: "border-amber-500/40 bg-amber-500/10 text-amber-500" },
   hidden: { label: "ফলাফল গোপন", className: "border-cyan-500/40 bg-cyan-500/10 text-cyan-500" },
 };
@@ -45,11 +45,11 @@ export default function ExamList() {
   const { hasPermission } = usePermissions();
 
   if (isLoading) {
-    return <PageLoader label="পরীক্ষার তালিকা লোড হচ্ছে…" />;
+    return <PageLoader label="পরীক্ষার লিস্ট লোড হচ্ছে…" />;
   }
 
   if (isError) {
-    return <ErrorState message="পরীক্ষার তালিকা আনতে সমস্যা হয়েছে। API সার্ভার সংযোগ পরীক্ষা করুন।" error={error} />;
+    return <ErrorState message="পরীক্ষার লিস্ট আনা যায়নি। API সার্ভারের কানেকশন চেক করুন।" error={error} />;
   }
 
   const exams = data?.results ?? [];
@@ -101,7 +101,7 @@ export default function ExamList() {
                   className="flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-sm font-semibold text-blue-500"
                 >
                   <CheckCircle2 size={14} />
-                  ফলাফল প্রকাশ করুন
+                  রেজাল্ট পাবলিশ করুন
                 </button>
               )}
 
@@ -166,7 +166,7 @@ function ExamAttemptsButton({ exam }: { exam: Exam }) {
         className="mt-2 inline-flex h-10 items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-3.5 text-sm font-black text-cyan-100 transition hover:bg-cyan-500/20"
       >
         <Users size={16} />
-        পরীক্ষার্থী তালিকা
+        পরীক্ষার্থীর লিস্ট
         {data ? (
           <span className="rounded-full bg-cyan-400/15 px-2 py-0.5 text-xs text-cyan-100">
             {toBn(data.count)}
@@ -182,7 +182,7 @@ function ExamAttemptsButton({ exam }: { exam: Exam }) {
         <div className="mt-3 overflow-hidden rounded-2xl border border-slate-800 bg-gray-950/45">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 px-4 py-3">
             <div>
-              <p className="text-sm font-bold text-blue-50">যারা পরীক্ষা দিয়েছে</p>
+              <p className="text-sm font-bold text-blue-50">যারা পরীক্ষা দিয়েছে</p>
               <p className="mt-0.5 text-xs text-slate-400">
                 Submitted, auto-submitted এবং tab-change violation submit একসাথে দেখানো হচ্ছে।
               </p>
@@ -198,10 +198,10 @@ function ExamAttemptsButton({ exam }: { exam: Exam }) {
           </div>
 
           {isFetching && !data ? (
-            <p className="p-5 text-center text-sm text-slate-400">পরীক্ষার্থীর তালিকা লোড হচ্ছে...</p>
+            <p className="p-5 text-center text-sm text-slate-400">পরীক্ষার্থীর লিস্ট লোড হচ্ছে...</p>
           ) : isError ? (
             <ErrorState
-              message="পরীক্ষার্থীর তালিকা আনতে সমস্যা হয়েছে। API সার্ভার সংযোগ পরীক্ষা করুন।"
+              message="পরীক্ষার্থীর লিস্ট আনা যায়নি। API সার্ভারের কানেকশন চেক করুন।"
               error={error}
             />
           ) : attempts.length === 0 ? (
@@ -253,9 +253,9 @@ function ExamAttemptsTable({ attempts }: { attempts: ExamAttempt[] }) {
             <th className="px-4 py-3">স্ট্যাটাস</th>
             <th className="px-4 py-3">স্কোর</th>
             <th className="px-4 py-3">সঠিক/ভুল/ফাঁকা</th>
-            <th className="px-4 py-3">সময়</th>
+            <th className="px-4 py-3">সময়</th>
             <th className="px-4 py-3">র‍্যাঙ্ক</th>
-            <th className="px-4 py-3">জমা দিয়েছে</th>
+            <th className="px-4 py-3">জমা দিয়েছে</th>
           </tr>
         </thead>
         <tbody>
@@ -304,10 +304,10 @@ function ExamAttemptsTable({ attempts }: { attempts: ExamAttempt[] }) {
 
 function attemptStatusLabel(status: string) {
   const labels: Record<string, string> = {
-    submitted: "জমা দিয়েছে",
+    submitted: "জমা দিয়েছে",
     auto_submitted: "Auto submit",
     violation_submitted: "Tab change submit",
-    expired: "সময় শেষ",
+    expired: "সময় শেষ",
     started: "চলমান",
   };
   return labels[status] ?? status;

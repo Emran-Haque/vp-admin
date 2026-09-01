@@ -12,6 +12,7 @@ export type Book = {
   price: string;
   /** Null when no discount is set. */
   old_price: string | null;
+  discount_amount: string;
   discount: string;
   author: string;
   publisher: string;
@@ -26,6 +27,11 @@ export type Book = {
   is_featured: boolean;
   includes_title: string;
   includes: IncludeItem[];
+  summary_points: { id: number; text: string; ordering: number }[];
+  features: { id: number; title: string; description: string; icon: string; icon_image: string | null; ordering: number }[];
+  review_average: number | null;
+  review_count: number;
+  total_sold: number;
   created_at: string;
   updated_at: string;
 };
@@ -41,12 +47,25 @@ export type BookListParams = {
 export type CreateBookInput = Partial<
   Omit<
     Book,
-    "id" | "slug" | "category_name" | "in_stock" | "created_at" | "updated_at" | "includes"
+    | "id"
+    | "slug"
+    | "category_name"
+    | "in_stock"
+    | "review_average"
+    | "review_count"
+    | "total_sold"
+    | "created_at"
+    | "updated_at"
+    | "includes"
+    | "summary_points"
+    | "features"
   >
 > & {
   title: string;
   category: number;
   includes?: IncludePayloadItem[];
+  summary_points?: { text: string; ordering?: number }[];
+  features?: { title: string; description?: string; icon?: string; icon_image_field?: string; remove_icon_image?: boolean; ordering?: number }[];
 };
 
 export type UpdateBookInput = Partial<CreateBookInput>;

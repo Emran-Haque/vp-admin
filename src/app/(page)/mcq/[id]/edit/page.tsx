@@ -8,6 +8,7 @@ import StepBasicInfo from "../../create/includes/step-basic-info";
 import StepQuestions from "../../create/includes/step-questions";
 import StepReview from "../../create/includes/step-review";
 import ExamSummary from "../../create/includes/exam-summary";
+import { normalizeMarks, tallyMarks } from "../../create/includes/marks";
 import TipsBox from "../../create/includes/tips-box";
 import EditWizardFooter from "./includes/edit-wizard-footer";
 import {
@@ -78,6 +79,8 @@ export default function Page() {
   const initializedRef = useRef(false);
   const originalQuestionIdsRef = useRef<Set<number>>(new Set());
   const originalCorrectOptionsRef = useRef<Map<number, string>>(new Map());
+  /** Marks each question had when loaded — changing one forces a regrade. */
+  const originalMarksRef = useRef<Map<number, string>>(new Map());
 
   useEffect(() => {
     if (initializedRef.current || !exam || !questionsData) return;
@@ -94,7 +97,10 @@ export default function Page() {
       duration: String(exam.duration_minutes),
       totalQuestions: String(exam.total_questions),
       passMark: exam.pass_mark_percentage,
+      marksPerQuestion: normalizeMarks(exam.marks_per_question),
+      negativeMode: exam.negative_marking_mode ?? "flat",
       negativeMark: exam.negative_mark_per_wrong,
+      negativePercentage: exam.negative_mark_percentage ?? "25",
       examDate: exam.exam_date ?? "",
       startTime: isoToTimeInput(exam.start_time),
       deadline: isoToLocalDateTimeInput(exam.end_time),
@@ -110,19 +116,38 @@ export default function Page() {
       options: [q.option_a, q.option_b, q.option_c, q.option_d],
       correctIndex: ["A", "B", "C", "D"].indexOf(q.correct_option),
       explanation: q.explanation,
+      marks: normalizeMarks(q.marks),
     }));
     setQuestions(loadedQuestions);
     originalQuestionIdsRef.current = new Set(questionsData.map((q) => q.id));
     originalCorrectOptionsRef.current = new Map(
       questionsData.map((q) => [q.id, q.correct_option])
     );
+    originalMarksRef.current = new Map(questionsData.map((q) => [q.id, q.marks]));
   }, [exam, questionsData, courseSubjectsData]);
 
   const hasResultImpactingChanges = () => {
     if (!basicInfo || !exam) return false;
+    // Anything that changes what an already-submitted answer is worth.
     if (Number(basicInfo.negativeMark || 0) !== Number(exam.negative_mark_per_wrong || 0)) {
       return true;
     }
+    if (basicInfo.negativeMode !== (exam.negative_marking_mode ?? "flat")) {
+      return true;
+    }
+    if (
+      Number(basicInfo.negativePercentage || 0) !==
+      Number(exam.negative_mark_percentage || 0)
+    ) {
+      return true;
+    }
+    const originalMarks = originalMarksRef.current;
+    const hasMarksChange = questions.some((q) => {
+      if (!isPersisted(q.id)) return false;
+      const before = originalMarks.get(Number(q.id));
+      return before !== undefined && Number(before) !== Number(q.marks || before);
+    });
+    if (hasMarksChange) return true;
 
     const currentQuestionIds = new Set(
       questions.filter((q) => isPersisted(q.id)).map((q) => Number(q.id))
@@ -148,8 +173,8 @@ export default function Page() {
       const attemptCount = attemptsData?.count;
       const confirmed = confirm(
         attemptCount && attemptCount > 0
-          ? `This exam already has ${attemptCount} submitted/started attempt(s). Saving these changes will recalculate stored results and leaderboard. Continue?`
-          : "This published exam may already have attempts. Saving these changes will recalculate stored results and leaderboard. Continue?"
+          ? `এই পরীক্ষায় ইতিমধ্যে ${attemptCount} জন পরীক্ষা দিয়েছে বা শুরু করেছে। সেভ করলে তাদের রেজাল্ট আর লিডারবোর্ড আবার ক্যালকুলেট হবে। চালিয়ে যাবেন?`
+          : "এই পরীক্ষাটা পাবলিশড — কেউ হয়তো ইতিমধ্যে দিয়ে ফেলেছে। সেভ করলে রেজাল্ট আর লিডারবোর্ড আবার ক্যালকুলেট হবে। চালিয়ে যাবেন?"
       );
       if (!confirmed) return;
     }
@@ -170,7 +195,10 @@ export default function Page() {
           subject: basicInfo.subject ? Number(basicInfo.subject) : null,
           instructions: basicInfo.description,
           duration_minutes: durationMinutes,
+          marks_per_question: basicInfo.marksPerQuestion || "1",
+          negative_marking_mode: basicInfo.negativeMode,
           negative_mark_per_wrong: basicInfo.negativeMark || "0",
+          negative_mark_percentage: basicInfo.negativePercentage || "0",
           pass_mark_percentage: basicInfo.passMark || "0",
           exam_date: basicInfo.examDate || undefined,
           start_time: startDateTime,
@@ -179,7 +207,7 @@ export default function Page() {
         },
       }).unwrap();
     } catch (err) {
-      setSaveError(`পরীক্ষা সংরক্ষণ করা যায়নি: ${extractErrorMessage(err)}`);
+      setSaveError(`পরীক্ষা সেভ করা যায়নি: ${extractErrorMessage(err)}`);
       setIsSaving(false);
       return;
     }
@@ -195,7 +223,7 @@ export default function Page() {
       try {
         await deleteQuestion(id).unwrap();
       } catch (err) {
-        setSaveError(`প্রশ্ন মুছে ফেলা যায়নি: ${extractErrorMessage(err)}`);
+        setSaveError(`প্রশ্ন ডিলিট করা যায়নি: ${extractErrorMessage(err)}`);
         setIsSaving(false);
         return;
       }
@@ -216,6 +244,9 @@ export default function Page() {
         option_d: q.options[3] ?? "",
         correct_option: correctOption,
         explanation: q.explanation,
+        // Blank only happens on a brand-new question the admin left alone —
+        // omitting it lets the server apply the exam default.
+        ...(q.marks.trim() ? { marks: q.marks.trim() } : {}),
         order: i + 1,
       };
       try {
@@ -230,7 +261,7 @@ export default function Page() {
           setQuestions((prev) => prev.map((item) => (item.id === q.id ? { ...item, id: String(created.id) } : item)));
         }
       } catch (err) {
-        setSaveError(`প্রশ্ন ${i + 1} সংরক্ষণ করা যায়নি: ${extractErrorMessage(err)}`);
+        setSaveError(`প্রশ্ন ${i + 1} সেভ করা যায়নি: ${extractErrorMessage(err)}`);
         setIsSaving(false);
         return;
       }
@@ -240,7 +271,7 @@ export default function Page() {
       try {
         await publishExam(examId).unwrap();
       } catch (err) {
-        setSaveError(`পরীক্ষা publish করা যায়নি: ${extractErrorMessage(err)}`);
+        setSaveError(`পরীক্ষা পাবলিশ করা যায়নি: ${extractErrorMessage(err)}`);
         setIsSaving(false);
         return;
       }
@@ -262,7 +293,7 @@ export default function Page() {
           },
         }).unwrap();
       } catch (err) {
-        setSaveError(`Result/leaderboard schedule save করা যায়নি: ${extractErrorMessage(err)}`);
+        setSaveError(`রেজাল্ট/লিডারবোর্ড শিডিউল সেভ করা যায়নি: ${extractErrorMessage(err)}`);
         setIsSaving(false);
         return;
       }
@@ -274,7 +305,7 @@ export default function Page() {
         const recalculated = await recalculateLeaderboard(examId).unwrap();
         recalculatedAttempts = recalculated.updated_attempts;
       } catch (err) {
-        setSaveError(`পরিবর্তন সংরক্ষিত হয়েছে, কিন্তু ফলাফল পুনরায় হিসাব করা যায়নি: ${extractErrorMessage(err)}`);
+        setSaveError(`চেঞ্জ সেভ হয়েছে, তবে রেজাল্ট আবার ক্যালকুলেট করা যায়নি: ${extractErrorMessage(err)}`);
         setIsSaving(false);
         return;
       }
@@ -286,35 +317,38 @@ export default function Page() {
     if (shouldWarnAboutRegrade) {
       setSaveMessage(
         recalculatedAttempts === null
-          ? "পরিবর্তন সংরক্ষিত হয়েছে। জমা দেওয়া ফলাফল ও লিডারবোর্ড পুনরায় হিসাব করা হয়েছে।"
-          : `পরিবর্তন সংরক্ষিত হয়েছে। ${recalculatedAttempts}টি জমা দেওয়া ফলাফল ও লিডারবোর্ড পুনরায় হিসাব করা হয়েছে।`
+          ? "চেঞ্জ সেভ হয়েছে। জমা দেওয়া রেজাল্ট আর লিডারবোর্ড আবার ক্যালকুলেট করা হয়েছে।"
+          : `চেঞ্জ সেভ হয়েছে। ${recalculatedAttempts}টি জমা দেওয়া রেজাল্ট আর লিডারবোর্ড আবার ক্যালকুলেট করা হয়েছে।`
       );
       return;
     }
-    setSaveMessage("পরিবর্তন সংরক্ষণ করা হয়েছে।");
+    setSaveMessage("চেঞ্জ সেভ হয়ে গেছে।");
   };
 
   if (isLoadingExam || isLoadingQuestions || !basicInfo) {
-    return <p className="text-center text-sm text-slate-400">পরীক্ষার তথ্য লোড হচ্ছে…</p>;
+    return <p className="text-center text-sm text-slate-400">পরীক্ষার ইনফো লোড হচ্ছে…</p>;
   }
 
   if (isExamError || !exam) {
     return (
       <ErrorState
-        message="পরীক্ষাটি খুঁজে পাওয়া যায়নি। API সার্ভার সংযোগ পরীক্ষা করুন।"
+        message="পরীক্ষাটা পাওয়া যায়নি। API সার্ভারের কানেকশন চেক করুন।"
         error={isExamError ? examError : undefined}
       />
     );
   }
+
+  const marksTally = tallyMarks(questions, basicInfo.marksPerQuestion || "1");
 
   return (
     <div className="flex flex-col gap-7">
       <WizardHeader
         step={step}
         status={basicInfo.status}
-        title="পরীক্ষা সম্পাদনা করুন"
-        subtitle="পরীক্ষার বিস্তারিত তথ্য ও প্রশ্নাবলি সম্পাদনা করুন"
+        title="পরীক্ষা এডিট করুন"
+        subtitle="পরীক্ষার ইনফো আর প্রশ্নগুলো এডিট করুন"
         backHref="/mcq"
+        onStepChange={setStep}
       />
 
       <EditWizardFooter
@@ -329,9 +363,9 @@ export default function Page() {
         <div className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5">
           <RefreshCw size={20} className="mt-0.5 shrink-0 text-amber-400" />
           <div>
-            <p className="text-sm font-bold text-amber-200">প্রকাশিত পরীক্ষার প্রশ্ন/সঠিক উত্তর এডিট করছেন</p>
+            <p className="text-sm font-bold text-amber-200">পাবলিশড পরীক্ষা এডিট করছেন</p>
             <p className="mt-1 text-sm leading-6 text-amber-100/75">
-              প্রশ্ন, সঠিক উত্তর, নেগেটিভ মার্ক বা প্রশ্ন সংখ্যা পরিবর্তন করলে সেভ করার সময় আগের জমা দেওয়া শিক্ষার্থীদের ফলাফল ও লিডারবোর্ড আবার হিসাব করা হবে।
+              প্রশ্ন, সঠিক উত্তর, নম্বর বা নেগেটিভ মার্কিং বদলালে সেভ করার সময় আগে যারা পরীক্ষা দিয়েছে তাদের রেজাল্ট আর লিডারবোর্ড আবার ক্যালকুলেট হবে।
             </p>
           </div>
         </div>
@@ -354,12 +388,23 @@ export default function Page() {
       <div className="grid grid-cols-1 gap-7 lg:grid-cols-[1fr_320px]">
         <div className="flex flex-col gap-7">
           {step === 1 && <StepBasicInfo value={basicInfo} onChange={setBasicInfo} />}
-          {step === 2 && <StepQuestions questions={questions} onChange={setQuestions} />}
+          {step === 2 && (
+            <StepQuestions
+              questions={questions}
+              defaultMarks={basicInfo.marksPerQuestion || "1"}
+              onChange={setQuestions}
+            />
+          )}
           {step === 3 && <StepReview basicInfo={basicInfo} questions={questions} published={false} />}
         </div>
 
         <div className="flex flex-col gap-6">
-          <ExamSummary value={basicInfo} questionCount={questions.length} />
+          <ExamSummary
+            value={basicInfo}
+            questionCount={questions.length}
+            totalMarks={marksTally.total}
+            marksSummary={marksTally.summary}
+          />
           <TipsBox step={step} />
         </div>
       </div>

@@ -26,7 +26,7 @@ export default function CsvImportButton({ onImport, onErrors, className }: Props
       if (questions.length > 0) onImport(questions);
       onErrors(errors);
     } catch {
-      onErrors(["CSV ফাইলটি পড়া যায়নি। ফাইলটি সঠিক ফরম্যাটে আছে কিনা যাচাই করুন।"]);
+      onErrors(["CSV ফাইলটা পড়া যায়নি। ফরম্যাট ঠিক আছে কিনা চেক করুন।"]);
     } finally {
       setIsParsing(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -36,7 +36,7 @@ export default function CsvImportButton({ onImport, onErrors, className }: Props
   return (
     <label
       className={className ?? defaultClassName}
-      title="প্রয়োজনীয় কলাম: question, option_a, option_b, option_c, option_d, correct_option, explanation (ঐচ্ছিক)। correct_option অবশ্যই A/B/C/D হতে হবে।"
+      title="প্রয়োজনীয় কলাম: question, option_a, option_b, option_c, option_d, correct_option, explanation (অপশনাল)। correct_option অবশ্যই A/B/C/D হতে হবে।"
     >
       {isParsing ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
       CSV আপলোড করুন

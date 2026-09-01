@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { X, Save, AlertTriangle, CheckCircle2, Circle, Phone, MapPin, Tag } from "lucide-react";
+import { X, Save, AlertTriangle, CheckCircle2, Circle, Phone, MapPin, Tag, XCircle } from "lucide-react";
 import { useUpdateOrderStatusMutation, type Order } from "@/redux/api/ordersApi";
-import { orderStatuses, paymentStatuses } from "./status-config";
+import { CANCELLED_STATUS, orderStatuses, orderStatusLabel, paymentStatuses } from "./status-config";
 import { usePermissions } from "@/hooks/use-permissions";
 
 function itemTypeLabel(itemType: string) {
@@ -21,6 +21,18 @@ export default function OrderDetailModal({ order, onClose }: { order: Order; onC
   const [updateOrderStatus, { isLoading, isError }] = useUpdateOrderStatusMutation();
   const { hasPermission } = usePermissions();
   const canUpdateStatus = hasPermission("can_update_order_status");
+
+  // The API decides which moves are legal and sends them with the order, so the
+  // dropdown can never offer something that would come back as a 400.
+  const options = [
+    { value: order.order_status, label: orderStatusLabel(order.order_status) },
+    ...(order.allowed_transitions ?? []).map((value) => ({
+      value,
+      label: orderStatusLabel(value),
+    })),
+  ];
+  const isCancelling = orderStatus === CANCELLED_STATUS.value;
+  const isFinal = (order.allowed_transitions ?? []).length === 0;
 
   const handleSave = async () => {
     try {
@@ -40,12 +52,12 @@ export default function OrderDetailModal({ order, onClose }: { order: Order; onC
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-800/95 p-4">
-      <div className="flex max-h-[85vh] w-full max-w-[640px] flex-col rounded-[20px] border border-white/5 bg-gray-900/75 shadow-[0px_15px_30px_0px_rgba(59,130,246,0.46)]">
-        <div className="flex items-center justify-between p-7 pb-0">
-          <div>
-            <h2 className="text-base font-bold text-slate-50">অর্ডার {order.order_number}</h2>
-            <p className="mt-0.5 text-xs text-slate-400">{order.user_email}</p>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-800/95 sm:items-center sm:p-4">
+      <div className="flex max-h-[92vh] w-full max-w-[640px] flex-col rounded-t-[20px] border border-white/5 bg-gray-900/75 shadow-[0px_15px_30px_0px_rgba(59,130,246,0.46)] sm:max-h-[85vh] sm:rounded-[20px]">
+        <div className="flex items-center justify-between gap-3 p-5 pb-0 sm:p-7 sm:pb-0">
+          <div className="min-w-0">
+            <h2 className="truncate text-base font-bold text-slate-50">অর্ডার {order.order_number}</h2>
+            <p className="mt-0.5 truncate text-xs text-slate-400">{order.user_email}</p>
           </div>
           <button
             type="button"
@@ -56,7 +68,7 @@ export default function OrderDetailModal({ order, onClose }: { order: Order; onC
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-7">
+        <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-5 sm:p-7">
           {isError && (
             <div className="flex items-start gap-2 rounded-[10px] border border-red-500/30 bg-red-500/5 p-3">
               <AlertTriangle size={16} className="mt-0.5 shrink-0 text-red-500" />
@@ -64,13 +76,26 @@ export default function OrderDetailModal({ order, onClose }: { order: Order; onC
             </div>
           )}
 
-          <div className="flex items-center justify-between rounded-[10px] border border-white/10 bg-white/5 p-3.5 overflow-x-auto">
+          {order.order_status === CANCELLED_STATUS.value ? (
+            // A cancelled order half-way along the rail reads as "in progress",
+            // so it gets its own banner instead of the stepper.
+            <div className="flex shrink-0 items-start gap-2 rounded-[10px] border border-red-500/30 bg-red-500/5 p-3.5">
+              <XCircle size={16} className="mt-0.5 shrink-0 text-red-400" />
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-red-300">এই অর্ডারটি বাতিল করা হয়েছে</p>
+                {order.admin_note ? (
+                  <p className="mt-0.5 break-words text-xs text-slate-400">{order.admin_note}</p>
+                ) : null}
+              </div>
+            </div>
+          ) : (
+          <div className="-mx-1 flex min-w-0 shrink-0 items-start justify-between gap-1 overflow-x-auto rounded-[10px] border border-white/10 bg-white/5 p-3.5">
             {orderStatuses.map((s, index) => {
               const timelineEntry = order.status_timeline.find((t) => t.status === s.value);
               const done = Boolean(timelineEntry?.at);
               return (
-                <div key={s.value} className="flex flex-1 items-center">
-                  <div className="flex flex-col items-center gap-1">
+                <div key={s.value} className="flex min-w-0 flex-1 items-center">
+                  <div className="flex min-w-[52px] flex-col items-center gap-1">
                     {done ? (
                       <CheckCircle2 size={16} className="text-emerald-500" />
                     ) : (
@@ -87,6 +112,7 @@ export default function OrderDetailModal({ order, onClose }: { order: Order; onC
               );
             })}
           </div>
+          )}
 
           <div className="rounded-[10px] border border-white/10 bg-white/5 p-3.5">
             <p className="pb-2 text-xs font-semibold text-slate-400">অর্ডারকৃত আইটেম</p>
@@ -142,7 +168,7 @@ export default function OrderDetailModal({ order, onClose }: { order: Order; onC
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3.5">
+          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
             <div>
               <label className="block pb-1.5 text-xs font-semibold text-slate-400">পেমেন্ট স্ট্যাটাস</label>
               <select
@@ -167,7 +193,7 @@ export default function OrderDetailModal({ order, onClose }: { order: Order; onC
                 disabled={!canUpdateStatus}
                 className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {orderStatuses.map((s) => (
+                {options.map((s) => (
                   <option key={s.value} value={s.value} className="bg-slate-800 text-slate-200">
                     {s.label}
                   </option>
@@ -175,6 +201,22 @@ export default function OrderDetailModal({ order, onClose }: { order: Order; onC
               </select>
             </div>
           </div>
+
+          {isFinal ? (
+            <p className="rounded-[10px] border border-white/10 bg-white/5 p-3 text-xs text-slate-400">
+              এই অর্ডারটি চূড়ান্ত — স্ট্যাটাস আর পরিবর্তন করা যাবে না।
+            </p>
+          ) : null}
+
+          {isCancelling ? (
+            <div className="flex items-start gap-2 rounded-[10px] border border-amber-500/30 bg-amber-500/5 p-3">
+              <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-400" />
+              <p className="text-xs leading-relaxed text-amber-300">
+                বাতিল করলে বইয়ের স্টক ফেরত যাবে এবং এই অর্ডারে দেওয়া কোর্স/ব্যাচের
+                অ্যাক্সেস বন্ধ হবে। ক্রেতাকে জানানো হবে — নিচের নোটটি কারণ হিসেবে যাবে।
+              </p>
+            </div>
+          ) : null}
 
           <div>
             <label className="block pb-1.5 text-xs font-semibold text-slate-400">ট্রানজেকশন আইডি</label>
@@ -207,7 +249,7 @@ export default function OrderDetailModal({ order, onClose }: { order: Order; onC
           )}
         </div>
 
-        <div className="flex justify-end gap-2.5 p-7 pt-0">
+        <div className="flex flex-col-reverse gap-2.5 p-5 pt-0 sm:flex-row sm:justify-end sm:p-7 sm:pt-0">
           <button
             type="button"
             onClick={onClose}

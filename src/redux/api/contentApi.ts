@@ -15,35 +15,61 @@ export type Teacher = {
 export type CreateTeacherInput = Omit<Teacher, "id">;
 export type UpdateTeacherInput = Partial<CreateTeacherInput>;
 
+/** What a review is about. One review row points at exactly one of the three. */
+export type ReviewTarget = "course" | "book" | "exam_batch";
+
+/** Nothing reaches the public site until a moderator moves it out of `pending`. */
+export type ReviewStatus = "pending" | "approved" | "rejected";
+
 export type Review = {
   id: number;
-  course: number;
-  course_title?: string;
   student: number;
   student_name?: string;
+  student_image?: string | null;
+  target_type: ReviewTarget;
+  /** Id of whichever product this is about. */
+  target_id: number;
+  target_title: string;
+  course: number | null;
+  book: number | null;
+  exam_batch: number | null;
+  institution: string;
+  unit: string;
+  merit_position: string;
   rating: number;
   comment: string;
+  /** Aspect keys the student ticked, e.g. ["teaching"]. */
+  aspects: string[];
+  /** Bangla labels for those keys, sent by the API so nothing is hardcoded here. */
+  aspect_labels: string[];
+  /** Books only — kept out of the product score on purpose. */
+  delivery_rating: number | null;
+  status: ReviewStatus;
+  moderation_note: string;
+  moderated_by_name?: string;
+  moderated_at?: string | null;
   is_featured: boolean;
-  is_visible: boolean;
   created_at?: string;
 };
+
 export type ReviewListParams = {
-  course?: number;
-  student?: number;
+  /** Defaults to the pending queue server-side; pass "all" to see everything. */
+  status?: ReviewStatus | "all";
+  target_type?: ReviewTarget;
+  rating?: number;
   is_featured?: boolean;
-  is_visible?: boolean;
   search?: string;
   page?: number;
 };
-export type CreateReviewInput = {
-  course: number;
-  student: number;
-  rating: number;
-  comment: string;
-  is_featured?: boolean;
-  is_visible?: boolean;
+
+export type ReviewCounts = {
+  pending: number;
+  approved: number;
+  rejected: number;
 };
-export type UpdateReviewInput = Partial<CreateReviewInput>;
+
+/** Admins may only edit presentation, never the student's own words. */
+export type UpdateReviewInput = Partial<Pick<Review, "is_featured" | "status">>;
 
 export type SuccessStory = {
   id: number;
@@ -178,13 +204,29 @@ export const contentApi = baseApi.injectEndpoints({
             ]
           : [{ type: "Reviews" as const, id: "LIST" }],
     }),
-    createReview: builder.mutation<Review, CreateReviewInput>({
-      query: (body) => ({ url: "admin/reviews/", method: "POST", body }),
-      invalidatesTags: [{ type: "Reviews", id: "LIST" }],
+    getReviewCounts: builder.query<ReviewCounts, void>({
+      query: () => "admin/reviews/counts/",
+      providesTags: [{ type: "Reviews", id: "COUNTS" }],
+    }),
+    approveReview: builder.mutation<Review, number>({
+      query: (id) => ({ url: `admin/reviews/${id}/approve/`, method: "POST" }),
+      invalidatesTags: [{ type: "Reviews", id: "LIST" }, { type: "Reviews", id: "COUNTS" }],
+    }),
+    rejectReview: builder.mutation<Review, { id: number; note?: string }>({
+      query: ({ id, note }) => ({
+        url: `admin/reviews/${id}/reject/`,
+        method: "POST",
+        body: { note: note ?? "" },
+      }),
+      invalidatesTags: [{ type: "Reviews", id: "LIST" }, { type: "Reviews", id: "COUNTS" }],
     }),
     updateReview: builder.mutation<Review, { id: number; data: UpdateReviewInput }>({
       query: ({ id, data }) => ({ url: `admin/reviews/${id}/`, method: "PATCH", body: data }),
-      invalidatesTags: (_r, _e, { id }) => [{ type: "Reviews", id }, { type: "Reviews", id: "LIST" }],
+      invalidatesTags: (_r, _e, { id }) => [
+        { type: "Reviews", id },
+        { type: "Reviews", id: "LIST" },
+        { type: "Reviews", id: "COUNTS" },
+      ],
     }),
     deleteReview: builder.mutation<void, number>({
       query: (id) => ({ url: `admin/reviews/${id}/`, method: "DELETE" }),
@@ -320,7 +362,9 @@ export const {
   useUpdateTeacherMutation,
   useDeleteTeacherMutation,
   useGetReviewsQuery,
-  useCreateReviewMutation,
+  useGetReviewCountsQuery,
+  useApproveReviewMutation,
+  useRejectReviewMutation,
   useUpdateReviewMutation,
   useDeleteReviewMutation,
   useGetSuccessStoriesQuery,

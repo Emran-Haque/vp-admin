@@ -14,6 +14,7 @@ import { extractErrorMessage } from "@/lib/api-error";
 import { PageLoader } from "@/components/loaders";
 import ErrorState from "@/components/error-state";
 import StepQuestions from "../../mcq/create/includes/step-questions";
+import { normalizeMarks } from "../../mcq/create/includes/marks";
 import type { Question } from "../../mcq/create/includes/types";
 
 const optionLetters = ["A", "B", "C", "D"] as const;
@@ -55,6 +56,7 @@ export default function RoutineMcqEditor({
         options: [q.option_a, q.option_b, q.option_c, q.option_d],
         correctIndex: (["A", "B", "C", "D"] as const).indexOf(q.correct_option),
         explanation: q.explanation,
+        marks: normalizeMarks(q.marks),
       })),
     );
     originalIds.current = new Set(questionsData.map((q) => q.id));
@@ -79,6 +81,8 @@ export default function RoutineMcqEditor({
         option_d: q.options[3] ?? "",
         correct_option: optionLetters[q.correctIndex ?? 0],
         explanation: q.explanation,
+        // Blank means "use this exam's default" — resolved server-side.
+        ...(q.marks.trim() ? { marks: q.marks.trim() } : {}),
         order: i + 1,
       };
       if (isPersisted(q.id)) {
@@ -175,7 +179,11 @@ export default function RoutineMcqEditor({
       ) : null}
 
       <section className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
-        <StepQuestions questions={questions} onChange={setQuestions} />
+        <StepQuestions
+          questions={questions}
+          defaultMarks={normalizeMarks(exam?.marks_per_question) || "1"}
+          onChange={setQuestions}
+        />
       </section>
     </div>
   );

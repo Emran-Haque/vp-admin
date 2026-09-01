@@ -1,3 +1,4 @@
+/** The delivery path, in order. Drives the stepper — cancel is not part of it. */
 export const orderStatuses = [
   { value: "pending", label: "পেন্ডিং" },
   { value: "confirmed", label: "নিশ্চিত" },
@@ -5,6 +6,15 @@ export const orderStatuses = [
   { value: "shipped", label: "পাঠানো হয়েছে" },
   { value: "completed", label: "সম্পন্ন" },
 ];
+
+/** Cancellation sits outside the path but still needs a label. */
+export const CANCELLED_STATUS = { value: "cancelled", label: "বাতিল" };
+
+/** Label for any order status, cancellation included. */
+export function orderStatusLabel(value: string) {
+  if (value === CANCELLED_STATUS.value) return CANCELLED_STATUS.label;
+  return orderStatuses.find((s) => s.value === value)?.label ?? value;
+}
 
 export const paymentStatuses = [
   { value: "pending", label: "পেন্ডিং" },

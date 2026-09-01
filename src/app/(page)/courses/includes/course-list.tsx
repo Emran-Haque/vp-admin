@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, Video, HelpCircle, ClipboardList, Users, Clock, Pencil, Trash2, Sparkles, ShieldCheck, type LucideIcon } from "lucide-react";
 import { useGetCoursesQuery, useDeleteCourseMutation, useUpdateCourseMutation, type Course } from "@/redux/api/coursesApi";
 import { usePermissions } from "@/hooks/use-permissions";
+import ConfirmDeleteDialog from "@/components/confirm-delete-dialog";
 import ErrorState from "@/components/error-state";
 import { PageLoader } from "@/components/loaders";
 
@@ -41,8 +43,9 @@ function priceLabel(course: Course) {
 
 export default function CourseList() {
   const { data, isLoading, isError, error } = useGetCoursesQuery();
-  const [deleteCourse] = useDeleteCourseMutation();
+  const [deleteCourse, { isLoading: isDeleting }] = useDeleteCourseMutation();
   const [updateCourse] = useUpdateCourseMutation();
+  const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
   const { hasPermission } = usePermissions();
   const router = useRouter();
 
@@ -57,7 +60,8 @@ export default function CourseList() {
   const courses = data?.results ?? [];
 
   return (
-    <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+    <>
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
       {courses.map((course) => {
         const status = statusStyles[course.is_published ? "published" : "draft"];
         const imageUrl = resolveMediaUrl(course.thumbnail || course.cover_image);
@@ -207,7 +211,7 @@ export default function CourseList() {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      if (confirm(`"${course.title}" কোর্সটি মুছে ফেলতে চান?`)) deleteCourse(course.id);
+                      setCourseToDelete(course);
                     }}
                     className="flex size-10 items-center justify-center rounded-xl border border-red-600/40 bg-red-600/10 text-red-600"
                   >
@@ -225,6 +229,20 @@ export default function CourseList() {
           কোনো কোর্স পাওয়া যায়নি।
         </p>
       )}
-    </section>
+      </section>
+      <ConfirmDeleteDialog
+        open={Boolean(courseToDelete)}
+        itemType="কোর্স"
+        itemName={courseToDelete?.title || ""}
+        isLoading={isDeleting}
+        impact="কোর্সটি মুছে ফেললে ক্লাস, ম্যাটেরিয়াল, ভর্তি তথ্য এবং সংশ্লিষ্ট কনটেন্টে প্রভাব পড়তে পারে।"
+        onClose={() => setCourseToDelete(null)}
+        onConfirm={async () => {
+          if (!courseToDelete) return;
+          await deleteCourse(courseToDelete.id).unwrap();
+          setCourseToDelete(null);
+        }}
+      />
+    </>
   );
 }

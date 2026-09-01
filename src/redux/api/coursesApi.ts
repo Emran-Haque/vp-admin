@@ -17,6 +17,7 @@ export type Course = {
   price: string;
   /** Null when no discount is set. */
   old_price: string | null;
+  discount_amount: string;
   discount: string;
   is_free: boolean;
   is_published: boolean;

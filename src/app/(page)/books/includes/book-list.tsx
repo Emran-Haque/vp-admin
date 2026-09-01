@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { BookOpen, Star, Pencil, Trash2, User, Building2 } from "lucide-react";
 import { useGetBooksQuery, useDeleteBookMutation, type Book } from "@/redux/api/booksApi";
 import { getMediaUrl } from "@/redux/api/baseApi";
 import { usePermissions } from "@/hooks/use-permissions";
+import ConfirmDeleteDialog from "@/components/confirm-delete-dialog";
 import ErrorState from "@/components/error-state";
 import { PageLoader } from "@/components/loaders";
 
@@ -20,7 +22,8 @@ export default function BookList({ search, category, availability, onEdit }: Pro
     category: category ? Number(category) : undefined,
     is_available: availability ? availability === "true" : undefined,
   });
-  const [deleteBook] = useDeleteBookMutation();
+  const [deleteBook, { isLoading: isDeleting }] = useDeleteBookMutation();
+  const [bookToDelete, setBookToDelete] = useState<Book | null>(null);
   const { hasPermission } = usePermissions();
 
   if (isLoading) {
@@ -34,7 +37,8 @@ export default function BookList({ search, category, availability, onEdit }: Pro
   const books = data?.results ?? [];
 
   return (
-    <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <>
+      <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {books.map((book) => {
         const hasDiscount = Number(book.discount) > 0;
         return (
@@ -114,9 +118,7 @@ export default function BookList({ search, category, availability, onEdit }: Pro
                 {hasPermission("can_delete_book") && (
                   <button
                     type="button"
-                    onClick={() => {
-                      if (confirm(`"${book.title}" বইটি মুছে ফেলতে চান?`)) deleteBook(book.id);
-                    }}
+                    onClick={() => setBookToDelete(book)}
                     className="flex size-9 items-center justify-center rounded-xl border border-red-600/40 bg-red-600/10 text-red-600"
                   >
                     <Trash2 size={14} />
@@ -133,6 +135,20 @@ export default function BookList({ search, category, availability, onEdit }: Pro
           কোনো বই পাওয়া যায়নি।
         </p>
       )}
-    </section>
+      </section>
+      <ConfirmDeleteDialog
+        open={Boolean(bookToDelete)}
+        itemType="বই"
+        itemName={bookToDelete?.title || ""}
+        isLoading={isDeleting}
+        impact="বইটি মুছে ফেললে স্টোর, ডিটেইল পেজ, কার্ট রেফারেন্স এবং সংশ্লিষ্ট পাবলিক কনটেন্টে প্রভাব পড়তে পারে।"
+        onClose={() => setBookToDelete(null)}
+        onConfirm={async () => {
+          if (!bookToDelete) return;
+          await deleteBook(bookToDelete.id).unwrap();
+          setBookToDelete(null);
+        }}
+      />
+    </>
   );
 }

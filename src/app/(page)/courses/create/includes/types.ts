@@ -26,8 +26,7 @@ export type BasicInfo = {
   category: string;
   level: string;
   price: string;
-  oldPrice: string;
-  discount: string;
+  discountAmount: string;
   isFree: boolean;
   verificationRequired: boolean;
   duration: string;

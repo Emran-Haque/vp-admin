@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, FileText, HelpCircle, PlayCircle, Plus, Trash2, Upload, Video, type LucideIcon } from "lucide-react";
+import { formatMarks } from "@/lib/marks";
 import { useGetExamsQuery } from "@/redux/api/examsApi";
 import type { MaterialDraft, MaterialKind, QuizQuestion } from "./types";
 
@@ -175,7 +176,7 @@ export default function MaterialItemCard({ item, courseId, onUpdate, onRemove, o
                 <div>
                   <p className="font-semibold text-blue-100">{selectedExam.title}</p>
                   <p className="mt-0.5 text-slate-400">
-                    {selectedExam.total_questions} টি প্রশ্ন • {selectedExam.duration_minutes} মিনিট • মার্কস: {selectedExam.total_marks}
+                    {selectedExam.total_questions} টি প্রশ্ন • {selectedExam.duration_minutes} মিনিট • মার্কস: {formatMarks(selectedExam.total_marks)}
                   </p>
                 </div>
               </div>

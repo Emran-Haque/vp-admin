@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarClock, ClipboardCheck, Pencil, Settings2, Users } from "lucide-react";
+import { CalendarClock, ClipboardCheck, Pencil, Settings2, Trash2, Users } from "lucide-react";
 import type { ExamBatch } from "@/redux/api/examsApi";
 
 const bn = (n: number | string) => String(n).replace(/[0-9]/g, (d) => "০১২৩৪৫৬৭৮৯"[Number(d)]);
@@ -28,10 +28,14 @@ export default function BatchCard({
   batch,
   onManage,
   onEdit,
+  onDelete,
+  canDelete = false,
 }: {
   batch: ExamBatch;
   onManage: () => void;
   onEdit: () => void;
+  onDelete?: () => void;
+  canDelete?: boolean;
 }) {
   const imageUrl = resolveMediaUrl(batch.thumbnail);
   return (
@@ -79,14 +83,14 @@ export default function BatchCard({
           </span>
         </div>
 
-        <div className="mt-5 flex items-center gap-2">
+        <div className="mt-5 flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
               onManage();
             }}
-            className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-cyan-600 px-4 text-sm font-bold text-white hover:bg-cyan-500"
+            className="inline-flex h-10 min-w-[145px] flex-1 items-center justify-center gap-2 rounded-xl bg-cyan-600 px-4 text-sm font-bold text-white hover:bg-cyan-500"
           >
             <Settings2 size={16} /> রুটিন ম্যানেজ
           </button>
@@ -100,6 +104,19 @@ export default function BatchCard({
           >
             <Pencil size={16} />
           </button>
+          {canDelete ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete?.();
+              }}
+              className="grid size-10 place-items-center rounded-xl border border-red-600/40 bg-red-600/10 text-red-500 hover:bg-red-600/20"
+              aria-label="ব্যাচ মুছে ফেলুন"
+            >
+              <Trash2 size={16} />
+            </button>
+          ) : null}
         </div>
       </div>
     </article>

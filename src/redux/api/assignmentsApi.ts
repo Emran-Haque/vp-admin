@@ -24,6 +24,10 @@ export type Assignment = {
   status: "active" | "closed" | "evaluated";
   created_by: number;
   attachments: AssignmentAttachment[];
+  /** Submissions received, and how many of those have been marked. Annotated
+   *  server-side, so listing assignments stays a single query. */
+  submission_count?: number;
+  evaluated_count?: number;
   created_at: string;
 };
 

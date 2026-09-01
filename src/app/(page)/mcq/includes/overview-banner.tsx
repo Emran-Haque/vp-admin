@@ -18,7 +18,7 @@ export default function OverviewBanner() {
           </span>
           <div>
             <h1 className="text-2xl font-bold leading-9 text-blue-50">MCQ ও পরীক্ষা ম্যানেজমেন্ট</h1>
-            <p className="mt-1 text-base text-slate-400">সকল পরীক্ষা তৈরি, সম্পাদনা ও প্রকাশ করুন</p>
+            <p className="mt-1 text-base text-slate-400">সব পরীক্ষা তৈরি, এডিট আর পাবলিশ করুন</p>
           </div>
         </div>
 

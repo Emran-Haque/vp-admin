@@ -26,6 +26,8 @@ export type Order = {
   payment_status: string;
   order_status: string;
   status_timeline: { status: string; at: string | null }[];
+  /** What this order may legally become next, decided by the API. */
+  allowed_transitions: string[];
   transaction_id: string;
   customer_phone: string;
   shipping_address: string;

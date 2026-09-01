@@ -8,6 +8,8 @@ export type ClassVideo = {
   title: string;
   video_url: string;
   duration: string;
+  /** Poster frame URL, or null when the admin has not uploaded one. */
+  thumbnail: string | null;
   source_type: string;
   order: number;
 };
@@ -48,6 +50,17 @@ export type CreateClassVideoInput = {
   video_url: string;
   duration?: string;
   source_type?: string;
+  order?: number;
+};
+
+/**
+ * Fields a video edit may change. `FormData` is used whenever a thumbnail file
+ * is attached — the same JSON/multipart split the class endpoints already use.
+ */
+export type UpdateClassVideoInput = {
+  title?: string;
+  video_url?: string;
+  duration?: string;
   order?: number;
 };
 
@@ -108,9 +121,31 @@ export const classesApi = baseApi.injectEndpoints({
       query: (id) => ({ url: `admin/classes/${id}/`, method: "DELETE" }),
       invalidatesTags: [{ type: "Classes", id: "LIST" }],
     }),
-    createClassVideo: builder.mutation<ClassVideo, CreateClassVideoInput>({
+    createClassVideo: builder.mutation<ClassVideo, CreateClassVideoInput | FormData>({
       query: (body) => ({ url: "admin/class-videos/", method: "POST", body }),
-      invalidatesTags: (_result, _error, { course_class }) => [{ type: "Classes", id: course_class }],
+      // FormData carries course_class as a string field rather than a property,
+      // so the whole list is invalidated when we cannot read the id directly.
+      invalidatesTags: (_result, _error, arg) =>
+        arg instanceof FormData
+          ? [{ type: "Classes" as const, id: "LIST" }]
+          : [
+              { type: "Classes" as const, id: arg.course_class },
+              { type: "Classes" as const, id: "LIST" },
+            ],
+    }),
+    updateClassVideo: builder.mutation<
+      ClassVideo,
+      { id: number; courseClassId: number; data: UpdateClassVideoInput | FormData }
+    >({
+      query: ({ id, data }) => ({
+        url: `admin/class-videos/${id}/`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: (_result, _error, { courseClassId }) => [
+        { type: "Classes", id: courseClassId },
+        { type: "Classes", id: "LIST" },
+      ],
     }),
     deleteClassVideo: builder.mutation<void, number>({
       query: (id) => ({ url: `admin/class-videos/${id}/`, method: "DELETE" }),
@@ -135,6 +170,7 @@ export const {
   useUpdateClassMutation,
   useDeleteClassMutation,
   useCreateClassVideoMutation,
+  useUpdateClassVideoMutation,
   useDeleteClassVideoMutation,
   useCreateClassMaterialMutation,
   useDeleteClassMaterialMutation,

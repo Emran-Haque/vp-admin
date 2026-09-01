@@ -25,9 +25,21 @@ const HEADER_ALIASES: Record<string, string> = {
   "সঠিক উত্তর": "correct_option",
   explanation: "explanation",
   "ব্যাখ্যা": "explanation",
+  marks: "marks",
+  mark: "marks",
+  score: "marks",
+  "নম্বর": "marks",
+  "মার্ক": "marks",
 };
 
 const OPTION_LETTERS = ["A", "B", "C", "D"];
+
+const BENGALI_DIGITS = "০১২৩৪৫৬৭৮৯";
+
+/** Accept "২" as readily as "2" — admins type marks in either script. */
+function toEnglishDigits(value: string): string {
+  return value.replace(/[০-৯]/g, (digit) => String(BENGALI_DIGITS.indexOf(digit)));
+}
 
 function normalizeHeader(header: string): string {
   const key = header.trim().toLowerCase();
@@ -63,7 +75,7 @@ export function parseQuestionsCsv(file: File): Promise<CsvImportResult> {
         if (missingColumns.length > 0) {
           errors.push(
             `CSV ফাইলের প্রথম সারিতে প্রয়োজনীয় কলাম পাওয়া যায়নি: ${missingColumns.join(", ")}। ` +
-              `কলামের নাম অবশ্যই এভাবে দিতে হবে: question, option_a, option_b, option_c, option_d, correct_option, explanation (ঐচ্ছিক)।`
+              `কলামের নাম অবশ্যই এভাবে দিতে হবে: question, option_a, option_b, option_c, option_d, correct_option, explanation (অপশনাল), marks (অপশনাল)।`
           );
           resolve({ questions, errors });
           return;
@@ -86,6 +98,7 @@ export function parseQuestionsCsv(file: File): Promise<CsvImportResult> {
           ];
           const correctRaw = (row.correct_option ?? "").trim().toUpperCase();
           const explanation = (row.explanation ?? "").trim();
+          const marksRaw = (row.marks ?? "").trim();
 
           const isBlankRow = !text && options.every((opt) => !opt) && !correctRaw;
           if (isBlankRow) return;
@@ -105,12 +118,26 @@ export function parseQuestionsCsv(file: File): Promise<CsvImportResult> {
             return;
           }
 
+          // `marks` is optional: a blank cell (or no column at all) means this
+          // question takes the exam's default, so an ordinary 1-mark paper
+          // needs no extra column. Only C-unit style papers fill it in.
+          let marks = "";
+          if (marksRaw) {
+            const parsed = Number(toEnglishDigits(marksRaw));
+            if (!Number.isFinite(parsed) || parsed <= 0) {
+              errors.push(`সারি ${rowNumber}: নম্বর (marks) অবশ্যই ০ এর বড় একটি সংখ্যা হতে হবে`);
+              return;
+            }
+            marks = String(parsed);
+          }
+
           questions.push({
             id: crypto.randomUUID(),
             text,
             options,
             correctIndex,
             explanation,
+            marks,
           });
         });
 

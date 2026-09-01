@@ -10,7 +10,16 @@ export type ExamBasicInfo = {
   duration: string;
   totalQuestions: string;
   passMark: string;
+  /** Default mark for questions added from here on. Never rewrites existing ones. */
+  marksPerQuestion: string;
+  /**
+   * `flat` subtracts `negativeMark` from any wrong answer. `percentage`
+   * subtracts `negativePercentage`% of that question's own marks — what CU's
+   * C unit needs, where a 2-mark question costs twice a 1-mark one.
+   */
+  negativeMode: "flat" | "percentage";
   negativeMark: string;
+  negativePercentage: string;
   examDate: string;
   startTime: string;
   /** Deadline the whole exam closes for everyone ("YYYY-MM-DDTHH:MM", or "" for
@@ -29,4 +38,10 @@ export type Question = {
   options: string[];
   correctIndex: number | null;
   explanation: string;
+  /**
+   * What this question alone is worth, as typed (so the input stays
+   * controlled). Empty means "use the exam default" — the server resolves it,
+   * which is why a plain 1-mark paper never has to fill this in.
+   */
+  marks: string;
 };

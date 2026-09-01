@@ -1,6 +1,21 @@
 import { baseApi } from "./baseApi";
 import type { IncludeItem, IncludePayloadItem, Paginated } from "./types";
 
+/**
+ * How a wrong answer is penalised.
+ *
+ *  - `flat`       — subtract `negative_mark_per_wrong`, whatever the question
+ *                   is worth. The original behaviour, kept by every exam that
+ *                   predates mixed marks.
+ *  - `percentage` — subtract `negative_mark_percentage`% of *that question's
+ *                   own* marks. Chittagong University C unit: a 1-mark question
+ *                   loses 0.25 and a 2-mark question loses 0.50, both at 25%.
+ */
+export type NegativeMarkingMode = "flat" | "percentage";
+
+/** How many questions sit at each mark value, e.g. 75 × 1 + 25 × 2. */
+export type MarksBreakdownRow = { marks: string; count: number };
+
 export type Exam = {
   id: number;
   /** null for standalone exam-batch (routine) exams — they have no course. */
@@ -13,8 +28,14 @@ export type Exam = {
   total_questions: number;
   duration_minutes: number;
   total_marks: string;
+  /** Only the default for NEWLY added questions — never retroactive. */
   marks_per_question: string;
+  negative_marking_mode: NegativeMarkingMode;
+  /** Used by `flat` mode only. */
   negative_mark_per_wrong: string;
+  /** Used by `percentage` mode only. 25.00 = a quarter of the question's marks. */
+  negative_mark_percentage: string;
+  marks_breakdown?: MarksBreakdownRow[];
   pass_mark_percentage: string;
   exam_date: string | null;
   start_time: string | null;
@@ -72,10 +93,14 @@ export type ExamQuestion = {
   option_d: string;
   correct_option: "A" | "B" | "C" | "D";
   explanation: string;
+  /** What this question alone is worth. Omit on write to take the exam default. */
+  marks: string;
   order: number;
 };
 
-export type CreateExamQuestionInput = Omit<ExamQuestion, "id" | "exam">;
+export type CreateExamQuestionInput = Omit<ExamQuestion, "id" | "exam" | "marks"> & {
+  marks?: string;
+};
 export type UpdateExamQuestionInput = Partial<CreateExamQuestionInput>;
 
 /** Quiz as nested read-only inside a CourseClass (session) response. */
@@ -187,6 +212,9 @@ export type ExamBatchExam = {
   duration_minutes: number;
   marks_per_question: string;
   negative_mark_per_wrong: string;
+  negative_marking_mode: NegativeMarkingMode;
+  negative_mark_percentage: string;
+  marks_breakdown?: MarksBreakdownRow[];
   ordering: number;
   note: string;
   subject_label: string;
@@ -201,6 +229,8 @@ export type RoutineImportQuestion = {
   option_d: string;
   correct_option: string;
   explanation?: string;
+  /** Omit to inherit the exam's `marks_per_question`. */
+  marks?: string;
 };
 
 export type RoutineImportExam = {
@@ -211,7 +241,9 @@ export type RoutineImportExam = {
   end_time?: string | null;
   duration_minutes?: number;
   marks_per_question?: string;
+  negative_marking_mode?: NegativeMarkingMode;
   negative_mark_per_wrong?: string;
+  negative_mark_percentage?: string;
   planned_questions?: number;
   /** Empty for schedule-only routine rows — questions are added per tile later. */
   questions: RoutineImportQuestion[];
@@ -225,8 +257,11 @@ export type ExamBatch = {
   short_description: string;
   thumbnail: string | null;
   promo_video_url: string;
+  /** Poster for the promo video. Falls back to `thumbnail` when unset. */
+  promo_video_thumbnail: string | null;
   price: string;
   old_price: string | null;
+  discount_amount: string;
   discount: string;
   is_published: boolean;
   start_date: string | null;
@@ -250,8 +285,7 @@ export type ExamBatchInput = Partial<
     | "short_description"
     | "promo_video_url"
     | "price"
-    | "old_price"
-    | "discount"
+    | "discount_amount"
     | "is_published"
     | "start_date"
     | "end_date"
@@ -318,6 +352,44 @@ export const examsApi = baseApi.injectEndpoints({
     getExamQuestions: builder.query<ExamQuestion[], number>({
       query: (examId) => `admin/exams/${examId}/questions/`,
       providesTags: (_result, _error, examId) => [{ type: "ExamQuestions", id: examId }],
+    }),
+    /**
+     * Save a whole paper in one request.
+     *
+     * The server accepts a list on the same endpoint, which matters: sending
+     * questions one at a time cost one round trip AND one full regrade of every
+     * submitted attempt *per question*. A 100-question C-unit paper meant 100
+     * of each.
+     */
+    addExamQuestions: builder.mutation<
+      ExamQuestion[],
+      { examId: number; questions: CreateExamQuestionInput[] }
+    >({
+      query: ({ examId, questions }) => ({
+        url: `admin/exams/${examId}/questions/`,
+        method: "POST",
+        body: questions,
+      }),
+      invalidatesTags: (_result, _error, { examId }) => [
+        { type: "ExamQuestions", id: examId },
+        { type: "Exams", id: examId },
+        { type: "Exams", id: "LIST" },
+      ],
+    }),
+    /** Overwrite every question's marks with the exam default, on request only. */
+    applyDefaultMarks: builder.mutation<
+      { updated: number; total_marks: string; marks_breakdown: MarksBreakdownRow[] },
+      number
+    >({
+      query: (examId) => ({
+        url: `admin/exams/${examId}/apply-default-marks/`,
+        method: "POST",
+      }),
+      invalidatesTags: (_result, _error, examId) => [
+        { type: "ExamQuestions", id: examId },
+        { type: "Exams", id: examId },
+        { type: "Exams", id: "LIST" },
+      ],
     }),
     addExamQuestion: builder.mutation<
       ExamQuestion,
@@ -407,6 +479,10 @@ export const examsApi = baseApi.injectEndpoints({
         { type: "ExamBatches", id: "LIST" },
       ],
     }),
+    deleteExamBatch: builder.mutation<void, number>({
+      query: (id) => ({ url: `admin/exam-batches/${id}/`, method: "DELETE" }),
+      invalidatesTags: [{ type: "ExamBatches", id: "LIST" }],
+    }),
     getBatchJoinRequests: builder.query<ExamBatchJoinRequest[], number>({
       query: (batchId) => `admin/exam-batches/${batchId}/join-requests/`,
       providesTags: (_result, _error, batchId) => [{ type: "ExamBatches", id: `join-${batchId}` }],
@@ -476,6 +552,8 @@ export const {
   useGetExamQuestionsQuery,
   useLazyGetExamQuestionsQuery,
   useAddExamQuestionMutation,
+  useAddExamQuestionsMutation,
+  useApplyDefaultMarksMutation,
   useUpdateQuestionMutation,
   useDeleteQuestionMutation,
   usePublishExamMutation,
@@ -488,6 +566,7 @@ export const {
   useGetExamBatchQuery,
   useCreateExamBatchMutation,
   useUpdateExamBatchMutation,
+  useDeleteExamBatchMutation,
   useAddExamToBatchMutation,
   useUpdateBatchExamMutation,
   useRemoveExamFromBatchMutation,

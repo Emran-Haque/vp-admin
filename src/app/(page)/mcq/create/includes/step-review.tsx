@@ -3,7 +3,7 @@ import { Eye, ListChecks, AlertTriangle, CheckCircle2, Megaphone, Trophy, Clock,
 import type { ExamBasicInfo, Question } from "./types";
 
 function formatLocalDateTime(value: string): string {
-  if (!value) return "ম্যানুয়ালি প্রকাশ করতে হবে";
+  if (!value) return "ম্যানুয়ালি পাবলিশ করতে হবে";
   const [date, time] = value.split("T");
   return time ? `${date} ${time}` : date;
 }
@@ -30,13 +30,13 @@ export default function StepReview({ basicInfo, questions, published, isPublishi
     return (
       <section className="flex flex-col items-center gap-3 rounded-3xl border border-emerald-500/40 bg-emerald-500/10 p-10 text-center shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
         <CheckCircle2 size={48} className="text-emerald-500" />
-        <p className="text-xl font-bold text-blue-50">পরীক্ষাটি সফলভাবে প্রকাশিত হয়েছে!</p>
-        <p className="text-sm text-slate-400">&quot;{basicInfo.name || "নতুন পরীক্ষা"}&quot; প্রকাশিত হয়েছে</p>
+        <p className="text-xl font-bold text-blue-50">পরীক্ষাটি পাবলিশ হয়ে গেছে!</p>
+        <p className="text-sm text-slate-400">&quot;{basicInfo.name || "নতুন পরীক্ষা"}&quot; পাবলিশ হয়ে গেছে</p>
         <Link
           href="/mcq"
           className="mt-2 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 px-6 py-3 text-base font-semibold text-white"
         >
-          পরীক্ষার তালিকায় ফিরে যান
+          পরীক্ষার লিস্টে ফিরে যান
         </Link>
       </section>
     );
@@ -46,7 +46,7 @@ export default function StepReview({ basicInfo, questions, published, isPublishi
     <div className="flex flex-col gap-6">
       {isPublishing && (
         <p className="rounded-2xl border border-slate-800 bg-slate-900 p-4 text-center text-sm text-slate-400">
-          পরীক্ষা প্রকাশ করা হচ্ছে…
+          পাবলিশ হচ্ছে…
         </p>
       )}
 
@@ -63,8 +63,8 @@ export default function StepReview({ basicInfo, questions, published, isPublishi
             <Eye size={24} className="text-cyan-500" />
           </span>
           <div>
-            <h2 className="text-xl font-bold leading-8 text-blue-50">পরীক্ষার পূর্বরূপ</h2>
-            <p className="mt-0.5 text-base text-slate-400">প্রকাশের আগে সব কিছু যাচাই করুন</p>
+            <h2 className="text-xl font-bold leading-8 text-blue-50">পরীক্ষার প্রিভিউ</h2>
+            <p className="mt-0.5 text-base text-slate-400">পাবলিশ করার আগে সব কিছু চেক করে নিন</p>
           </div>
         </div>
 
@@ -114,7 +114,7 @@ export default function StepReview({ basicInfo, questions, published, isPublishi
               <Megaphone size={16} className="text-cyan-500" />
             </span>
             <div>
-              <p className="text-sm text-slate-400">ফলাফল প্রকাশের সময়</p>
+              <p className="text-sm text-slate-400">রেজাল্ট পাবলিশের সময়</p>
               <p className="mt-0.5 text-sm font-semibold text-blue-50">
                 {formatLocalDateTime(basicInfo.resultPublishAt)}
               </p>
@@ -126,7 +126,7 @@ export default function StepReview({ basicInfo, questions, published, isPublishi
               <Trophy size={16} className="text-amber-500" />
             </span>
             <div>
-              <p className="text-sm text-slate-400">লিডারবোর্ড প্রকাশের সময়</p>
+              <p className="text-sm text-slate-400">লিডারবোর্ড পাবলিশের সময়</p>
               <p className="mt-0.5 text-sm font-semibold text-blue-50">
                 {formatLocalDateTime(basicInfo.leaderboardPublishAt)}
               </p>
@@ -179,14 +179,14 @@ export default function StepReview({ basicInfo, questions, published, isPublishi
               )}
             </div>
           ))}
-          {questions.length === 0 && <p className="text-sm text-slate-400">কোনো প্রশ্ন যোগ করা হয়নি</p>}
+          {questions.length === 0 && <p className="text-sm text-slate-400">কোনো প্রশ্ন অ্যাড করা হয়নি</p>}
         </div>
       </section>
 
       <div className="flex items-start gap-3 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-5">
         <AlertTriangle size={20} className="mt-0.5 shrink-0 text-amber-500" />
         <p className="text-sm text-amber-500">
-          প্রকাশ করার পর পরীক্ষার্থীরা সাথে সাথে এই পরীক্ষা দেখতে পারবে। নিশ্চিত হয়ে নিন সব প্রশ্ন ও সঠিক উত্তর ঠিক আছে।
+          পাবলিশ করার সাথে সাথেই শিক্ষার্থীরা পরীক্ষাটা দেখতে পাবে। তাই সব প্রশ্ন আর সঠিক উত্তর ঠিক আছে কিনা দেখে নিন।
         </p>
       </div>
     </div>

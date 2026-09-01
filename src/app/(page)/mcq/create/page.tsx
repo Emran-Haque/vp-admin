@@ -6,11 +6,12 @@ import StepBasicInfo from "./includes/step-basic-info";
 import StepQuestions from "./includes/step-questions";
 import StepReview from "./includes/step-review";
 import ExamSummary from "./includes/exam-summary";
+import { tallyMarks } from "./includes/marks";
 import TipsBox from "./includes/tips-box";
 import WizardFooter from "./includes/wizard-footer";
 import {
   useCreateExamMutation,
-  useAddExamQuestionMutation,
+  useAddExamQuestionsMutation,
   usePublishExamMutation,
   usePublishExamResultMutation,
 } from "@/redux/api/examsApi";
@@ -26,7 +27,10 @@ const emptyBasicInfo: ExamBasicInfo = {
   duration: "30",
   totalQuestions: "30",
   passMark: "40",
+  marksPerQuestion: "1",
+  negativeMode: "percentage",
   negativeMark: "0.25",
+  negativePercentage: "25",
   examDate: "",
   startTime: "",
   deadline: "",
@@ -43,11 +47,12 @@ export default function Page() {
   const [basicInfo, setBasicInfo] = useState<ExamBasicInfo>(emptyBasicInfo);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [published, setPublished] = useState(false);
+  const marksTally = tallyMarks(questions, basicInfo.marksPerQuestion || "1");
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
 
   const [createExam] = useCreateExamMutation();
-  const [addExamQuestion] = useAddExamQuestionMutation();
+  const [addExamQuestions] = useAddExamQuestionsMutation();
   const [publishExam] = usePublishExamMutation();
   const [publishExamResult] = usePublishExamResultMutation();
 
@@ -69,7 +74,10 @@ export default function Page() {
         subject: basicInfo.subject ? Number(basicInfo.subject) : undefined,
         instructions: basicInfo.description,
         duration_minutes: durationMinutes,
+        marks_per_question: basicInfo.marksPerQuestion || "1",
+        negative_marking_mode: basicInfo.negativeMode,
         negative_mark_per_wrong: basicInfo.negativeMark || "0",
+        negative_mark_percentage: basicInfo.negativePercentage || "0",
         pass_mark_percentage: basicInfo.passMark || "0",
         exam_date: basicInfo.examDate || undefined,
         start_time: startDateTime,
@@ -83,12 +91,14 @@ export default function Page() {
       return;
     }
 
-    for (let i = 0; i < questions.length; i++) {
-      const q = questions[i];
+    // One request for the whole paper. Sending them one by one made the server
+    // re-grade every submitted attempt once per question, which a 100-question
+    // C-unit paper turns into 100 full regrades.
+    if (questions.length > 0) {
       try {
-        await addExamQuestion({
+        await addExamQuestions({
           examId: exam.id,
-          data: {
+          questions: questions.map((q, i) => ({
             question_text: q.text,
             option_a: q.options[0] ?? "",
             option_b: q.options[1] ?? "",
@@ -96,12 +106,14 @@ export default function Page() {
             option_d: q.options[3] ?? "",
             correct_option: optionLetters[q.correctIndex ?? 0],
             explanation: q.explanation,
+            // Omitted when blank, so the server applies the exam default.
+            ...(q.marks.trim() ? { marks: q.marks.trim() } : {}),
             order: i + 1,
-          },
+          })),
         }).unwrap();
       } catch (err) {
-        console.error(`Failed to add question ${i + 1}:`, err);
-        setPublishError(`প্রশ্ন ${i + 1} যোগ করা যায়নি: ${extractErrorMessage(err)}`);
+        console.error("Failed to add questions:", err);
+        setPublishError(`প্রশ্ন অ্যাড করা যায়নি: ${extractErrorMessage(err)}`);
         setIsPublishing(false);
         return;
       }
@@ -112,7 +124,7 @@ export default function Page() {
         await publishExam(exam.id).unwrap();
       } catch (err) {
         console.error("Failed to publish exam:", err);
-        setPublishError(`পরীক্ষা প্রকাশ করা যায়নি: ${extractErrorMessage(err)}`);
+        setPublishError(`পরীক্ষা পাবলিশ করা যায়নি: ${extractErrorMessage(err)}`);
         setIsPublishing(false);
         return;
       }
@@ -132,7 +144,7 @@ export default function Page() {
         }).unwrap();
       } catch (err) {
         console.error("Failed to schedule result/leaderboard publish:", err);
-        setPublishError(`ফলাফল/লিডারবোর্ড প্রকাশের সময়সূচি নির্ধারণ করা যায়নি: ${extractErrorMessage(err)}`);
+        setPublishError(`রেজাল্ট/লিডারবোর্ড পাবলিশের শিডিউল সেট করা যায়নি: ${extractErrorMessage(err)}`);
         setIsPublishing(false);
         return;
       }
@@ -144,12 +156,18 @@ export default function Page() {
 
   return (
     <div className="flex flex-col gap-7">
-      <WizardHeader step={step} status={basicInfo.status} />
+      <WizardHeader step={step} status={basicInfo.status} onStepChange={setStep} />
 
       <div className="grid grid-cols-1 gap-7 lg:grid-cols-[1fr_320px]">
         <div className="flex flex-col gap-7">
           {step === 1 && <StepBasicInfo value={basicInfo} onChange={setBasicInfo} />}
-          {step === 2 && <StepQuestions questions={questions} onChange={setQuestions} />}
+          {step === 2 && (
+            <StepQuestions
+              questions={questions}
+              defaultMarks={basicInfo.marksPerQuestion || "1"}
+              onChange={setQuestions}
+            />
+          )}
           {step === 3 && (
             <StepReview
               basicInfo={basicInfo}
@@ -163,7 +181,12 @@ export default function Page() {
 
         {!published && (
           <div className="flex flex-col gap-6">
-            <ExamSummary value={basicInfo} questionCount={questions.length} />
+            <ExamSummary
+            value={basicInfo}
+            questionCount={questions.length}
+            totalMarks={marksTally.total}
+            marksSummary={marksTally.summary}
+          />
             <TipsBox step={step} />
           </div>
         )}

@@ -3,15 +3,15 @@ import { ArrowLeft, ClipboardList, ListChecks, Eye, Check } from "lucide-react";
 import type { ExamStatus } from "./types";
 
 const steps = [
-  { step: 1, label: "মৌলিক তথ্য", icon: ClipboardList },
-  { step: 2, label: "প্রশ্ন যোগ করুন", icon: ListChecks },
-  { step: 3, label: "রিভিউ ও প্রকাশ", icon: Eye },
+  { step: 1, label: "বেসিক ইনফো", icon: ClipboardList },
+  { step: 2, label: "প্রশ্ন অ্যাড", icon: ListChecks },
+  { step: 3, label: "রিভিউ ও পাবলিশ", icon: Eye },
 ] as const;
 
 const statusLabel: Record<ExamStatus, string> = {
   draft: "ড্রাফট",
-  scheduled: "নির্ধারিত",
-  published: "প্রকাশিত",
+  scheduled: "শিডিউলড",
+  published: "পাবলিশড",
 };
 
 type Props = {
@@ -20,14 +20,18 @@ type Props = {
   title?: string;
   subtitle?: string;
   backHref?: string;
+  /** Pass this to make the three step cards clickable. Left out, they stay
+   *  read-only indicators — which is what a wizard with required steps wants. */
+  onStepChange?: (step: 1 | 2 | 3) => void;
 };
 
 export default function WizardHeader({
   step,
   status,
-  title = "নতুন পরীক্ষা যোগ করুন",
-  subtitle = "ধাপে ধাপে MCQ পরীক্ষার বিস্তারিত, প্রশ্ন এবং প্রকাশনার সেটিংস তৈরি করুন",
+  title = "নতুন পরীক্ষা অ্যাড করুন",
+  subtitle = "ধাপে ধাপে পরীক্ষার ইনফো, প্রশ্ন আর পাবলিশ সেটিংস ঠিক করুন",
   backHref = "/mcq",
+  onStepChange,
 }: Props) {
   return (
     <section className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
@@ -56,16 +60,23 @@ export default function WizardHeader({
         {steps.map(({ step: s, label, icon: Icon }, index) => {
           const isActive = s === step;
           const isCompleted = s < step;
+          // A button only when it does something — a non-interactive <button>
+          // would still take keyboard focus and read as clickable.
+          const Card = onStepChange ? "button" : "div";
           return (
             <div key={s} className="flex flex-1 items-center gap-2">
-              <div
-                className={`flex flex-1 items-center gap-3.5 rounded-2xl border px-4 py-3.5 ${
+              <Card
+                aria-current={isActive ? "step" : undefined}
+                className={`flex flex-1 items-center gap-3.5 rounded-2xl border px-4 py-3.5 text-left transition ${
                   isActive
                     ? "border-blue-500 bg-cyan-500/10"
                     : isCompleted
                       ? "border-emerald-500/40 bg-emerald-500/10"
                       : "border-slate-800 bg-slate-900"
-                }`}
+                } ${onStepChange ? "cursor-pointer hover:border-blue-500/60 hover:bg-white/[0.04]" : ""}`}
+                {...(onStepChange
+                  ? { onClick: () => onStepChange(s), type: "button" as const }
+                  : {})}
               >
                 <span
                   className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${
@@ -94,7 +105,7 @@ export default function WizardHeader({
                     {label}
                   </p>
                 </div>
-              </div>
+              </Card>
               {index < steps.length - 1 && <div className="h-px w-6 shrink-0 bg-slate-800" />}
             </div>
           );

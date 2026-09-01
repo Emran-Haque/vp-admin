@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { formatMarks } from "@/lib/marks";
 import { AlertTriangle, Check, Copy, Download, FileText, Loader2, Upload, X } from "lucide-react";
 import { useImportRoutineMutation, type ExamBatch, type RoutineImportExam } from "@/redux/api/examsApi";
 import { extractErrorMessage } from "@/lib/api-error";
@@ -139,7 +140,7 @@ export default function RoutineCsvImport({
                     </div>
                     <p className="mt-1 text-xs text-slate-500">
                       {exam.subject_label || "বিষয় নেই"} · {exam.exam_date || "তারিখ নেই"} ·{" "}
-                      {bn(exam.duration_minutes ?? 30)} মিনিট · প্রতি প্রশ্ন {bn(exam.marks_per_question ?? "1")} নম্বর
+                      {bn(exam.duration_minutes ?? 30)} মিনিট · প্রতি প্রশ্ন {bn(formatMarks(exam.marks_per_question) || "1")} নম্বর
                       {exam.end_time ? " · ডেডলাইন আছে" : ""}
                     </p>
                   </div>
@@ -177,8 +178,10 @@ export default function RoutineCsvImport({
             <div className="min-h-0 flex-1 overflow-auto p-6">
               <p className="text-xs leading-6 text-slate-400">
                 প্রতিটি সারি একটি পরীক্ষার শিডিউল। কলাম:{" "}
-                <span className="font-semibold text-slate-200">name, subject, date, start_time, end_time, duration_minutes, mark, questions</span>{" "}
-                (<span className="font-semibold text-slate-200">mark</span> = প্রতি প্রশ্নের নম্বর, <span className="font-semibold text-slate-200">questions</span> = প্রশ্ন সংখ্যা)। শুধু <span className="font-semibold text-slate-200">name</span> আবশ্যক। প্রশ্ন পরে প্রতিটি টাইলে যোগ করবেন।
+                <span className="font-semibold text-slate-200">name, subject, date, start_time, end_time, duration_minutes, mark, questions, negative_mode, negative</span>{" "}
+                (<span className="font-semibold text-slate-200">mark</span> = প্রতি প্রশ্নের ডিফল্ট নম্বর, <span className="font-semibold text-slate-200">questions</span> = প্রশ্ন সংখ্যা)। শুধু <span className="font-semibold text-slate-200">name</span> আবশ্যক। প্রশ্ন পরে প্রতিটি টাইলে যোগ করবেন।
+                <br />
+                <span className="font-semibold text-slate-200">negative_mode</span> = <span className="font-semibold text-slate-200">percentage</span> দিলে ভুল উত্তরে প্রশ্নের নিজের নম্বরের <span className="font-semibold text-slate-200">negative</span>% কাটা যাবে (চবি C ইউনিটে ২৫) — অর্থাৎ ২ নম্বরের প্রশ্নে ০.৫০। <span className="font-semibold text-slate-200">flat</span> দিলে প্রতিটি ভুলে <span className="font-semibold text-slate-200">negative</span> নম্বরই কাটা যাবে। খালি রাখলে flat ধরা হবে।
               </p>
               <div className="mt-4 overflow-auto rounded-xl border border-slate-800 bg-slate-950/60 p-3">
                 <pre className="whitespace-pre text-xs leading-6 text-slate-300">{ROUTINE_SAMPLE_CSV}</pre>

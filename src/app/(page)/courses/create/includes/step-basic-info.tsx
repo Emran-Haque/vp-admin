@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import ImageSizeHint, { type ImageKind } from "@/components/image-size-hint";
 import { Upload, X, FileText, Image as ImageIcon, FolderCog } from "lucide-react";
 import { useGetCourseCategoriesQuery } from "@/redux/api/coursesApi";
 import type { BasicInfo, CourseFiles } from "./types";
 import ManageCourseCategoriesModal from "./manage-categories-modal";
 import AutoTextarea from "@/components/auto-textarea";
 import RichTextEditor from "@/components/rich-text-editor";
+import { formatBanglaMoney, offerPreview } from "@/lib/offer-pricing";
 
 type ExistingCourseFiles = {
   thumbnail: string | null;
@@ -31,12 +33,16 @@ const levels = [
 function ImageUploadField({
   label,
   hint,
+  sizeHint,
   file,
   existingUrl,
   onChange,
 }: {
   label: string;
   hint: string;
+  /** Rendered under the control in every state — `hint` only shows when empty,
+   *  which is exactly when an admin editing an existing course cannot see it. */
+  sizeHint: ImageKind;
   file: File | null;
   existingUrl?: string | null;
   onChange: (file: File | null) => void;
@@ -105,6 +111,7 @@ function ImageUploadField({
           />
         </label>
       )}
+      <ImageSizeHint kind={sizeHint} />
     </div>
   );
 }
@@ -199,6 +206,7 @@ export default function StepBasicInfo({ value, onChange, files, onFilesChange, e
   const setFile = <K extends keyof CourseFiles>(key: K, val: CourseFiles[K]) => {
     onFilesChange({ ...files, [key]: val });
   };
+  const pricingPreview = offerPreview(value.price, value.discountAmount);
 
   return (
     <div className="flex flex-col gap-6">
@@ -338,9 +346,9 @@ export default function StepBasicInfo({ value, onChange, files, onFilesChange, e
         </label>
 
         {!value.isFree && (
-          <div className="grid grid-cols-1 gap-6 pt-5 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 pt-5 sm:grid-cols-2">
             <div>
-              <label className="block pb-1.5 text-base font-medium text-blue-50">মূল্য (৳)</label>
+              <label className="block pb-1.5 text-base font-medium text-blue-50">মূল দাম (৳)</label>
               <input
                 type="number"
                 value={value.price}
@@ -350,23 +358,20 @@ export default function StepBasicInfo({ value, onChange, files, onFilesChange, e
             </div>
 
             <div>
-              <label className="block pb-1.5 text-base font-medium text-blue-50">পুরাতন মূল্য (৳)</label>
+              <label className="block pb-1.5 text-base font-medium text-blue-50">ডিসকাউন্ট এমাউন্ট (৳)</label>
               <input
                 type="number"
-                value={value.oldPrice}
-                onChange={(e) => set("oldPrice", e.target.value)}
+                value={value.discountAmount}
+                onChange={(e) => set("discountAmount", e.target.value)}
                 className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 focus:outline-none"
               />
             </div>
-
-            <div>
-              <label className="block pb-1.5 text-base font-medium text-blue-50">ছাড় (%)</label>
-              <input
-                type="number"
-                value={value.discount}
-                onChange={(e) => set("discount", e.target.value)}
-                className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 focus:outline-none"
-              />
+            <div className="rounded-2xl border border-blue-500/20 bg-blue-500/10 p-4 text-sm leading-6 text-slate-300 sm:col-span-2">
+              <span className="font-semibold text-blue-200">অটো হিসাব:</span>{" "}
+              ছাড়ের পর দাম {formatBanglaMoney(pricingPreview.salePrice)} · ছাড়{" "}
+              {formatBanglaMoney(pricingPreview.discountAmount)} (
+              {pricingPreview.percent.toLocaleString("bn-BD", { maximumFractionDigits: 2 })}%
+              ){pricingPreview.hasOffer ? ` · আগের দাম ${formatBanglaMoney(pricingPreview.oldPrice)}` : ""}
             </div>
           </div>
         )}
@@ -526,6 +531,7 @@ export default function StepBasicInfo({ value, onChange, files, onFilesChange, e
           <ImageUploadField
             label="থাম্বনেইল ছবি"
             hint="PNG, JPG (সর্বোচ্চ 5MB)"
+            sizeHint="courseThumbnail"
             file={files.thumbnail}
             existingUrl={existingFiles?.thumbnail}
             onChange={(f) => setFile("thumbnail", f)}
@@ -533,6 +539,7 @@ export default function StepBasicInfo({ value, onChange, files, onFilesChange, e
           <ImageUploadField
             label="কভার ইমেজ"
             hint="PNG, JPG (সর্বোচ্চ 5MB)"
+            sizeHint="courseCover"
             file={files.coverImage}
             existingUrl={existingFiles?.coverImage}
             onChange={(f) => setFile("coverImage", f)}

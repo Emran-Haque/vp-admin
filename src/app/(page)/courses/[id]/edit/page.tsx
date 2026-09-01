@@ -43,6 +43,7 @@ import {
   type ExamQuestion,
 } from "@/redux/api/examsApi";
 import { extractErrorMessage } from "@/lib/api-error";
+import { discountAmountFromLegacy, offerPreview, originalPriceFromOffer } from "@/lib/offer-pricing";
 import { draftsFromIncludes, serializeIncludes, type IncludeDraft } from "@/lib/rich-text";
 import ErrorState from "@/components/error-state";
 import type { BasicInfo, CourseFiles, MaterialDraft, QuizQuestion, SubjectDraft, FaqDraft } from "../../create/includes/types";
@@ -60,11 +61,16 @@ function toBasicInfo(course: Course): BasicInfo {
     whyNeeded: course.why_needed,
     category: String(course.category),
     level: course.level,
-    price: course.price,
-    // Nullable in the database; a null here would flip the input to
-    // uncontrolled and warn, so normalise to a blank string.
-    oldPrice: course.old_price ?? "",
-    discount: course.discount,
+    price: originalPriceFromOffer({
+      price: course.price,
+      oldPrice: course.old_price,
+      discountAmount: course.discount_amount,
+    }),
+    discountAmount: discountAmountFromLegacy({
+      price: course.price,
+      oldPrice: course.old_price,
+      discountAmount: course.discount_amount,
+    }),
     isFree: course.is_free,
     verificationRequired: course.verification_required,
     duration: course.duration,
@@ -262,9 +268,9 @@ export default function Page() {
     // API's IncludesField accepts either form.
     formData.append("includes", JSON.stringify(serializeIncludes(includes)));
     formData.append("level", basicInfo.level);
-    formData.append("price", basicInfo.isFree ? "0" : basicInfo.price || "0");
-    if (basicInfo.oldPrice) formData.append("old_price", basicInfo.oldPrice);
-    if (basicInfo.discount) formData.append("discount", basicInfo.discount);
+    const pricing = offerPreview(basicInfo.price, basicInfo.discountAmount);
+    formData.append("price", basicInfo.isFree ? "0" : String(pricing.salePrice));
+    formData.append("discount_amount", basicInfo.isFree ? "0" : String(pricing.discountAmount));
     formData.append("is_free", String(basicInfo.isFree));
     formData.append("verification_required", String(basicInfo.verificationRequired));
     formData.append("duration", basicInfo.duration);
