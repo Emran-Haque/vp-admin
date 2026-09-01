@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, ClipboardList, BookOpen, Book, Package, type LucideIcon } from "lucide-react";
+import { ArrowRight, ClipboardList, BookOpen, Book, Package, PanelsTopLeft, type LucideIcon } from "lucide-react";
 import SectionHeader from "./section-header";
 
 type Module = {
@@ -37,6 +37,14 @@ const modules: Module[] = [
     iconColor: "text-emerald-500",
   },
   {
+    title: "ভিউ ম্যানেজমেন্ট",
+    description: "ব্যানার ও ওয়েবসাইটের দৃশ্যমান অংশ",
+    href: "/view-management",
+    icon: PanelsTopLeft,
+    iconWrap: "bg-sky-500/10",
+    iconColor: "text-sky-400",
+  },
+  {
     title: "অর্ডার",
     description: "স্ট্যাটাস আপডেট",
     href: "/books",
@@ -51,11 +59,11 @@ export default function ManagementModules() {
     <section>
       <SectionHeader title="ম্যানেজমেন্ট মডিউল" description="বিদ্যমান কন্টেন্ট দেখুন ও সম্পাদনা করুন" />
 
-      <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {modules.map(({ title, description, href, icon: Icon, iconWrap, iconColor }) => (
           <div
             key={title}
-            className="flex flex-col rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]"
+            className="flex flex-col rounded-lg border border-slate-800 bg-slate-900 p-5 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]"
           >
             <span className={`flex size-12 items-center justify-center rounded-2xl ${iconWrap}`}>
               <Icon size={28} className={iconColor} strokeWidth={2} />

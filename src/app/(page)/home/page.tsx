@@ -6,7 +6,7 @@ import StudentExperience from "./includes/student-experience";
 
 export default function Page() {
   return (
-    <div className="flex flex-col gap-11">
+    <div className="flex flex-col gap-7">
       <WelcomeBanner />
       <AdminNotifications />
       <QuickActions />

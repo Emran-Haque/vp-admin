@@ -13,6 +13,7 @@ import {
   Star,
   HelpCircle,
   Share2,
+  PanelsTopLeft,
   type LucideIcon,
 } from "lucide-react";
 import type { ModeratorPermissions } from "@/redux/api/moderatorsApi";
@@ -45,6 +46,7 @@ export const navItems: NavItem[] = [
   { label: "শিক্ষক", href: "/teachers", icon: GraduationCap, permission: "can_manage_teachers" },
   { label: "মডারেটর", href: "/moderators", icon: ShieldCheck, adminOnly: true },
   { label: "রিভিউ", href: "/reviews", icon: Star, permission: "can_manage_reviews" },
+  { label: "ভিউ ম্যানেজমেন্ট", href: "/view-management", icon: PanelsTopLeft, permission: "can_manage_home_content" },
   { label: "সোশ্যাল", href: "/social", icon: Share2, permission: "can_manage_home_content" },
   { label: "FAQ", href: "/faq", icon: HelpCircle, permission: "can_manage_faq" },
 ];

@@ -307,11 +307,11 @@ export const contentApi = baseApi.injectEndpoints({
       query: () => "admin/home-content/hero/",
       providesTags: [{ type: "HomeContent", id: "HERO_LIST" }],
     }),
-    createHeroSlide: builder.mutation<HeroContent, CreateHeroContentInput>({
+    createHeroSlide: builder.mutation<HeroContent, CreateHeroContentInput | FormData>({
       query: (body) => ({ url: "admin/home-content/hero/", method: "POST", body }),
       invalidatesTags: [{ type: "HomeContent", id: "HERO_LIST" }],
     }),
-    updateHeroSlide: builder.mutation<HeroContent, { id: number; data: UpdateHeroContentInput }>({
+    updateHeroSlide: builder.mutation<HeroContent, { id: number; data: UpdateHeroContentInput | FormData }>({
       query: ({ id, data }) => ({
         url: `admin/home-content/hero/${id}/`,
         method: "PATCH",

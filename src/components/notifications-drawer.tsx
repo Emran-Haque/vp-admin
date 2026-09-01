@@ -1,34 +1,15 @@
 "use client";
 
 import { useMemo } from "react";
-import {
-  X,
-  Bell,
-  Package,
-  Radio,
-  Award,
-  FileText,
-  ClipboardList,
-  Megaphone,
-  CheckCheck,
-  type LucideIcon,
-} from "lucide-react";
+import Link from "next/link";
+import { ArrowUpRight, X, Bell, CheckCheck } from "lucide-react";
 import {
   useGetNotificationsQuery,
   useMarkAllNotificationsReadMutation,
   type AdminNotification,
 } from "@/redux/api/notificationsApi";
 import { PageLoader } from "./loaders";
-
-const TYPE_ICON: Record<string, LucideIcon> = {
-  order: Package,
-  live_class: Radio,
-  result: Award,
-  resource: FileText,
-  assignment: ClipboardList,
-  notice: Megaphone,
-  general: Bell,
-};
+import { getNotificationHref, getNotificationVisual } from "./notification-visuals";
 
 function formatWhen(value: string) {
   const date = new Date(value);
@@ -62,10 +43,10 @@ export function NotificationsDrawer({
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black/50" onClick={onClose} />
-      <aside className="fixed right-0 top-0 z-50 flex h-full w-[380px] max-w-[90vw] flex-col border-l border-white/10 bg-gray-950 shadow-[-20px_0_60px_rgba(0,0,0,0.5)]">
-        <div className="flex items-center justify-between border-b border-white/5 p-5">
+      <aside className="fixed right-0 top-0 z-50 flex h-full w-[350px] max-w-full flex-col border-l border-white/10 bg-gray-950 shadow-[-20px_0_60px_rgba(0,0,0,0.5)]">
+        <div className="flex items-center justify-between border-b border-white/5 px-4 py-3.5">
           <h2 className="flex items-center gap-2 text-base font-bold text-white">
-            <Bell size={18} className="text-blue-400" />
+            <Bell size={16} className="text-sky-400" />
             নোটিফিকেশন
           </h2>
           <div className="flex items-center gap-2">
@@ -91,7 +72,7 @@ export function NotificationsDrawer({
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto p-3">
+        <div className="min-h-0 flex-1 overflow-y-auto p-2">
           {isLoading ? (
             <PageLoader label="নোটিফিকেশন লোড হচ্ছে…" />
           ) : items.length === 0 ? (
@@ -100,34 +81,42 @@ export function NotificationsDrawer({
               <p className="text-sm font-semibold">এখন কোনো নোটিফিকেশন নেই।</p>
             </div>
           ) : (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               {items.map((n) => {
-                const Icon = TYPE_ICON[n.notification_type] ?? Bell;
+                const visual = getNotificationVisual(n.notification_type);
+                const Icon = visual.icon;
+                const href = getNotificationHref(n);
                 return (
                   <div
                     key={n.id}
-                    className={`flex gap-3 rounded-xl border p-3 ${
+                    className={`flex gap-2.5 rounded-lg border p-2.5 ${
                       n.is_read
                         ? "border-white/5 bg-white/[0.02]"
-                        : "border-blue-500/25 bg-blue-500/[0.06]"
+                        : visual.unreadClass
                     }`}
                   >
-                    <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-blue-300">
-                      <Icon size={16} />
+                    <span className={`grid size-8 shrink-0 place-items-center rounded-lg border ${visual.iconClass}`}>
+                      <Icon size={14} />
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm font-bold text-white">{n.title}</p>
+                        <p className="text-[13px] font-bold leading-5 text-white">{n.title}</p>
                         {!n.is_read ? (
-                          <span className="mt-1 size-2 shrink-0 rounded-full bg-blue-400" />
+                          <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-sky-400" />
                         ) : null}
                       </div>
                       {n.message ? (
-                        <p className="mt-0.5 text-xs leading-5 text-slate-400">{n.message}</p>
+                        <p className="mt-0.5 line-clamp-2 text-[11px] leading-[1.55] text-slate-400">{n.message}</p>
                       ) : null}
-                      <p className="mt-1 text-[11px] font-semibold text-slate-500">
-                        {formatWhen(n.created_at)}
-                      </p>
+                      <div className="mt-1 flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-slate-600">{visual.label}</span>
+                        <span className="text-[10px] font-semibold text-slate-600">{formatWhen(n.created_at)}</span>
+                        {href ? (
+                          <Link href={href} onClick={onClose} className="ml-auto grid size-6 place-items-center rounded-md text-slate-500 hover:bg-white/5 hover:text-white" aria-label="সম্পর্কিত অংশ খুলুন" title="সম্পর্কিত অংশ খুলুন">
+                            <ArrowUpRight size={13} />
+                          </Link>
+                        ) : null}
+                      </div>
                     </div>
                   </div>
                 );
