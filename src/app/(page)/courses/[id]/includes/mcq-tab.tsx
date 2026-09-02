@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ClipboardCheck, Plus, Pencil, Trash2 } from "lucide-react";
 import { useGetExamsQuery, useDeleteExamMutation } from "@/redux/api/examsApi";
 import { usePermissions } from "@/hooks/use-permissions";
+import AdminDeleteButton from "@/components/admin-delete-button";
 import EmptyState from "./empty-state";
 import AddExamModal from "./add-exam-modal";
 
@@ -89,15 +90,15 @@ export default function McqTab({ courseId }: { courseId: number }) {
                       </Link>
                     )}
                     {hasPermission("can_delete_exam") && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (confirm(`"${exam.title}" মুছে ফেলতে চান?`)) deleteExam(exam.id);
-                        }}
+                      <AdminDeleteButton
+                        itemName={exam.title}
+                        itemType="MCQ পরীক্ষা"
+                        impact="পরীক্ষা, প্রশ্ন এবং সংশ্লিষ্ট ফলাফল ডেটা মুছে যেতে পারে।"
+                        onDelete={() => deleteExam(exam.id).unwrap()}
                         className="flex size-9 items-center justify-center rounded-xl border border-red-600/40 bg-red-600/10 text-red-600"
                       >
                         <Trash2 size={15} />
-                      </button>
+                      </AdminDeleteButton>
                     )}
                   </div>
                 </div>

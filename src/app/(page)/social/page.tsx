@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ExternalLink, Pencil, Plus, Share2, Trash2 } from "lucide-react";
 import ErrorState from "@/components/error-state";
+import AdminDeleteButton from "@/components/admin-delete-button";
 import { PageLoader } from "@/components/loaders";
 import { usePermissions } from "@/hooks/use-permissions";
 import {
@@ -98,15 +99,15 @@ export default function Page() {
                       >
                         <Pencil size={14} /> এডিট
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (confirm(`"${link.title}" মুছে ফেলতে চান?`)) deleteLink(link.id);
-                        }}
+                      <AdminDeleteButton
+                        itemName={link.title}
+                        itemType="সোশ্যাল লিংক"
+                        impact="লিংকটি ওয়েবসাইটের সোশ্যাল/কমিউনিটি অংশ থেকে মুছে যাবে।"
+                        onDelete={() => deleteLink(link.id).unwrap()}
                         className="grid size-9 place-items-center rounded-lg border border-red-600/40 bg-red-600/10 text-red-500 hover:bg-red-600/20"
                       >
                         <Trash2 size={14} />
-                      </button>
+                      </AdminDeleteButton>
                     </div>
                   ) : null}
                 </div>

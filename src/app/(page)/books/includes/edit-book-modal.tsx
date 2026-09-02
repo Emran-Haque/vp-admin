@@ -66,6 +66,7 @@ export default function EditBookModal({ book, onClose }: { book: Book; onClose: 
   const [promoVideoUrl, setPromoVideoUrl] = useState(text(book.promo_video_url));
   const [sampleDriveLink, setSampleDriveLink] = useState(text(book.sample_preview_drive_link));
   const [coverImage, setCoverImage] = useState<File | null>(null);
+  const [promoVideoThumbnail, setPromoVideoThumbnail] = useState<File | null>(null);
   const [samplePreviewFile, setSamplePreviewFile] = useState<File | null>(null);
   const [faqs, setFaqs] = useState<FaqDraft[]>([]);
   const [includes, setIncludes] = useState<IncludeDraft[]>(() => draftsFromIncludes(book.includes));
@@ -134,6 +135,7 @@ export default function EditBookModal({ book, onClose }: { book: Book; onClose: 
     if (promoVideoUrl) formData.append("promo_video_url", promoVideoUrl);
     if (sampleDriveLink) formData.append("sample_preview_drive_link", sampleDriveLink);
     if (coverImage) formData.append("cover_image", coverImage);
+    if (promoVideoThumbnail) formData.append("promo_video_thumbnail", promoVideoThumbnail);
     if (samplePreviewFile) formData.append("sample_preview_file", samplePreviewFile);
     formData.append("includes_title", includesTitle);
     // Multipart cannot carry a nested list, so it goes as JSON text; the
@@ -185,6 +187,7 @@ export default function EditBookModal({ book, onClose }: { book: Book; onClose: 
 
   const canSave = title.trim() && category;
   const coverPreview = coverImage ? URL.createObjectURL(coverImage) : getMediaUrl(book.cover_image);
+  const promoVideoThumbnailPreview = promoVideoThumbnail ? URL.createObjectURL(promoVideoThumbnail) : getMediaUrl(book.promo_video_thumbnail);
   const pricingPreview = offerPreview(price, discountAmount);
 
   return (
@@ -346,6 +349,19 @@ export default function EditBookModal({ book, onClose }: { book: Book; onClose: 
               onChange={(e) => setPromoVideoUrl(e.target.value)}
               className="w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
             />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 rounded-[12px] border border-white/10 bg-white/5 p-3">
+            {promoVideoThumbnailPreview ? (
+              <img src={promoVideoThumbnailPreview} alt="প্রোমো ভিডিও থাম্বনেইল" className="h-20 w-32 rounded-lg object-cover" />
+            ) : (
+              <span className="grid h-20 w-32 place-items-center rounded-lg bg-slate-950 text-slate-500"><Upload size={20} /></span>
+            )}
+            <label className="flex cursor-pointer items-center gap-1.5 rounded-[10px] border border-white/10 bg-slate-950 px-3.5 py-2.5 text-xs font-semibold text-slate-200">
+              <Upload size={14} />
+              ভিডিও থাম্বনেইল বদলান
+              <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={(e) => setPromoVideoThumbnail(e.target.files?.[0] ?? null)} />
+            </label>
           </div>
 
           <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">

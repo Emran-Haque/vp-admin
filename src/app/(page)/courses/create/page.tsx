@@ -56,6 +56,7 @@ const emptyBasicInfo: BasicInfo = {
 const emptyFiles: CourseFiles = {
   thumbnail: null,
   coverImage: null,
+  promoVideoThumbnail: null,
   syllabusPdf: null,
 };
 
@@ -137,6 +138,7 @@ export default function Page() {
     for (const teacherId of basicInfo.teacherIds) formData.append("teachers", teacherId);
     if (files.thumbnail) formData.append("thumbnail", files.thumbnail);
     if (files.coverImage) formData.append("cover_image", files.coverImage);
+    if (files.promoVideoThumbnail) formData.append("promo_video_thumbnail", files.promoVideoThumbnail);
     if (files.syllabusPdf) formData.append("syllabus_pdf", files.syllabusPdf);
 
     let course: Course;

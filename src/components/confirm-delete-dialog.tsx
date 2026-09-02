@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { AlertTriangle, X } from "lucide-react";
@@ -8,6 +8,7 @@ type ConfirmDeleteDialogProps = {
   itemName: string;
   itemType: string;
   impact?: string;
+  error?: string | null;
   isLoading?: boolean;
   onClose: () => void;
   onConfirm: () => void | Promise<void>;
@@ -18,6 +19,7 @@ export default function ConfirmDeleteDialog({
   itemName,
   itemType,
   impact,
+  error = null,
   isLoading = false,
   onClose,
   onConfirm,
@@ -30,6 +32,7 @@ export default function ConfirmDeleteDialog({
       itemName={itemName}
       itemType={itemType}
       impact={impact}
+      error={error}
       isLoading={isLoading}
       onClose={onClose}
       onConfirm={onConfirm}
@@ -41,6 +44,7 @@ function ConfirmDeleteDialogContent({
   itemName,
   itemType,
   impact,
+  error,
   isLoading,
   onClose,
   onConfirm,
@@ -77,6 +81,12 @@ function ConfirmDeleteDialogContent({
           <p className="text-sm leading-6 text-slate-300">
             {impact || "এই কাজটি ফেরানো যাবে না। ভুল করে মুছে ফেলা আটকাতে আরেকবার নিশ্চিত করুন।"}
           </p>
+
+          {error ? (
+            <div className="mt-4 rounded-xl border border-red-500/25 bg-red-500/10 px-3 py-2 text-sm font-bold leading-6 text-red-200">
+              {error}
+            </div>
+          ) : null}
 
           <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-slate-200">
             <input

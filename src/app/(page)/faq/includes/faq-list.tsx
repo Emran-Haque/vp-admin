@@ -23,6 +23,7 @@ import { useGetCoursesQuery } from "@/redux/api/coursesApi";
 import { useGetBooksQuery } from "@/redux/api/booksApi";
 import { usePermissions } from "@/hooks/use-permissions";
 import ErrorState from "@/components/error-state";
+import AdminDeleteButton from "@/components/admin-delete-button";
 import { CATEGORY_OPTIONS } from "./add-faq-modal";
 import { PageLoader } from "@/components/loaders";
 
@@ -243,18 +244,16 @@ export default function FaqList({ onEdit }: { onEdit: (faq: Faq) => void }) {
 
                     {/* Delete Button */}
                     {hasPermission("can_manage_faq") && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (confirm(`FAQ-টি মুছে ফেলতে চান?`)) {
-                            deleteFaq(faq.id);
-                          }
-                        }}
+                      <AdminDeleteButton
+                        itemName={faq.question}
+                        itemType="FAQ"
+                        impact="FAQ-টি সংশ্লিষ্ট পাবলিক/ড্যাশবোর্ড সেকশন থেকে মুছে যাবে।"
+                        onDelete={() => deleteFaq(faq.id).unwrap()}
                         title="মুছে ফেলুন"
                         className="flex size-9 items-center justify-center rounded-xl border border-red-600/40 bg-red-600/10 text-red-500 transition-colors hover:bg-red-600/20"
                       >
                         <Trash2 size={15} />
-                      </button>
+                      </AdminDeleteButton>
                     )}
                   </div>
 

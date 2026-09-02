@@ -14,7 +14,7 @@ import {
 } from "@/redux/api/contentApi";
 import BannerFormModal from "./banner-form-modal";
 
-export default function BannerManager() {
+export default function BannerManager({ embedded = false }: { embedded?: boolean } = {}) {
   const { data, isLoading, isError, refetch } = useGetHeroSlidesQuery();
   const [updateSlide, { isLoading: updating }] = useUpdateHeroSlideMutation();
   const [deleteSlide, { isLoading: deleting }] = useDeleteHeroSlideMutation();
@@ -70,8 +70,14 @@ export default function BannerManager() {
   };
 
   return (
-    <section className="overflow-hidden rounded-lg border border-slate-800 bg-slate-950/35">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 bg-slate-900/70 px-4 py-4 sm:px-5">
+    <section
+      className={
+        embedded
+          ? "overflow-hidden"
+          : "overflow-hidden rounded-lg border border-slate-800 bg-slate-950/35"
+      }
+    >
+      <div className={`flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 ${embedded ? "px-0 pt-0 pb-4" : "bg-slate-900/70 px-4 py-4 sm:px-5"}`}>
         <div>
           <div className="flex flex-wrap items-center gap-2.5">
             <h2 className="text-lg font-black text-slate-50">হোমপেজ ব্যানার</h2>

@@ -12,6 +12,7 @@ export type Course = {
   thumbnail: string | null;
   cover_image: string | null;
   promo_video_url: string;
+  promo_video_thumbnail: string | null;
   syllabus_pdf: string | null;
   syllabus_drive_link: string;
   price: string;

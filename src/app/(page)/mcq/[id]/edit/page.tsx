@@ -32,6 +32,7 @@ import {
 } from "@/lib/exam-datetime";
 import { extractErrorMessage } from "@/lib/api-error";
 import ErrorState from "@/components/error-state";
+import ConfirmActionDialog from "@/components/confirm-action-dialog";
 import type { ExamBasicInfo, Question } from "../../create/includes/types";
 
 const optionLetters = ["A", "B", "C", "D"] as const;
@@ -73,6 +74,7 @@ export default function Page() {
   const [basicInfo, setBasicInfo] = useState<ExamBasicInfo | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [showRegradeConfirm, setShowRegradeConfirm] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
@@ -165,18 +167,13 @@ export default function Page() {
     return hasRemovedQuestion || hasAddedQuestion || hasCorrectAnswerChange;
   };
 
-  const handleSave = async () => {
+  const handleSave = async (skipRegradeConfirm = false) => {
     if (!basicInfo) return;
     const shouldWarnAboutRegrade =
       exam?.status === "published" && hasResultImpactingChanges();
-    if (shouldWarnAboutRegrade) {
-      const attemptCount = attemptsData?.count;
-      const confirmed = confirm(
-        attemptCount && attemptCount > 0
-          ? `এই পরীক্ষায় ইতিমধ্যে ${attemptCount} জন পরীক্ষা দিয়েছে বা শুরু করেছে। সেভ করলে তাদের রেজাল্ট আর লিডারবোর্ড আবার ক্যালকুলেট হবে। চালিয়ে যাবেন?`
-          : "এই পরীক্ষাটা পাবলিশড — কেউ হয়তো ইতিমধ্যে দিয়ে ফেলেছে। সেভ করলে রেজাল্ট আর লিডারবোর্ড আবার ক্যালকুলেট হবে। চালিয়ে যাবেন?"
-      );
-      if (!confirmed) return;
+    if (shouldWarnAboutRegrade && !skipRegradeConfirm) {
+      setShowRegradeConfirm(true);
+      return;
     }
 
     setIsSaving(true);
@@ -339,6 +336,10 @@ export default function Page() {
   }
 
   const marksTally = tallyMarks(questions, basicInfo.marksPerQuestion || "1");
+  const regradeAttemptCount = attemptsData?.count ?? 0;
+  const regradeMessage = regradeAttemptCount > 0
+    ? `এই পরীক্ষায় ইতিমধ্যে ${regradeAttemptCount} জন পরীক্ষা দিয়েছে বা শুরু করেছে। সেভ করলে তাদের রেজাল্ট আর লিডারবোর্ড আবার ক্যালকুলেট হবে।`
+    : "এই পরীক্ষাটা পাবলিশড। কেউ হয়তো ইতিমধ্যে পরীক্ষা দিয়ে ফেলেছে, তাই সেভ করলে রেজাল্ট আর লিডারবোর্ড আবার ক্যালকুলেট হতে পারে।";
 
   return (
     <div className="flex flex-col gap-7">
@@ -415,6 +416,19 @@ export default function Page() {
         onPrev={() => setStep((s) => (s > 1 ? ((s - 1) as 1 | 2) : s))}
         onNext={() => setStep((s) => (s < 3 ? ((s + 1) as 2 | 3) : s))}
         onSave={handleSave}
+      />
+
+      <ConfirmActionDialog
+        open={showRegradeConfirm}
+        title="রেজাল্ট আবার ক্যালকুলেট হবে"
+        message={regradeMessage}
+        confirmLabel="সেভ করুন"
+        isLoading={isSaving}
+        onClose={() => setShowRegradeConfirm(false)}
+        onConfirm={() => {
+          setShowRegradeConfirm(false);
+          void handleSave(true);
+        }}
       />
     </div>
   );

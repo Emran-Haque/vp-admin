@@ -51,7 +51,7 @@ import type { BasicInfo, CourseFiles, MaterialDraft, QuizQuestion, SubjectDraft,
 const optionLetters = ["A", "B", "C", "D"] as const;
 const isPersisted = (id: string) => /^\d+$/.test(id);
 
-const emptyFiles: CourseFiles = { thumbnail: null, coverImage: null, syllabusPdf: null };
+const emptyFiles: CourseFiles = { thumbnail: null, coverImage: null, promoVideoThumbnail: null, syllabusPdf: null };
 
 function toBasicInfo(course: Course): BasicInfo {
   return {
@@ -286,6 +286,7 @@ export default function Page() {
     for (const teacherId of basicInfo.teacherIds) formData.append("teachers", teacherId);
     if (files.thumbnail) formData.append("thumbnail", files.thumbnail);
     if (files.coverImage) formData.append("cover_image", files.coverImage);
+    if (files.promoVideoThumbnail) formData.append("promo_video_thumbnail", files.promoVideoThumbnail);
     if (files.syllabusPdf) formData.append("syllabus_pdf", files.syllabusPdf);
 
     try {
@@ -589,6 +590,7 @@ export default function Page() {
           existingFiles={{
             thumbnail: course.thumbnail,
             coverImage: course.cover_image,
+            promoVideoThumbnail: course.promo_video_thumbnail,
             syllabusPdf: course.syllabus_pdf,
           }}
         />

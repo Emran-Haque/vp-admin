@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
@@ -39,6 +39,8 @@ import {
   type Exam,
 } from "@/redux/api/examsApi";
 import { useGetCourseMaterialsQuery } from "@/redux/api/courseMaterialsApi";
+import ConfirmDeleteDialog from "@/components/confirm-delete-dialog";
+import { extractErrorMessage } from "@/lib/api-error";
 import {
   useGetResourcesQuery,
   useDeleteResourceMutation,
@@ -56,6 +58,7 @@ import {
 
 type SubjectTab = "lectures" | "live" | "notes" | "assignments" | "mcq";
 type ModalKey = "recording" | "live" | "resource" | "assignment" | "exam" | null;
+type DeleteTarget = { tab: SubjectTab; id: number; title: string };
 
 type SubjectBundle = {
   subject: CourseSubject;
@@ -224,17 +227,43 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
   const [editTarget, setEditTarget] = useState<EditTarget | null>(null);
   const [viewSubmissions, setViewSubmissions] = useState<Assignment | null>(null);
   const [telegramMessage, setTelegramMessage] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [deleteClass] = useDeleteClassMutation();
   const [deleteResource] = useDeleteResourceMutation();
   const [deleteAssignment] = useDeleteAssignmentMutation();
   const [deleteExam] = useDeleteExamMutation();
 
+  const deleteTypeLabels: Record<SubjectTab, string> = {
+    lectures: "লেকচার",
+    live: "লাইভ ক্লাস",
+    notes: "রিসোর্স",
+    assignments: "অ্যাসাইনমেন্ট",
+    mcq: "MCQ পরীক্ষা",
+  };
+
   const handleDelete = (tab: SubjectTab, id: number, title: string) => {
-    if (!confirm(`"${title}" মুছে ফেলতে চান?`)) return;
-    if (tab === "lectures" || tab === "live") deleteClass(id);
-    else if (tab === "notes") deleteResource(id);
-    else if (tab === "assignments") deleteAssignment(id);
-    else if (tab === "mcq") deleteExam(id);
+    setDeleteError(null);
+    setDeleteTarget({ tab, id, title });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      const { tab, id } = deleteTarget;
+      if (tab === "lectures" || tab === "live") await deleteClass(id).unwrap();
+      else if (tab === "notes") await deleteResource(id).unwrap();
+      else if (tab === "assignments") await deleteAssignment(id).unwrap();
+      else if (tab === "mcq") await deleteExam(id).unwrap();
+      setDeleteTarget(null);
+    } catch (err) {
+      setDeleteError(extractErrorMessage(err));
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -869,3 +898,4 @@ function ItemList({
     </div>
   );
 }
+

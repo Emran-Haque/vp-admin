@@ -8,6 +8,8 @@ export type Teacher = {
   subject: string;
   image: string | null;
   bio: string;
+  short_description: string;
+  long_description: string;
   social_links: Record<string, string>;
   ordering: number;
   is_active: boolean;
@@ -125,6 +127,41 @@ export type StaticPage = {
 };
 export type UpdateStaticPageInput = Partial<Omit<StaticPage, "id" | "page_key">>;
 
+/** Page keys that can carry an editable heading block. */
+export type LandingHeroKey =
+  | "course"
+  | "exam_batch"
+  | "book_store"
+  | "free_class"
+  | "team"
+  | "success";
+
+/**
+ * The heading block at the top of a public landing page.
+ *
+ * Keyed by page rather than id, so the admin edits "the course page heading"
+ * without caring whether a row exists yet. A page with no row keeps the copy
+ * the student site already ships.
+ */
+export type LandingHero = {
+  id: number;
+  page_key: LandingHeroKey;
+  eyebrow: string;
+  title: string;
+  accent: string;
+  description: string;
+  primary_label: string;
+  primary_href: string;
+  secondary_label: string;
+  secondary_href: string;
+  is_active: boolean;
+};
+
+export type LandingHeroInput = Partial<Omit<LandingHero, "id">> & {
+  page_key: LandingHeroKey;
+  title: string;
+};
+
 export type HeroContent = {
   id: number;
   title: string;
@@ -139,14 +176,26 @@ export type HeroContent = {
 export type CreateHeroContentInput = Omit<HeroContent, "id">;
 export type UpdateHeroContentInput = Partial<CreateHeroContentInput>;
 
+export type WhyPlatformCard = {
+  id?: number;
+  title: string;
+  description: string;
+  icon: string;
+  target_url: string;
+  ordering: number;
+};
+
 export type WhyPlatformContent = {
   id: number;
   promo_video_url: string;
+  promo_video_thumbnail: string | null;
   title: string;
   description: string;
   is_active: boolean;
+  cards: WhyPlatformCard[];
 };
-export type UpdateWhyPlatformInput = Partial<Omit<WhyPlatformContent, "id">>;
+export type CreateWhyPlatformInput = Omit<WhyPlatformContent, "id">;
+export type UpdateWhyPlatformInput = Partial<CreateWhyPlatformInput>;
 
 export type AboutContent = {
   id: number;
@@ -303,6 +352,19 @@ export const contentApi = baseApi.injectEndpoints({
     }),
 
     // Home content
+    getLandingHeroes: builder.query<Paginated<LandingHero> | LandingHero[], void>({
+      query: () => "admin/landing-heroes/",
+      providesTags: [{ type: "HomeContent", id: "HEROES" }],
+    }),
+    // Create-or-update in one call: the page key is the lookup, so the caller
+    // never has to know whether a row exists yet.
+    saveLandingHero: builder.mutation<LandingHero, { exists: boolean; data: LandingHeroInput }>({
+      query: ({ exists, data }) =>
+        exists
+          ? { url: `admin/landing-heroes/${data.page_key}/`, method: "PATCH", body: data }
+          : { url: "admin/landing-heroes/", method: "POST", body: data },
+      invalidatesTags: [{ type: "HomeContent", id: "HEROES" }],
+    }),
     getHeroSlides: builder.query<Paginated<HeroContent>, void>({
       query: () => "admin/home-content/hero/",
       providesTags: [{ type: "HomeContent", id: "HERO_LIST" }],
@@ -323,32 +385,52 @@ export const contentApi = baseApi.injectEndpoints({
       query: (id) => ({ url: `admin/home-content/hero/${id}/`, method: "DELETE" }),
       invalidatesTags: [{ type: "HomeContent", id: "HERO_LIST" }],
     }),
-    getWhyPlatform: builder.query<WhyPlatformContent, void>({
+    getWhyPlatforms: builder.query<Paginated<WhyPlatformContent>, void>({
       query: () => "admin/home-content/why-platform/",
       providesTags: [{ type: "HomeContent", id: "WHY_PLATFORM" }],
     }),
-    updateWhyPlatform: builder.mutation<WhyPlatformContent, UpdateWhyPlatformInput>({
-      query: (data) => ({
-        url: "admin/home-content/why-platform/",
+    createWhyPlatform: builder.mutation<WhyPlatformContent, CreateWhyPlatformInput | FormData>({
+      query: (body) => ({ url: "admin/home-content/why-platform/", method: "POST", body }),
+      invalidatesTags: [{ type: "HomeContent", id: "WHY_PLATFORM" }],
+    }),
+    updateWhyPlatform: builder.mutation<WhyPlatformContent, { id: number; data: UpdateWhyPlatformInput | FormData }>({
+      query: ({ id, data }) => ({
+        url: `admin/home-content/why-platform/${id}/`,
         method: "PATCH",
         body: data,
       }),
       invalidatesTags: [{ type: "HomeContent", id: "WHY_PLATFORM" }],
     }),
-    getAboutContent: builder.query<AboutContent, void>({
+    // These two are ModelViewSets, so the collection route answers GET and POST
+    // and edits go to `/{id}/`. The previous version PATCHed the collection,
+    // which DRF answers with 405 — it was never caught because nothing in the
+    // admin used these hooks.
+    getAboutContent: builder.query<Paginated<AboutContent> | AboutContent[], void>({
       query: () => "admin/home-content/about/",
       providesTags: [{ type: "HomeContent", id: "ABOUT" }],
     }),
-    updateAboutContent: builder.mutation<AboutContent, UpdateAboutContentInput>({
-      query: (data) => ({ url: "admin/home-content/about/", method: "PATCH", body: data }),
+    saveAboutContent: builder.mutation<
+      AboutContent,
+      { id?: number; data: UpdateAboutContentInput | FormData }
+    >({
+      query: ({ id, data }) =>
+        id
+          ? { url: `admin/home-content/about/${id}/`, method: "PATCH", body: data }
+          : { url: "admin/home-content/about/", method: "POST", body: data },
       invalidatesTags: [{ type: "HomeContent", id: "ABOUT" }],
     }),
-    getFooterContent: builder.query<FooterContent, void>({
+    getFooterContent: builder.query<Paginated<FooterContent> | FooterContent[], void>({
       query: () => "admin/home-content/footer/",
       providesTags: [{ type: "HomeContent", id: "FOOTER" }],
     }),
-    updateFooterContent: builder.mutation<FooterContent, UpdateFooterContentInput>({
-      query: (data) => ({ url: "admin/home-content/footer/", method: "PATCH", body: data }),
+    saveFooterContent: builder.mutation<
+      FooterContent,
+      { id?: number; data: UpdateFooterContentInput | FormData }
+    >({
+      query: ({ id, data }) =>
+        id
+          ? { url: `admin/home-content/footer/${id}/`, method: "PATCH", body: data }
+          : { url: "admin/home-content/footer/", method: "POST", body: data },
       invalidatesTags: [{ type: "HomeContent", id: "FOOTER" }],
     }),
   }),
@@ -377,14 +459,17 @@ export const {
   useDeleteFaqMutation,
   useGetStaticPageQuery,
   useUpdateStaticPageMutation,
+  useGetLandingHeroesQuery,
+  useSaveLandingHeroMutation,
   useGetHeroSlidesQuery,
   useCreateHeroSlideMutation,
   useUpdateHeroSlideMutation,
   useDeleteHeroSlideMutation,
-  useGetWhyPlatformQuery,
+  useGetWhyPlatformsQuery,
+  useCreateWhyPlatformMutation,
   useUpdateWhyPlatformMutation,
   useGetAboutContentQuery,
-  useUpdateAboutContentMutation,
+  useSaveAboutContentMutation,
   useGetFooterContentQuery,
-  useUpdateFooterContentMutation,
+  useSaveFooterContentMutation,
 } = contentApi;

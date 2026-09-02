@@ -17,6 +17,7 @@ export type ImageKind =
   | "courseCover"
   | "bookCover"
   | "teacherPhoto"
+  | "aboutImage"
   | "examBatchThumbnail"
   | "promoVideoThumbnail"
   | "liveClassThumbnail"
@@ -51,6 +52,11 @@ export const IMAGE_GUIDANCE: Record<ImageKind, Guidance> = {
     text: "প্রস্তাবিত সাইজ: ৮০০ × ১০০০ পিক্সেল (4:5, পোর্ট্রেট) · ব্যাকগ্রাউন্ড ছাড়া PNG হলে ভালো",
     reason:
       "Team and mentor cards use object-contain object-bottom — cut-out portraits standing on the card edge, so a transparent PNG reads best.",
+  },
+  aboutImage: {
+    text: "প্রস্তাবিত সাইজ: ১০০০ × ۱۰۰۰ পিক্সেল (বর্গাকার) · JPG, PNG বা WebP · সর্বোচ্চ ۵০০ KB",
+    reason:
+      "The homepage about block uses a square object-cover frame, so square images fill the visual without empty space.",
   },
   examBatchThumbnail: {
     text: "প্রস্তাবিত সাইজ: ১২৮০ × ৭২০ পিক্সেল (16:9) · সর্বোচ্চ ৫০০ KB",

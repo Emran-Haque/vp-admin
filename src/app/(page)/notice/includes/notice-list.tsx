@@ -8,6 +8,7 @@ import {
   type Notice,
 } from "@/redux/api/noticesApi";
 import ErrorState from "@/components/error-state";
+import AdminDeleteButton from "@/components/admin-delete-button";
 import { PageLoader } from "@/components/loaders";
 
 const targetTypeStyles: Record<string, { label: string; icon: typeof Users }> = {
@@ -105,15 +106,15 @@ export default function NoticeList({ onEdit }: { onEdit: (notice: Notice) => voi
               >
                 <Pencil size={12} />
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (confirm(`"${notice.title}" নোটিশটি মুছে ফেলতে চান?`)) deleteNotice(notice.id);
-                }}
+              <AdminDeleteButton
+                itemName={notice.title}
+                itemType="নোটিশ"
+                impact="নোটিশটি পাবলিক ও ড্যাশবোর্ড ভিউ থেকে স্থায়ীভাবে মুছে যাবে।"
+                onDelete={() => deleteNotice(notice.id).unwrap()}
                 className="flex size-7 cursor-pointer items-center justify-center rounded-lg bg-red-500/10 text-red-500 transition-colors duration-200 hover:bg-red-500/20"
               >
                 <Trash2 size={12} />
-              </button>
+              </AdminDeleteButton>
             </div>
           </div>
         );

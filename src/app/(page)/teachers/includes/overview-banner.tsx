@@ -1,4 +1,4 @@
-import { GraduationCap, Plus } from "lucide-react";
+﻿import { GraduationCap, Plus } from "lucide-react";
 
 export default function OverviewBanner({ onAddClick }: { onAddClick: () => void }) {
   return (
@@ -12,7 +12,7 @@ export default function OverviewBanner({ onAddClick }: { onAddClick: () => void 
           </span>
           <div>
             <h1 className="text-2xl font-bold leading-9 text-blue-50">শিক্ষক ম্যানেজমেন্ট</h1>
-            <p className="mt-1 text-base text-slate-400">শিক্ষকদের প্রোফাইল, বিষয় ও সামাজিক যোগাযোগ পরিচালনা করুন</p>
+            <p className="mt-1 text-base text-slate-400">শিক্ষকদের প্রোফাইল, বিষয় ও পাবলিক মেন্টর কার্ড পরিচালনা করুন</p>
           </div>
         </div>
 
@@ -28,3 +28,4 @@ export default function OverviewBanner({ onAddClick }: { onAddClick: () => void 
     </section>
   );
 }
+

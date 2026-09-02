@@ -13,6 +13,7 @@ import { formatBanglaMoney, offerPreview } from "@/lib/offer-pricing";
 type ExistingCourseFiles = {
   thumbnail: string | null;
   coverImage: string | null;
+  promoVideoThumbnail: string | null;
   syllabusPdf: string | null;
 };
 
@@ -543,6 +544,14 @@ export default function StepBasicInfo({ value, onChange, files, onFilesChange, e
             file={files.coverImage}
             existingUrl={existingFiles?.coverImage}
             onChange={(f) => setFile("coverImage", f)}
+          />
+          <ImageUploadField
+            label="প্রোমো ভিডিও থাম্বনেইল"
+            hint="ভিডিও কার্ডে দেখানোর জন্য ছবি"
+            sizeHint="courseThumbnail"
+            file={files.promoVideoThumbnail}
+            existingUrl={existingFiles?.promoVideoThumbnail}
+            onChange={(f) => setFile("promoVideoThumbnail", f)}
           />
         </div>
 

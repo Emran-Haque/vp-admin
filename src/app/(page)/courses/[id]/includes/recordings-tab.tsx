@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Play, Plus, ExternalLink, Trash2 } from "lucide-react";
 import { useGetClassesQuery, useDeleteClassVideoMutation } from "@/redux/api/classesApi";
 import { usePermissions } from "@/hooks/use-permissions";
+import AdminDeleteButton from "@/components/admin-delete-button";
 import EmptyState from "./empty-state";
 import AddRecordingModal from "./add-recording-modal";
 
@@ -73,15 +74,15 @@ export default function RecordingsTab({ courseId }: { courseId: number }) {
                     </a>
                   )}
                   {hasPermission("can_create_live_class") && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (confirm(`"${video.title}" মুছে ফেলতে চান?`)) deleteClassVideo(video.id);
-                      }}
+                    <AdminDeleteButton
+                      itemName={video.title}
+                      itemType="রেকর্ডিং"
+                      impact="রেকর্ডেড ভিডিওটি শিক্ষার্থীদের ক্লাস রেকর্ডিং থেকে মুছে যাবে।"
+                      onDelete={() => deleteClassVideo(video.id).unwrap()}
                       className="flex size-9 items-center justify-center rounded-xl border border-red-600/40 bg-red-600/10 text-red-600"
                     >
                       <Trash2 size={15} />
-                    </button>
+                    </AdminDeleteButton>
                   )}
                 </div>
               </div>

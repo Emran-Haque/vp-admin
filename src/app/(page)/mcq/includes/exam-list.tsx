@@ -25,6 +25,7 @@ import {
 } from "@/redux/api/examsApi";
 import { usePermissions } from "@/hooks/use-permissions";
 import ErrorState from "@/components/error-state";
+import AdminDeleteButton from "@/components/admin-delete-button";
 import { PageLoader } from "@/components/loaders";
 
 const resultStatusStyles: Record<string, { label: string; className: string }> = {
@@ -119,15 +120,15 @@ export default function ExamList() {
                 </Link>
               )}
               {hasPermission("can_delete_exam") && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (confirm(`"${exam.title}" পরীক্ষাটি মুছে ফেলতে চান?`)) deleteExam(exam.id);
-                  }}
+                <AdminDeleteButton
+                  itemName={exam.title}
+                  itemType="পরীক্ষা"
+                  impact="পরীক্ষাটি এবং এর প্রশ্ন/রেজাল্ট সম্পর্কিত ডেটা মুছে যেতে পারে।"
+                  onDelete={() => deleteExam(exam.id).unwrap()}
                   className="flex size-10 items-center justify-center rounded-xl border border-red-600/40 bg-red-600/10 text-red-600"
                 >
                   <Trash2 size={16} />
-                </button>
+                </AdminDeleteButton>
               )}
             </div>
           </div>

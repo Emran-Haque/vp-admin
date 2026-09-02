@@ -1,5 +1,6 @@
 "use client";
 
+import AdminDeleteButton from "@/components/admin-delete-button";
 import { useState } from "react";
 import { X, Plus, Pencil, Trash2, Save, FolderCog } from "lucide-react";
 import {
@@ -114,15 +115,15 @@ function CategoryRow({ category }: { category: BookCategory }) {
         </button>
       )}
       {hasPermission("can_delete_book") && (
-        <button
-          type="button"
-          onClick={() => {
-            if (confirm(`"${category.name}" ক্যাটাগরি মুছে ফেলতে চান?`)) deleteCategory(category.id);
-          }}
+        <AdminDeleteButton
+          itemName={category.name}
+          itemType="বই ক্যাটাগরি"
+          impact="এই ক্যাটাগরি মুছে গেলে সংশ্লিষ্ট বইয়ের ক্যাটাগরি রেফারেন্স বদলে যেতে পারে।"
+          onDelete={() => deleteCategory(category.id).unwrap()}
           className="text-red-500"
         >
           <Trash2 size={14} />
-        </button>
+        </AdminDeleteButton>
       )}
     </div>
   );

@@ -9,6 +9,7 @@ import {
   type Moderator,
 } from "@/redux/api/moderatorsApi";
 import ErrorState from "@/components/error-state";
+import AdminDeleteButton from "@/components/admin-delete-button";
 import { PageLoader } from "@/components/loaders";
 
 type Props = {
@@ -103,15 +104,15 @@ export default function ModeratorList({ search, onManagePermissions }: Props) {
                   <UserCheck size={16} />
                 </button>
               )}
-              <button
-                type="button"
-                onClick={() => {
-                  if (confirm(`${moderator.full_name}-কে মুছে ফেলতে চান?`)) deleteModerator(moderator.id);
-                }}
+              <AdminDeleteButton
+                itemName={moderator.full_name}
+                itemType="মডারেটর"
+                impact="এই মডারেটরের অ্যাডমিন প্যানেল অ্যাক্সেস ও অনুমতি স্থায়ীভাবে মুছে যাবে।"
+                onDelete={() => deleteModerator(moderator.id).unwrap()}
                 className="flex size-10 cursor-pointer items-center justify-center rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 transition-colors duration-200 hover:bg-red-500/15"
               >
                 <Trash2 size={16} />
-              </button>
+              </AdminDeleteButton>
             </div>
           </div>
         );

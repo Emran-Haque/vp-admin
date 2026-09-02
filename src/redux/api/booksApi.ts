@@ -24,6 +24,7 @@ export type Book = {
   sample_preview_file: string | null;
   sample_preview_drive_link: string;
   promo_video_url: string;
+  promo_video_thumbnail: string | null;
   is_featured: boolean;
   includes_title: string;
   includes: IncludeItem[];

@@ -22,6 +22,7 @@ import {
 } from "@/redux/api/examsApi";
 import { PageLoader } from "@/components/loaders";
 import ErrorState from "@/components/error-state";
+import AdminDeleteButton from "@/components/admin-delete-button";
 import AddRoutineExamModal from "./add-routine-exam-modal";
 import RoutineCsvImport from "./routine-csv-import";
 import RoutineMcqEditor from "./routine-mcq-editor";
@@ -83,10 +84,9 @@ export default function BatchManageView({
   const rows = [...batch.exams].sort((a, b) => a.ordering - b.ordering);
 
   const removeRow = async (item: ExamBatchExam) => {
-    if (!confirm(`"${item.exam_title}" রুটিন থেকে মুছে ফেলতে চান? পরীক্ষাটি ও এর প্রশ্নগুলো মুছে যাবে।`)) return;
     // Deleting the exam cascades its batch link + questions. deleteExam only
     // invalidates the exam list, so refetch this batch to update the routine.
-    await deleteExam(item.exam).unwrap().catch(() => {});
+    await deleteExam(item.exam).unwrap();
     void refetch();
   };
 
@@ -209,14 +209,16 @@ export default function BatchManageView({
                             >
                               <Pencil size={14} />
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => removeRow(item)}
+                            <AdminDeleteButton
+                              itemName={item.exam_title}
+                              itemType="রুটিন পরীক্ষা"
+                              impact="রুটিন থেকে সরানোর সাথে পরীক্ষাটি এবং এর প্রশ্নগুলোও মুছে যাবে।"
+                              onDelete={() => removeRow(item)}
                               title="মুছে ফেলুন"
                               className="grid size-9 place-items-center rounded-lg border border-red-600/40 bg-red-600/10 text-red-500 hover:bg-red-600/20"
                             >
                               <Trash2 size={14} />
-                            </button>
+                            </AdminDeleteButton>
                           </div>
                         </td>
                       </tr>

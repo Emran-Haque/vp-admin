@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Radio, Plus, ExternalLink, Trash2 } from "lucide-react";
 import { useGetClassesQuery, useDeleteClassMutation } from "@/redux/api/classesApi";
 import { usePermissions } from "@/hooks/use-permissions";
+import AdminDeleteButton from "@/components/admin-delete-button";
 import EmptyState from "./empty-state";
 import AddLiveClassModal from "./add-live-class-modal";
 
@@ -72,15 +73,15 @@ export default function LiveClassTab({ courseId }: { courseId: number }) {
                     </a>
                   )}
                   {hasPermission("can_delete_live_class") && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (confirm(`"${cls.title}" মুছে ফেলতে চান?`)) deleteClass(cls.id);
-                      }}
+                    <AdminDeleteButton
+                      itemName={cls.title}
+                      itemType="লাইভ ক্লাস"
+                      impact="লাইভ ক্লাসটি রুটিন/ক্লাস তালিকা থেকে মুছে যাবে।"
+                      onDelete={() => deleteClass(cls.id).unwrap()}
                       className="flex size-9 items-center justify-center rounded-xl border border-red-600/40 bg-red-600/10 text-red-600"
                     >
                       <Trash2 size={15} />
-                    </button>
+                    </AdminDeleteButton>
                   )}
                 </div>
               </div>

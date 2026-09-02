@@ -36,6 +36,7 @@ import { useGetClassesQuery } from "@/redux/api/classesApi";
 import { useGetCourseSubjectsQuery } from "@/redux/api/courseSubjectsApi";
 import { usePermissions } from "@/hooks/use-permissions";
 import { extractErrorMessage } from "@/lib/api-error";
+import AdminDeleteButton from "@/components/admin-delete-button";
 
 const statusStyles: Record<string, string> = {
   active: "bg-emerald-500/10 text-emerald-500 outline-emerald-500/40",
@@ -171,15 +172,15 @@ export default function AssignmentsPanel({ courseId, compact = false }: Assignme
                       </button>
                     )}
                     {hasPermission("can_manage_assignments") && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (confirm(`"${assignment.title}" অ্যাসাইনমেন্টটি মুছে ফেলতে চান?`)) deleteAssignment(assignment.id);
-                        }}
+                      <AdminDeleteButton
+                        itemName={assignment.title}
+                        itemType="অ্যাসাইনমেন্ট"
+                        impact="অ্যাসাইনমেন্ট এবং জমা দেওয়া কাজের রেফারেন্স মুছে যেতে পারে।"
+                        onDelete={() => deleteAssignment(assignment.id).unwrap()}
                         className="flex size-9 items-center justify-center rounded-xl border border-red-600/40 bg-red-600/10 text-red-600"
                       >
                         <Trash2 size={15} />
-                      </button>
+                      </AdminDeleteButton>
                     )}
                   </div>
                 </div>

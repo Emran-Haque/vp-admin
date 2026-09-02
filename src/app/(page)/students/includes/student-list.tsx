@@ -16,6 +16,7 @@ import { STATUS_PARAMS } from "./status-params";
 import StudentDetailModal from "./student-detail-modal";
 import { useEffect, useState } from "react";
 import ErrorState from "@/components/error-state";
+import AdminDeleteButton from "@/components/admin-delete-button";
 import { PageLoader } from "@/components/loaders";
 
 export default function StudentList({
@@ -156,15 +157,15 @@ export default function StudentList({
                   </button>
                 ))}
               {hasPermission("can_delete_student") && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (confirm(`${student.full_name}-কে মুছে ফেলতে চান?`)) deleteStudent(student.id);
-                  }}
+                <AdminDeleteButton
+                  itemName={student.full_name}
+                  itemType="শিক্ষার্থী"
+                  impact="শিক্ষার্থীর অ্যাকাউন্ট ও সংশ্লিষ্ট অ্যাক্সেস স্থায়ীভাবে মুছে যেতে পারে।"
+                  onDelete={() => deleteStudent(student.id).unwrap()}
                   className="flex size-10 items-center justify-center rounded-xl border border-red-500/20 bg-red-500/5 text-red-500"
                 >
                   <Trash2 size={16} />
-                </button>
+                </AdminDeleteButton>
               )}
             </div>
           </div>

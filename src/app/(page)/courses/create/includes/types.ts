@@ -50,6 +50,7 @@ export type BasicInfo = {
 export type CourseFiles = {
   thumbnail: File | null;
   coverImage: File | null;
+  promoVideoThumbnail: File | null;
   syllabusPdf: File | null;
 };
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { FileText, Plus, ExternalLink, Trash2 } from "lucide-react";
 import { useGetResourcesQuery, useDeleteResourceMutation } from "@/redux/api/resourcesApi";
 import { usePermissions } from "@/hooks/use-permissions";
+import AdminDeleteButton from "@/components/admin-delete-button";
 import EmptyState from "./empty-state";
 import AddResourceModal from "./add-resource-modal";
 
@@ -68,15 +69,15 @@ export default function ResourcesTab({ courseId }: { courseId: number }) {
                     </a>
                   )}
                   {hasPermission("can_manage_course_resources") && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (confirm(`"${resource.title}" মুছে ফেলতে চান?`)) deleteResource(resource.id);
-                      }}
+                    <AdminDeleteButton
+                      itemName={resource.title}
+                      itemType="রিসোর্স"
+                      impact="এই রিসোর্সটি শিক্ষার্থীদের কোর্স ম্যাটেরিয়াল থেকে মুছে যাবে।"
+                      onDelete={() => deleteResource(resource.id).unwrap()}
                       className="flex size-9 items-center justify-center rounded-xl border border-red-600/40 bg-red-600/10 text-red-600"
                     >
                       <Trash2 size={15} />
-                    </button>
+                    </AdminDeleteButton>
                   )}
                 </div>
               </div>
