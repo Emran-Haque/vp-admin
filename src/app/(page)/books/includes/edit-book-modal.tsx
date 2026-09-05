@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { extractErrorMessage } from "@/lib/api-error";
 import ImageSizeHint from "@/components/image-size-hint";
 import { X, Save, AlertTriangle, Upload, BookOpen, FileText, ExternalLink, HelpCircle, Plus, Trash2 } from "lucide-react";
 import { useUpdateBookMutation, useGetBookCategoriesQuery, type Book } from "@/redux/api/booksApi";
@@ -29,7 +30,7 @@ import {
 } from "./book-section-editors";
 
 /** Matches the public site's default heading when `includes_title` is blank. */
-const DEFAULT_INCLUDES_TITLE = "এই বইয়ে যা থাকছে";
+const DEFAULT_INCLUDES_TITLE = "এই বইয়ে যা থাকছে";
 
 
 export default function EditBookModal({ book, onClose }: { book: Book; onClose: () => void }) {
@@ -40,6 +41,7 @@ export default function EditBookModal({ book, onClose }: { book: Book; onClose: 
   const text = (value: string | number | null | undefined) =>
     value === null || value === undefined ? "" : String(value);
 
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [title, setTitle] = useState(text(book.title));
   const [category, setCategory] = useState(text(book.category));
   const [description, setDescription] = useState(text(book.description));
@@ -119,6 +121,7 @@ export default function EditBookModal({ book, onClose }: { book: Book; onClose: 
   const [updateBook, { isLoading, isError }] = useUpdateBookMutation();
 
   const handleSave = async () => {
+    setSaveError(null);
     const pricing = offerPreview(price, discountAmount);
     const formData = new FormData();
     formData.append("title", title);
@@ -180,8 +183,8 @@ export default function EditBookModal({ book, onClose }: { book: Book; onClose: 
       }
 
       onClose();
-    } catch {
-      // error state shown inline below
+    } catch (err) {
+      setSaveError(extractErrorMessage(err));
     }
   };
 
@@ -205,10 +208,12 @@ export default function EditBookModal({ book, onClose }: { book: Book; onClose: 
         </div>
 
         <div className="flex flex-1 flex-col gap-3.5 overflow-y-auto p-7">
-          {isError && (
+          {(isError || saveError) && (
             <div className="flex items-start gap-2 rounded-[10px] border border-red-500/30 bg-red-500/5 p-3">
               <AlertTriangle size={16} className="mt-0.5 shrink-0 text-red-500" />
-              <p className="text-xs text-red-500">বই সংরক্ষণ করা যায়নি। তথ্য ও API সার্ভার সংযোগ যাচাই করুন।</p>
+              <p className="text-xs text-red-500">
+                {saveError || "বই সংরক্ষণ করা যায়নি। তথ্য ও API সার্ভার সংযোগ যাচাই করুন।"}
+              </p>
             </div>
           )}
 
@@ -312,7 +317,7 @@ export default function EditBookModal({ book, onClose }: { book: Book; onClose: 
 
           <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
             <div>
-              <label className="block pb-1.5 text-xs font-semibold text-slate-400">বইয়ের মূল দাম লিখুন (৳)</label>
+              <label className="block pb-1.5 text-xs font-semibold text-slate-400">বইয়ের মূল দাম লিখুন (৳)</label>
               <input
                 type="number"
                 value={price}
@@ -321,7 +326,7 @@ export default function EditBookModal({ book, onClose }: { book: Book; onClose: 
               />
             </div>
             <div>
-              <label className="block pb-1.5 text-xs font-semibold text-slate-400">কত টাকা ছাড় দেবেন? (৳)</label>
+              <label className="block pb-1.5 text-xs font-semibold text-slate-400">কত টাকা ছাড় দেবেন? (৳)</label>
               <input
                 type="number"
                 value={discountAmount}
@@ -332,9 +337,9 @@ export default function EditBookModal({ book, onClose }: { book: Book; onClose: 
           </div>
 
           <div className="rounded-[12px] border border-blue-500/20 bg-blue-500/10 p-3 text-sm leading-6 text-slate-300">
-            <p className="font-semibold text-blue-100">ওয়েবসাইটে দাম এভাবে দেখাবে</p>
+            <p className="font-semibold text-blue-100">ওয়েবসাইটে দাম এভাবে দেখাবে</p>
             <p className="mt-1">
-              ছাড়ের পর দাম {formatBanglaMoney(pricingPreview.salePrice)} · ছাড়{" "}
+              ছাড়ের পর দাম {formatBanglaMoney(pricingPreview.salePrice)} · ছাড়{" "}
               {formatBanglaMoney(pricingPreview.discountAmount)} (
               {pricingPreview.percent.toLocaleString("bn-BD", { maximumFractionDigits: 2 })}%)
               {pricingPreview.hasOffer ? ` · আগের দাম ${formatBanglaMoney(pricingPreview.oldPrice)}` : ""}
@@ -454,7 +459,7 @@ export default function EditBookModal({ book, onClose }: { book: Book; onClose: 
 
           <IncludesEditor
             items={includes}
-            label="এই বইয়ে যা থাকছে"
+            label="এই বইয়ে যা থাকছে"
             onItemsChange={setIncludes}
             onTitleChange={setIncludesTitle}
             title={includesTitle}
@@ -497,7 +502,7 @@ export default function EditBookModal({ book, onClose }: { book: Book; onClose: 
                   type="text"
                   value={faq.question}
                   onChange={(e) => handleUpdateFaq(faq.id, "question", e.target.value)}
-                  placeholder="যেমন: এই বইটি কোন বিষয়ের জন্য উপযোগী?"
+                  placeholder="যেমন: এই বইটি কোন বিষয়ের জন্য উপযোগী?"
                   className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none"
                 />
                 <textarea
@@ -524,7 +529,7 @@ export default function EditBookModal({ book, onClose }: { book: Book; onClose: 
                 className="mt-1 size-4 cursor-pointer accent-blue-500"
               />
               <span>
-                <span className="block text-sm font-semibold text-slate-100">ওয়েবসাইটে বইটি দেখান</span>
+                <span className="block text-sm font-semibold text-slate-100">ওয়েবসাইটে বইটি দেখান</span>
                 <span className="mt-1 block text-xs leading-5 text-slate-400">বন্ধ করলে বইটি স্টোর ও ডিটেইল পেজে দেখা যাবে না।</span>
               </span>
             </label>
@@ -537,7 +542,7 @@ export default function EditBookModal({ book, onClose }: { book: Book; onClose: 
               />
               <span>
                 <span className="block text-sm font-semibold text-slate-100">বিশেষ বই হিসেবে হাইলাইট করুন</span>
-                <span className="mt-1 block text-xs leading-5 text-slate-400">চালু করলে বইটি ফিচার্ড/প্রাধান্য পাওয়া তালিকায় দেখাবে।</span>
+                <span className="mt-1 block text-xs leading-5 text-slate-400">চালু করলে বইটি ফিচার্ড/প্রাধান্য পাওয়া তালিকায় দেখাবে।</span>
               </span>
             </label>
           </div>
