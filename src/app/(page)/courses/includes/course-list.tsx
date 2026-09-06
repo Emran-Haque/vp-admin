@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, Video, HelpCircle, ClipboardList, Users, Clock, Pencil, Trash2, Sparkles, ShieldCheck, type LucideIcon } from "lucide-react";
-import { useGetCoursesQuery, useDeleteCourseMutation, useUpdateCourseMutation, type Course } from "@/redux/api/coursesApi";
+import { BookOpen, Video, HelpCircle, ClipboardList, Users, Clock, Pencil, Trash2, Sparkles, ShieldCheck, Eye, EyeOff, type LucideIcon } from "lucide-react";
+import { useGetCoursesQuery, useDeleteCourseMutation, usePublishCourseMutation, useUpdateCourseMutation, type Course } from "@/redux/api/coursesApi";
 import { usePermissions } from "@/hooks/use-permissions";
 import ConfirmDeleteDialog from "@/components/confirm-delete-dialog";
 import ErrorState from "@/components/error-state";
@@ -37,13 +37,14 @@ function resolveMediaUrl(value: string | null) {
 function priceLabel(course: Course) {
   if (course.is_free) return "ফ্রি";
   const price = Number(course.price);
-  if (!Number.isFinite(price) || price <= 0) return "মূল্য নির্ধারিত নয়";
+  if (!Number.isFinite(price) || price <= 0) return "মূল্য নির্ধারিত নয়";
   return `৳${price.toLocaleString("bn-BD")}`;
 }
 
 export default function CourseList() {
   const { data, isLoading, isError, error } = useGetCoursesQuery();
   const [deleteCourse, { isLoading: isDeleting }] = useDeleteCourseMutation();
+  const [publishCourse, { isLoading: isPublishing }] = usePublishCourseMutation();
   const [updateCourse] = useUpdateCourseMutation();
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
   const { hasPermission } = usePermissions();
@@ -102,7 +103,7 @@ export default function CourseList() {
               <div className="absolute bottom-5 left-5 right-5">
                 <span className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-blue-400/30 bg-blue-500/20 px-3 py-1 text-xs font-black text-blue-100 backdrop-blur">
                   <Sparkles size={13} />
-                  {course.duration || "সময় নির্ধারিত নয়"}
+                  {course.duration || "সময় নির্ধারিত নয়"}
                 </span>
                 <h2 className="line-clamp-2 text-2xl font-black leading-tight text-white">
                   {course.title}
@@ -112,7 +113,7 @@ export default function CourseList() {
 
             <div className="p-5">
               <p className="line-clamp-2 min-h-[48px] text-sm leading-6 text-slate-300">
-                {course.short_description || course.full_description || "কোর্সের সংক্ষিপ্ত বিবরণ এখনো যোগ করা হয়নি।"}
+                {course.short_description || course.full_description || "কোর্সের সংক্ষিপ্ত বিবরণ এখনো যোগ করা হয়নি।"}
               </p>
 
               <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-bold text-slate-400">
@@ -163,6 +164,33 @@ export default function CourseList() {
                   >
                     <Users size={15} />
                     ভর্তি তালিকা
+                  </button>
+                )}
+                {/* The backend has always had a publish toggle; nothing in the
+                    UI called it, so a course could only ever be published from
+                    the last step of the create wizard — and never afterwards. */}
+                {hasPermission("can_publish_course") && (
+                  <button
+                    type="button"
+                    disabled={isPublishing}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      void publishCourse(course.id);
+                    }}
+                    title={
+                      course.is_published
+                        ? "শিক্ষার্থীরা এখন কোর্সটি দেখতে পাচ্ছে"
+                        : "পাবলিশ করলে শিক্ষার্থীরা কোর্সটি দেখতে পাবে"
+                    }
+                    className={`flex h-10 cursor-pointer items-center gap-2 rounded-xl border px-3 text-xs font-bold transition-colors duration-200 disabled:opacity-60 ${
+                      course.is_published
+                        ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
+                        : "border-slate-800 text-slate-300 hover:bg-white/5"
+                    }`}
+                  >
+                    {course.is_published ? <Eye size={15} /> : <EyeOff size={15} />}
+                    {course.is_published ? "পাবলিশড" : "পাবলিশ করুন"}
                   </button>
                 )}
                 {hasPermission("can_edit_course") && (
@@ -235,7 +263,7 @@ export default function CourseList() {
         itemType="কোর্স"
         itemName={courseToDelete?.title || ""}
         isLoading={isDeleting}
-        impact="কোর্সটি মুছে ফেললে ক্লাস, ম্যাটেরিয়াল, ভর্তি তথ্য এবং সংশ্লিষ্ট কনটেন্টে প্রভাব পড়তে পারে।"
+        impact="কোর্সটি মুছে ফেললে ক্লাস, ম্যাটেরিয়াল, ভর্তি তথ্য এবং সংশ্লিষ্ট কনটেন্টে প্রভাব পড়তে পারে।"
         onClose={() => setCourseToDelete(null)}
         onConfirm={async () => {
           if (!courseToDelete) return;
