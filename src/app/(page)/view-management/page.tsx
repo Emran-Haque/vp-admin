@@ -6,6 +6,7 @@ import type { LandingHeroKey, StaticPageKey } from "@/redux/api/contentApi";
 import AboutModal from "./includes/about-modal";
 import BannerModal from "./includes/banner-modal";
 import FooterModal from "./includes/footer-modal";
+import HomeStatsModal from "./includes/home-stats-modal";
 import LandingHeroModal from "./includes/landing-hero-modal";
 import StaticPageModal from "./includes/static-page-modal";
 import SuccessStoriesModal from "./includes/success-stories-modal";
@@ -140,6 +141,9 @@ export default function ViewManagementPage() {
         <WhyPlatformModal onClose={() => setTarget(null)} />
       ) : null}
       {target?.kind === "about" ? <AboutModal onClose={() => setTarget(null)} /> : null}
+      {target?.kind === "homeStats" ? (
+        <HomeStatsModal onClose={() => setTarget(null)} />
+      ) : null}
       {target?.kind === "successStories" ? (
         <SuccessStoriesModal onClose={() => setTarget(null)} />
       ) : null}

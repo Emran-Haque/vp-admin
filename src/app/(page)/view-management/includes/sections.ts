@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   BookOpen,
   FileText,
   GraduationCap,
@@ -23,6 +24,7 @@ export type ViewTarget =
   | { kind: "banner" }
   | { kind: "whyPlatform" }
   | { kind: "about" }
+  | { kind: "homeStats" }
   | { kind: "successStories" }
   | { kind: "footer" }
   | { kind: "landingHero"; pageKey: string }
@@ -76,6 +78,14 @@ export const VIEW_SECTIONS: ViewSection[] = [
         description: "সুবিধার কার্ডগুলো",
         icon: Sparkles,
         target: { kind: "whyPlatform" },
+        path: "/",
+      },
+      {
+        id: "stats",
+        label: "সাইট পরিসংখ্যান",
+        description: "কোর্স, পরীক্ষা, শিক্ষার্থী ও শিক্ষকের সংখ্যা",
+        icon: BarChart3,
+        target: { kind: "homeStats" },
         path: "/",
       },
       {

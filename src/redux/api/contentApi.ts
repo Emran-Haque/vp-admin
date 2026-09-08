@@ -127,6 +127,33 @@ export type StaticPage = {
 };
 export type UpdateStaticPageInput = Partial<Omit<StaticPage, "id" | "page_key">>;
 
+/**
+ * One home-page stat.
+ *
+ * `computed_value` is what the database actually says and `boost_value` is the
+ * head start an admin added on top. They are summed, never swapped — so a
+ * boosted counter still ticks up when a real record is created.
+ */
+export type HomeStat = {
+  key: string;
+  label: string;
+  default_label: string;
+  /** The real figure from the database. */
+  computed_value: number;
+  /** Added on top of it, so the counter keeps rising with real growth. */
+  boost_value: number;
+  /** What the site shows: computed_value + boost_value. */
+  value: number;
+  ordering: number;
+};
+
+export type HomeStatInput = {
+  key: string;
+  label?: string;
+  boost_value?: number;
+  ordering?: number;
+};
+
 /** Page keys that can carry an editable heading block. */
 export type LandingHeroKey =
   | "course"
@@ -352,6 +379,18 @@ export const contentApi = baseApi.injectEndpoints({
     }),
 
     // Home content
+    getHomeStats: builder.query<HomeStat[], void>({
+      query: () => "admin/home-content/stats/",
+      providesTags: [{ type: "HomeContent", id: "STATS" }],
+    }),
+    saveHomeStats: builder.mutation<HomeStat[], HomeStatInput[]>({
+      query: (body) => ({
+        url: "admin/home-content/stats/",
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: [{ type: "HomeContent", id: "STATS" }],
+    }),
     getLandingHeroes: builder.query<Paginated<LandingHero> | LandingHero[], void>({
       query: () => "admin/landing-heroes/",
       providesTags: [{ type: "HomeContent", id: "HEROES" }],
@@ -459,6 +498,8 @@ export const {
   useDeleteFaqMutation,
   useGetStaticPageQuery,
   useUpdateStaticPageMutation,
+  useGetHomeStatsQuery,
+  useSaveHomeStatsMutation,
   useGetLandingHeroesQuery,
   useSaveLandingHeroMutation,
   useGetHeroSlidesQuery,
