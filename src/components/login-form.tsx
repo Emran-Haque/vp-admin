@@ -44,10 +44,15 @@ function EyeIcon({ isVisible }: { isVisible: boolean }) {
 function describeLoginError(error: unknown): string {
   if (error && typeof error === "object" && "status" in error) {
     const status = (error as { status: unknown }).status;
-    if (status === "FETCH_ERROR") return "সার্ভারে সংযোগ করা যায়নি। ইন্টারনেট সংযোগ করুন।";
+    if (status === "FETCH_ERROR" || status === "TIMEOUT_ERROR") {
+      return "সার্ভারে সংযোগ হচ্ছে না। backend চালু আছে কিনা দেখুন।";
+    }
     if (status === 400 || status === 401) return "ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।";
+    if (typeof status === "number" && status >= 500) {
+      return "সার্ভারে সমস্যা হয়েছে। একটু পরে আবার চেষ্টা করুন।";
+    }
   }
-  return "লগইন করা যায়নি। আবার চেষ্টা করুন। ";
+  return "লগইন করা যায়নি। আবার চেষ্টা করুন।";
 }
 
 export function LoginForm() {

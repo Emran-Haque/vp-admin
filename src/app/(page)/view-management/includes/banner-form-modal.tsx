@@ -44,6 +44,7 @@ export default function BannerFormModal({
 
   useEffect(() => {
     if (!imageFile) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPreviewUrl(getMediaUrl(slide?.image));
       return;
     }

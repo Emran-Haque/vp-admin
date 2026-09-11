@@ -20,6 +20,7 @@ import { useGetStudentQuery } from "@/redux/api/studentsApi";
 import { usePermissions } from "@/hooks/use-permissions";
 import { statusOf, studentStatusStyles } from "@/lib/student-status";
 import StudentDetailModal from "../../../students/includes/student-detail-modal";
+import BulkEnrollmentImport from "./bulk-enrollment-import";
 
 function formatDate(value: string) {
   const date = new Date(value);
@@ -40,16 +41,18 @@ function sourceLabel(value: string) {
 
 export default function CourseEnrolledStudents({
   courseId,
+  courseTitle,
   verificationRequired,
 }: {
   courseId: number;
+  courseTitle: string;
   verificationRequired: boolean;
 }) {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
   const { hasPermission } = usePermissions();
-  const { data, isLoading, isError } = useGetCourseEnrollmentsQuery({
+  const { data, isLoading, isError, refetch } = useGetCourseEnrollmentsQuery({
     id: courseId,
     page,
   });
@@ -80,16 +83,23 @@ export default function CourseEnrolledStudents({
             {verificationRequired ? " · এই কোর্সে অ্যাডমিন ভেরিফিকেশন চালু আছে" : ""}
           </p>
         </div>
-        <label className="flex min-w-[260px] items-center gap-2 rounded-2xl border border-slate-800 bg-slate-950/35 px-3.5 py-2.5">
-          <Search size={15} className="text-slate-500" />
-          <input
-            type="search"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="নাম, ইমেইল বা ফোন খুঁজুন"
-            className="w-full bg-transparent text-sm text-blue-50 placeholder:text-slate-500 focus:outline-none"
+        <div className="flex flex-wrap items-center gap-2">
+          <BulkEnrollmentImport
+            courseId={courseId}
+            courseTitle={courseTitle}
+            onCompleted={() => void refetch()}
           />
-        </label>
+          <label className="flex min-w-[260px] items-center gap-2 rounded-2xl border border-slate-800 bg-slate-950/35 px-3.5 py-2.5">
+            <Search size={15} className="text-slate-500" />
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="নাম, ইমেইল বা ফোন খুঁজুন"
+              className="w-full bg-transparent text-sm text-blue-50 placeholder:text-slate-500 focus:outline-none"
+            />
+          </label>
+        </div>
       </div>
 
       <div className="mt-5 flex flex-col gap-3">

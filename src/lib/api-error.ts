@@ -1,3 +1,9 @@
+export function getApiErrorStatus(error: unknown): number | null {
+  if (typeof error !== "object" || error === null || !("status" in error)) return null;
+  const status = (error as { status?: unknown }).status;
+  return typeof status === "number" ? status : null;
+}
+
 export function extractErrorMessage(error: unknown): string {
   if (typeof error === "object" && error !== null && "status" in error) {
     const err = error as {
@@ -8,7 +14,7 @@ export function extractErrorMessage(error: unknown): string {
     };
 
     if (err.status === "FETCH_ERROR" || err.status === "TIMEOUT_ERROR" || err.status === "CUSTOM_ERROR") {
-      return typeof err.error === "string" ? err.error : "সার্ভারের সাথে সংযোগ করা যায়নি।";
+      return "সার্ভারে সংযোগ হচ্ছে না। backend চালু আছে কিনা দেখুন।";
     }
 
     if (err.status === "PARSING_ERROR") {
@@ -18,6 +24,9 @@ export function extractErrorMessage(error: unknown): string {
     }
 
     if (typeof err.status === "number") {
+      if (err.status === 429) {
+        return "একসঙ্গে অনেক অনুরোধ হয়েছে। একটু পরে আবার চেষ্টা করুন।";
+      }
       const data = err.data;
       if (typeof data === "string" && data) return `(${err.status}) ${data}`;
       if (data && typeof data === "object") {
@@ -32,14 +41,20 @@ export function extractErrorMessage(error: unknown): string {
           .filter((v): v is string => v !== null);
         if (fieldErrors.length) return `(${err.status}) ${fieldErrors.join(" | ")}`;
       }
-      return `HTTP ${err.status}`;
+      if (err.status >= 500) return "সার্ভারে সমস্যা হয়েছে। একটু পরে আবার চেষ্টা করুন।";
+      return `অনুরোধটি সম্পন্ন করা যায়নি (${err.status})।`;
     }
   }
 
   if (typeof error === "object" && error !== null && "message" in error) {
     const message = (error as { message?: unknown }).message;
-    if (typeof message === "string") return message;
+    if (typeof message === "string") {
+      if (/failed to fetch|networkerror|load failed/i.test(message)) {
+        return "সার্ভারে সংযোগ হচ্ছে না। backend চালু আছে কিনা দেখুন।";
+      }
+      return message;
+    }
   }
 
-  return "অজানা সমস্যা হয়েছে।";
+  return "অনুরোধটি সম্পন্ন করা যায়নি।";
 }

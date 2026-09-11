@@ -2,7 +2,8 @@ import { createApi, fetchBaseQuery, type BaseQueryFn, type FetchArgs, type Fetch
 import type { RootState } from "../store";
 import { logout } from "../slices/authSlice";
 
-export const API_BASE_URL = "https://api.vaiyaderpathshala.com/api/v1/";
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000/api/v1/";
 
 export function getMediaUrl(path: string | null | undefined): string | null {
   if (!path) return null;
@@ -48,6 +49,7 @@ export const baseApi = createApi({
     "CourseCategories",
     "CourseSubjects",
     "Enrollments",
+    "BulkEnrollments",
     "Classes",
     "CourseMaterials",
     "Resources",

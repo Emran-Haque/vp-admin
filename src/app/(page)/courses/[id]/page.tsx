@@ -75,6 +75,7 @@ export default function Page() {
       ) : (
         <CourseEnrolledStudents
           courseId={course.id}
+          courseTitle={course.title}
           verificationRequired={course.verification_required}
         />
       )}

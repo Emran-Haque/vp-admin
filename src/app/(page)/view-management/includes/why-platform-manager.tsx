@@ -66,6 +66,7 @@ export default function WhyPlatformManager({ embedded = false }: { embedded?: bo
 
   useEffect(() => {
     if (!section) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTitle(section.title || "");
     setDescription(section.description || "");
     setPromoVideoUrl(section.promo_video_url || "");

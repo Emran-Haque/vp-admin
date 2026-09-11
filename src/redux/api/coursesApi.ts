@@ -94,6 +94,42 @@ export type Enrollment = {
   student_phone?: string | null;
 };
 
+export type BulkEnrollmentIssue = {
+  row_number: number;
+  email: string;
+  phone: string;
+  status: string;
+  detail: string;
+};
+
+export type BulkEnrollmentJob = {
+  id: number;
+  course: number;
+  course_title: string;
+  uploaded_by_email: string | null;
+  original_filename: string;
+  status: "draft" | "queued" | "processing" | "completed" | "cancelled";
+  total_rows: number;
+  summary: {
+    ready_new: number;
+    ready_existing: number;
+    new_accounts: number;
+    existing_accounts: number;
+    already_enrolled: number;
+    invalid: number;
+    conflict: number;
+    completed: number;
+    failed: number;
+    message_failed: number;
+    messages_sent: number;
+    processable: number;
+  };
+  issues: BulkEnrollmentIssue[];
+  created_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+};
+
 export const coursesApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getCourses: builder.query<Paginated<Course>, CourseListParams | void>({
@@ -149,6 +185,45 @@ export const coursesApi = baseApi.injectEndpoints({
         { type: "Enrollments", id: courseId },
       ],
     }),
+    getBulkEnrollmentJobs: builder.query<Paginated<BulkEnrollmentJob>, number>({
+      query: (course) => ({ url: "admin/bulk-enrollments/", params: { course } }),
+      providesTags: [{ type: "BulkEnrollments", id: "LIST" }],
+    }),
+    getBulkEnrollmentJob: builder.query<BulkEnrollmentJob, number>({
+      query: (id) => `admin/bulk-enrollments/${id}/`,
+      providesTags: (_result, _error, id) => [{ type: "BulkEnrollments", id }],
+    }),
+    uploadBulkEnrollmentCsv: builder.mutation<BulkEnrollmentJob, FormData>({
+      query: (body) => ({ url: "admin/bulk-enrollments/", method: "POST", body }),
+      invalidatesTags: [{ type: "BulkEnrollments", id: "LIST" }],
+    }),
+    startBulkEnrollment: builder.mutation<BulkEnrollmentJob, number>({
+      query: (id) => ({ url: `admin/bulk-enrollments/${id}/start/`, method: "POST" }),
+      invalidatesTags: (_result, _error, id) => [
+        { type: "BulkEnrollments", id },
+        { type: "BulkEnrollments", id: "LIST" },
+      ],
+    }),
+    cancelBulkEnrollment: builder.mutation<BulkEnrollmentJob, number>({
+      query: (id) => ({ url: `admin/bulk-enrollments/${id}/cancel/`, method: "POST" }),
+      invalidatesTags: (_result, _error, id) => [
+        { type: "BulkEnrollments", id },
+        { type: "BulkEnrollments", id: "LIST" },
+      ],
+    }),
+    retryBulkEnrollmentMessages: builder.mutation<BulkEnrollmentJob, number>({
+      query: (id) => ({ url: `admin/bulk-enrollments/${id}/retry-messages/`, method: "POST" }),
+      invalidatesTags: (_result, _error, id) => [
+        { type: "BulkEnrollments", id },
+        { type: "BulkEnrollments", id: "LIST" },
+      ],
+    }),
+    downloadBulkEnrollmentReport: builder.mutation<string, number>({
+      query: (id) => ({
+        url: `admin/bulk-enrollments/${id}/report/`,
+        responseHandler: (response) => response.text(),
+      }),
+    }),
     getCourseCategories: builder.query<CourseCategory[] | Paginated<CourseCategory>, void>({
       query: () => "public/categories/",
       providesTags: ["CourseCategories"],
@@ -193,6 +268,13 @@ export const {
   usePublishCourseMutation,
   useGetCourseEnrollmentsQuery,
   useUpdateEnrollmentVerificationMutation,
+  useGetBulkEnrollmentJobsQuery,
+  useGetBulkEnrollmentJobQuery,
+  useUploadBulkEnrollmentCsvMutation,
+  useStartBulkEnrollmentMutation,
+  useCancelBulkEnrollmentMutation,
+  useRetryBulkEnrollmentMessagesMutation,
+  useDownloadBulkEnrollmentReportMutation,
   useGetCourseCategoriesQuery,
   useGetAdminCourseCategoriesQuery,
   useCreateCourseCategoryMutation,
