@@ -189,8 +189,11 @@ export type LandingHeroInput = Partial<Omit<LandingHero, "id">> & {
   title: string;
 };
 
+export type HeroPageKey = "home" | LandingHeroKey;
+
 export type HeroContent = {
   id: number;
+  page_key: HeroPageKey;
   title: string;
   subtitle: string;
   image: string | null;
@@ -314,13 +317,13 @@ export const contentApi = baseApi.injectEndpoints({
       query: () => "admin/success-stories/",
       providesTags: [{ type: "SuccessStories", id: "LIST" }],
     }),
-    createSuccessStory: builder.mutation<SuccessStory, CreateSuccessStoryInput>({
+    createSuccessStory: builder.mutation<SuccessStory, CreateSuccessStoryInput | FormData>({
       query: (body) => ({ url: "admin/success-stories/", method: "POST", body }),
       invalidatesTags: [{ type: "SuccessStories", id: "LIST" }],
     }),
     updateSuccessStory: builder.mutation<
       SuccessStory,
-      { id: number; data: UpdateSuccessStoryInput }
+      { id: number; data: UpdateSuccessStoryInput | FormData }
     >({
       query: ({ id, data }) => ({
         url: `admin/success-stories/${id}/`,
@@ -404,8 +407,8 @@ export const contentApi = baseApi.injectEndpoints({
           : { url: "admin/landing-heroes/", method: "POST", body: data },
       invalidatesTags: [{ type: "HomeContent", id: "HEROES" }],
     }),
-    getHeroSlides: builder.query<Paginated<HeroContent>, void>({
-      query: () => "admin/home-content/hero/",
+    getHeroSlides: builder.query<Paginated<HeroContent>, HeroPageKey>({
+      query: (pageKey) => ({ url: "admin/home-content/hero/", params: { page_key: pageKey } }),
       providesTags: [{ type: "HomeContent", id: "HERO_LIST" }],
     }),
     createHeroSlide: builder.mutation<HeroContent, CreateHeroContentInput | FormData>({

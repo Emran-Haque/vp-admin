@@ -7,9 +7,11 @@ import { extractErrorMessage } from "@/lib/api-error";
 import { getMediaUrl } from "@/redux/api/baseApi";
 import {
   type HeroContent,
+  type HeroPageKey,
   useCreateHeroSlideMutation,
   useUpdateHeroSlideMutation,
 } from "@/redux/api/contentApi";
+import { getBannerImageSpec } from "./banner-image-spec";
 
 const fieldClass =
   "h-11 w-full rounded-lg border border-slate-700 bg-slate-950/60 px-3.5 text-sm text-slate-100 outline-none placeholder:text-slate-600 focus:border-sky-400/60 focus:ring-2 focus:ring-sky-400/10";
@@ -17,11 +19,13 @@ const fieldClass =
 type ImageInfo = { width: number; height: number };
 
 export default function BannerFormModal({
+  pageKey,
   slide,
   suggestedOrder,
   onClose,
   onSaved,
 }: {
+  pageKey: HeroPageKey;
   slide: HeroContent | null;
   suggestedOrder: number;
   onClose: () => void;
@@ -41,6 +45,7 @@ export default function BannerFormModal({
   const [createSlide, { isLoading: creating }] = useCreateHeroSlideMutation();
   const [updateSlide, { isLoading: updating }] = useUpdateHeroSlideMutation();
   const isBusy = creating || updating;
+  const imageSpec = getBannerImageSpec(pageKey);
 
   useEffect(() => {
     if (!imageFile) {
@@ -65,20 +70,20 @@ export default function BannerFormModal({
       setError("শুধু JPG, PNG, WebP বা অন্য ছবি ফাইল নির্বাচন করুন।");
       return;
     }
-    if (file.size > 20 * 1024 * 1024) {
-      setError("ছবির সাইজ ২০ MB-এর বেশি হতে পারবে না।");
+    if (file.size > 5 * 1024 * 1024) {
+      setError("ছবির সাইজ ৫ MB-এর বেশি হতে পারবে না।");
       return;
     }
 
     try {
       const info = await inspectImage(file);
       const ratio = info.width / info.height;
-      if (Math.abs(ratio - 16 / 9) > 0.025) {
-        setError(`ছবিটি 16:9 নয় (${info.width} × ${info.height})। ৪০০০ × ২২৫০ বা অন্য 16:9 ছবি দিন।`);
+      if (Math.abs(ratio - imageSpec.ratio) > 0.025) {
+        setError(`ছবিটি ${imageSpec.ratioLabel} নয় (${info.width} × ${info.height})। ${imageSpec.recommendedWidth} × ${imageSpec.recommendedHeight} বা অন্য ${imageSpec.ratioLabel} ছবি দিন।`);
         return;
       }
-      if (info.width < 1600 || info.height < 900) {
-        setImageWarning("ছবিটি ব্যবহার করা যাবে, তবে বড় স্ক্রিনে ঝাপসা হতে পারে। অন্তত ১৬০০ × ৯০০ ব্যবহার করুন।");
+      if (info.width < imageSpec.minimumWidth || info.height < imageSpec.minimumHeight) {
+        setImageWarning(`ছবিটি ব্যবহার করা যাবে, তবে বড় স্ক্রিনে ঝাপসা হতে পারে। অন্তত ${imageSpec.minimumWidth} × ${imageSpec.minimumHeight} ব্যবহার করুন।`);
       }
       setImageFile(file);
       setImageInfo(info);
@@ -109,6 +114,7 @@ export default function BannerFormModal({
     }
 
     const formData = new FormData();
+    formData.append("page_key", pageKey);
     formData.append("title", cleanTitle);
     formData.append("subtitle", subtitle.trim());
     formData.append("button_text", cleanButton);
@@ -154,7 +160,7 @@ export default function BannerFormModal({
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1.12fr)_minmax(280px,0.88fr)]">
             <div className="min-w-0">
               <label className="mb-2 block text-xs font-bold text-slate-300">ব্যানারের ছবি *</label>
-              <label className="group relative block aspect-video cursor-pointer overflow-hidden rounded-lg border border-dashed border-slate-600 bg-slate-950 hover:border-sky-400/60">
+              <label className={`group relative block cursor-pointer overflow-hidden rounded-lg border border-dashed border-slate-600 bg-slate-950 hover:border-sky-400/60 ${imageSpec.previewClass}`}>
                 {previewUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={previewUrl} alt="ব্যানার প্রিভিউ" className="h-full w-full object-cover" />
@@ -167,11 +173,11 @@ export default function BannerFormModal({
                 </span>
                 <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={(event) => chooseImage(event.target.files?.[0] ?? null)} />
               </label>
-              <ImageSizeHint kind="homeBanner" />
+              <ImageSizeHint kind={imageSpec.hintKind} />
               {imageInfo ? (
                 <p className="mt-1.5 inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-300">
                   <CheckCircle2 size={13} />
-                  {imageInfo.width} × {imageInfo.height} · 16:9 ঠিক আছে
+                  {imageInfo.width} × {imageInfo.height} · {imageSpec.ratioLabel} ঠিক আছে
                 </p>
               ) : null}
               {imageWarning ? <p className="mt-1.5 text-[11px] leading-5 text-amber-300">{imageWarning}</p> : null}

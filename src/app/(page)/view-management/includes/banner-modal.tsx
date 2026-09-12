@@ -1,6 +1,7 @@
 "use client";
 
 import { Layers } from "lucide-react";
+import type { HeroPageKey } from "@/redux/api/contentApi";
 import BannerManager from "./banner-manager";
 import ModalShell from "./modal-shell";
 
@@ -11,17 +12,25 @@ import ModalShell from "./modal-shell";
  * wrapper deliberately has no save button — there is nothing at this level to
  * save, and offering one would suggest the list below was a draft.
  */
-export default function BannerModal({ onClose }: { onClose: () => void }) {
+export default function BannerModal({
+  onClose,
+  pageKey = "home",
+  pageLabel = "হোমপেজ",
+}: {
+  onClose: () => void;
+  pageKey?: HeroPageKey;
+  pageLabel?: string;
+}) {
   return (
     <ModalShell
-      footerNote="হোমপেজের উপরের স্লাইড শো"
+      footerNote={`${pageLabel}-এর উপরের স্লাইড শো`}
       icon={<Layers size={17} />}
       onClose={onClose}
       size="lg"
       subtitle="স্লাইড যোগ, এডিট ও ক্রম পরিবর্তন করুন"
-      title="হোম ব্যানার"
+      title={`${pageLabel} ব্যানার`}
     >
-      <BannerManager embedded />
+      <BannerManager embedded pageKey={pageKey} pageLabel={pageLabel} />
     </ModalShell>
   );
 }

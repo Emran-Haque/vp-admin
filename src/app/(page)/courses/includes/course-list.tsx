@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, Video, HelpCircle, ClipboardList, Users, Clock, Pencil, Trash2, Sparkles, ShieldCheck, Eye, EyeOff, type LucideIcon } from "lucide-react";
+import { BookOpen, Video, HelpCircle, ClipboardList, Users, Clock, Pencil, Trash2, Sparkles, ShieldCheck, Eye, EyeOff, Copy, Check, type LucideIcon } from "lucide-react";
 import { useGetCoursesQuery, useDeleteCourseMutation, usePublishCourseMutation, useUpdateCourseMutation, type Course } from "@/redux/api/coursesApi";
 import { usePermissions } from "@/hooks/use-permissions";
 import ConfirmDeleteDialog from "@/components/confirm-delete-dialog";
@@ -23,6 +23,9 @@ const statBoxes: { key: keyof Course; label: string; icon: LucideIcon }[] = [
 ];
 
 const API_ORIGIN = "https://api.vaiyaderpathshala.com";
+const STUDENT_SITE_ORIGIN = (
+  process.env.NEXT_PUBLIC_STUDENT_SITE_URL ?? "https://www.vaiyaderpathshala.com"
+).replace(/\/$/, "");
 
 function resolveMediaUrl(value: string | null) {
   if (!value) return "";
@@ -47,6 +50,7 @@ export default function CourseList() {
   const [publishCourse, { isLoading: isPublishing }] = usePublishCourseMutation();
   const [updateCourse] = useUpdateCourseMutation();
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
+  const [copiedCourseId, setCopiedCourseId] = useState<number | null>(null);
   const { hasPermission } = usePermissions();
   const router = useRouter();
 
@@ -59,6 +63,20 @@ export default function CourseList() {
   }
 
   const courses = data?.results ?? [];
+
+  const copyCourseUrl = async (courseId: number) => {
+    const next = encodeURIComponent(`/my-courses/${courseId}`);
+    const url = `${STUDENT_SITE_ORIGIN}/auth/login?next=${next}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedCourseId(courseId);
+      window.setTimeout(() => {
+        setCopiedCourseId((current) => current === courseId ? null : current);
+      }, 2000);
+    } catch {
+      setCopiedCourseId(null);
+    }
+  };
 
   return (
     <>
@@ -90,11 +108,40 @@ export default function CourseList() {
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/45 to-slate-950/10" />
 
               <div className="absolute left-5 right-5 top-5 flex items-start justify-between gap-3">
-                <span
-                  className={`rounded-full px-3.5 py-1.5 text-xs font-black outline outline-1 outline-offset-[-1px] backdrop-blur ${status.className}`}
-                >
-                  {status.label}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`rounded-full px-3.5 py-1.5 text-xs font-black outline outline-1 outline-offset-[-1px] backdrop-blur ${status.className}`}
+                  >
+                    {status.label}
+                  </span>
+                  {hasPermission("can_edit_course") && (
+                    <label
+                      className={`flex h-8 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-xs font-bold backdrop-blur transition-colors duration-200 ${
+                        course.verification_required
+                          ? "border-amber-500/40 bg-amber-500/10 text-amber-300"
+                          : "border-white/15 bg-black/30 text-slate-300 hover:bg-black/45"
+                      }`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={course.verification_required}
+                        onChange={(e) => {
+                          void updateCourse({
+                            id: course.id,
+                            data: { verification_required: e.target.checked },
+                          });
+                        }}
+                        className="sr-only"
+                      />
+                      <ShieldCheck size={14} />
+                      {course.verification_required ? "ভেরিফাই লাগবে" : "সরাসরি অ্যাক্সেস"}
+                    </label>
+                  )}
+                </div>
                 <span className="rounded-full border border-white/15 bg-black/30 px-3.5 py-1.5 text-xs font-black text-white backdrop-blur">
                   {priceLabel(course)}
                 </span>
@@ -194,31 +241,23 @@ export default function CourseList() {
                   </button>
                 )}
                 {hasPermission("can_edit_course") && (
-                  <label
-                    className={`flex h-10 cursor-pointer items-center gap-2 rounded-xl border px-3 text-xs font-bold transition-colors duration-200 ${
-                      course.verification_required
-                        ? "border-amber-500/40 bg-amber-500/10 text-amber-300"
-                        : "border-slate-800 text-slate-300 hover:bg-white/5"
-                    }`}
+                  <button
+                    type="button"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
+                      void copyCourseUrl(course.id);
                     }}
+                    title={copiedCourseId === course.id ? "লিংক কপি হয়েছে" : "শিক্ষার্থীর লগইন লিংক কপি করুন"}
+                    aria-label={copiedCourseId === course.id ? "লিংক কপি হয়েছে" : `${course.title} কোর্সের শিক্ষার্থী লিংক কপি করুন`}
+                    className={`flex size-10 cursor-pointer items-center justify-center rounded-xl border transition-colors duration-200 ${
+                      copiedCourseId === course.id
+                        ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
+                        : "border-slate-800 text-blue-50 hover:bg-white/5"
+                    }`}
                   >
-                    <input
-                      type="checkbox"
-                      checked={course.verification_required}
-                      onChange={(e) => {
-                        void updateCourse({
-                          id: course.id,
-                          data: { verification_required: e.target.checked },
-                        });
-                      }}
-                      className="sr-only"
-                    />
-                    <ShieldCheck size={15} />
-                    {course.verification_required ? "ভেরিফাই লাগবে" : "সরাসরি অ্যাক্সেস"}
-                  </label>
+                    {copiedCourseId === course.id ? <Check size={16} /> : <Copy size={16} />}
+                  </button>
                 )}
                 {hasPermission("can_edit_course") && (
                   <button

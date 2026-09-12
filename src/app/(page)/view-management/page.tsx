@@ -136,7 +136,13 @@ export default function ViewManagementPage() {
         </section>
       </div>
 
-      {target?.kind === "banner" ? <BannerModal onClose={() => setTarget(null)} /> : null}
+      {target?.kind === "banner" ? (
+        <BannerModal
+          onClose={() => setTarget(null)}
+          pageKey={target.pageKey}
+          pageLabel={target.pageLabel}
+        />
+      ) : null}
       {target?.kind === "whyPlatform" ? (
         <WhyPlatformModal onClose={() => setTarget(null)} />
       ) : null}

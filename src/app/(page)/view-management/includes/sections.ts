@@ -14,6 +14,7 @@ import {
   Video,
   type LucideIcon,
 } from "lucide-react";
+import type { HeroPageKey } from "@/redux/api/contentApi";
 
 /**
  * What a click on a card opens. Each variant carries just enough to identify
@@ -21,7 +22,7 @@ import {
  * state instead of a boolean per section.
  */
 export type ViewTarget =
-  | { kind: "banner" }
+  | { kind: "banner"; pageKey: HeroPageKey; pageLabel: string }
   | { kind: "whyPlatform" }
   | { kind: "about" }
   | { kind: "homeStats" }
@@ -69,7 +70,7 @@ export const VIEW_SECTIONS: ViewSection[] = [
         label: "হোম ব্যানার",
         description: "উপরের স্লাইড শো — ছবি, লেখা ও বাটন",
         icon: Layers,
-        target: { kind: "banner" },
+        target: { kind: "banner", pageKey: "home", pageLabel: "হোমপেজ" },
         path: "/",
       },
       {
@@ -121,12 +122,28 @@ export const VIEW_SECTIONS: ViewSection[] = [
     blurb: "কোর্স তালিকার পেজ",
     items: [
       {
+        id: "course-banner",
+        label: "পেজ ব্যানার",
+        description: "কোর্স পেজের ছবির স্লাইড শো",
+        icon: Layers,
+        target: { kind: "banner", pageKey: "course", pageLabel: "কোর্স পেজ" },
+        path: "/course",
+      },
+      {
         id: "course-hero",
         label: "পেজ হেডিং",
         description: "উপরের শিরোনাম, বিবরণ ও বাটন",
         icon: FileText,
         target: { kind: "landingHero", pageKey: "course" },
         path: "/course",
+      },
+      {
+        id: "free-class-banner",
+        label: "ফ্রি ক্লাস ব্যানার",
+        description: "ফ্রি ক্লাস পেজের ছবির স্লাইড শো",
+        icon: Layers,
+        target: { kind: "banner", pageKey: "free_class", pageLabel: "ফ্রি ক্লাস পেজ" },
+        path: "/free-class",
       },
       {
         id: "free-class-hero",
@@ -145,6 +162,14 @@ export const VIEW_SECTIONS: ViewSection[] = [
     blurb: "পরীক্ষা ব্যাচ তালিকার পেজ",
     items: [
       {
+        id: "batch-banner",
+        label: "পেজ ব্যানার",
+        description: "পরীক্ষা ব্যাচ পেজের ছবির স্লাইড শো",
+        icon: Layers,
+        target: { kind: "banner", pageKey: "exam_batch", pageLabel: "পরীক্ষা ব্যাচ পেজ" },
+        path: "/exam-batch",
+      },
+      {
         id: "batch-hero",
         label: "পেজ হেডিং",
         description: "উপরের শিরোনাম, বিবরণ ও বাটন",
@@ -160,6 +185,14 @@ export const VIEW_SECTIONS: ViewSection[] = [
     icon: BookOpen,
     blurb: "বই তালিকার পেজ",
     items: [
+      {
+        id: "book-banner",
+        label: "পেজ ব্যানার",
+        description: "বুক স্টোরের ছবির স্লাইড শো",
+        icon: Layers,
+        target: { kind: "banner", pageKey: "book_store", pageLabel: "বুক স্টোর পেজ" },
+        path: "/book-store",
+      },
       {
         id: "book-hero",
         label: "পেজ হেডিং",
@@ -177,12 +210,28 @@ export const VIEW_SECTIONS: ViewSection[] = [
     blurb: "টিম ও সাফল্য পেজের হেডিং",
     items: [
       {
+        id: "team-banner",
+        label: "মেন্টর পেজ ব্যানার",
+        description: "মেন্টর পেজের ছবির স্লাইড শো",
+        icon: Layers,
+        target: { kind: "banner", pageKey: "team", pageLabel: "মেন্টর পেজ" },
+        path: "/team",
+      },
+      {
         id: "team-hero",
         label: "মেন্টর পেজ হেডিং",
         description: "টিম পেজের উপরের অংশ",
         icon: Users,
         target: { kind: "landingHero", pageKey: "team" },
         path: "/team",
+      },
+      {
+        id: "success-banner",
+        label: "সাফল্য পেজ ব্যানার",
+        description: "সাফল্য পেজের ছবির স্লাইড শো",
+        icon: Layers,
+        target: { kind: "banner", pageKey: "success", pageLabel: "সাফল্য পেজ" },
+        path: "/success",
       },
       {
         id: "success-hero",

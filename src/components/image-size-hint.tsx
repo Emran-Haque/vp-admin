@@ -23,6 +23,7 @@ export type ImageKind =
   | "liveClassThumbnail"
   | "classVideoThumbnail"
   | "homeBanner"
+  | "reducedHeroBanner"
   | "communityBanner";
 
 type Guidance = {
@@ -78,9 +79,14 @@ export const IMAGE_GUIDANCE: Record<ImageKind, Guidance> = {
       "Rendered as a small 76×44 poster beside the video title, so a light file is worth more than resolution.",
   },
   homeBanner: {
-    text: "প্রস্তাবিত সাইজ: ৪০০০ × ২২৫০ পিক্সেল (16:9) · JPG, PNG বা WebP · সর্বোচ্চ ২০ MB",
+    text: "প্রস্তাবিত সাইজ: ২৫৬০ × ১৪৪০ পিক্সেল (16:9) · WebP বা JPG · সর্বোচ্চ ৫ MB",
     reason:
-      "The homepage carousel preserves the full 16:9 artwork on mobile and uses the same ratio for its admin preview.",
+      "Every public-page carousel preserves the full 16:9 artwork on mobile and desktop.",
+  },
+  reducedHeroBanner: {
+    text: "প্রস্তাবিত সাইজ: ২৫৬০ × ১২২৪ পিক্সেল (320:153) · WebP বা JPG · সর্বোচ্চ ৫ MB",
+    reason:
+      "Course, exam batch, book store, team, and success carousels render at 15% less height than 16:9.",
   },
   communityBanner: {
     text: "প্রস্তাবিত সাইজ: ২৪০ × ২৪০ পিক্সেল (বর্গাকার) · সর্বোচ্চ ১০০ KB",

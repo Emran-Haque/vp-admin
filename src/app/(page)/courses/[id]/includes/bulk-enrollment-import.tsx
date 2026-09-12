@@ -38,6 +38,15 @@ const HEADER_ALIASES: Record<string, string> = {
   name: "full_name",
 };
 
+type EnrollmentMode = "manual" | "csv";
+
+const EMPTY_STUDENT = {
+  fullName: "",
+  email: "",
+  phone: "",
+  password: "",
+};
+
 function cleanHeader(value: string) {
   const header = value.trim().toLowerCase().replace(/[\s-]+/g, "_");
   return HEADER_ALIASES[header] ?? header;
@@ -138,6 +147,8 @@ export default function BulkEnrollmentImport({
   const refreshedJobId = useRef<number | null>(null);
   const { isAdmin } = usePermissions();
   const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<EnrollmentMode>("manual");
+  const [student, setStudent] = useState(EMPTY_STUDENT);
   const [jobId, setJobId] = useState<number | null>(null);
   const [preview, setPreview] = useState<BulkEnrollmentJob | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -177,11 +188,9 @@ export default function BulkEnrollmentImport({
   if (!isAdmin) return null;
   const latest = jobs?.results[0];
 
-  const chooseFile = async (file: File | null) => {
-    if (!file) return;
+  const uploadFile = async (file: File) => {
     setError(null);
     setPreview(null);
-    setOpen(true);
     const form = new FormData();
     form.append("course", String(courseId));
     try {
@@ -190,11 +199,50 @@ export default function BulkEnrollmentImport({
       const result = await uploadCsv(form).unwrap();
       setPreview(result);
       setJobId(result.id);
+      return true;
     } catch (err) {
       setError(extractErrorMessage(err));
-    } finally {
-      if (inputRef.current) inputRef.current.value = "";
+      return false;
     }
+  };
+
+  const chooseFile = async (file: File | null) => {
+    if (!file) return;
+    setOpen(true);
+    await uploadFile(file);
+    if (inputRef.current) inputRef.current.value = "";
+  };
+
+  const submitManual = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const values = {
+      fullName: student.fullName.trim(),
+      email: student.email.trim(),
+      phone: student.phone.trim(),
+      password: student.password,
+    };
+    if (Object.values(values).some((value) => !value)) {
+      setError("নাম, ইমেইল, ফোন ও পাসওয়ার্ড সবগুলো পূরণ করুন।");
+      return;
+    }
+
+    const csv = [
+      "full_name,email,phone,password",
+      [values.fullName, values.email, values.phone, values.password].map(csvCell).join(","),
+    ].join("\n");
+    const uploaded = await uploadFile(
+      new File([csv], "manual-student.csv", { type: "text/csv" }),
+    );
+    if (uploaded) setStudent(EMPTY_STUDENT);
+  };
+
+  const openAddModal = () => {
+    setMode("manual");
+    setStudent(EMPTY_STUDENT);
+    setJobId(null);
+    setPreview(null);
+    setError(null);
+    setOpen(true);
   };
 
   const start = async () => {
@@ -255,19 +303,11 @@ export default function BulkEnrollmentImport({
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
-          onClick={() => inputRef.current?.click()}
+          onClick={openAddModal}
           disabled={isUploading}
           className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-cyan-500 disabled:opacity-50"
         >
-          {isUploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-          CSV দিয়ে ভর্তি
-        </button>
-        <button
-          type="button"
-          onClick={sample}
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/40 px-4 py-2.5 text-sm font-bold text-slate-200 hover:bg-white/5"
-        >
-          <FileSpreadsheet size={16} /> নমুনা CSV
+          <UserPlus size={16} /> শিক্ষার্থী যোগ করুন
         </button>
         <input
           ref={inputRef}
@@ -282,11 +322,12 @@ export default function BulkEnrollmentImport({
             onClick={() => {
               setJobId(latest.id);
               setPreview(latest);
+              setError(null);
               setOpen(true);
             }}
             className="rounded-xl border border-slate-700 px-3 py-2.5 text-xs font-semibold text-slate-300 hover:bg-white/5"
           >
-            সর্বশেষ CSV: {statusText(latest.status)}
+            সর্বশেষ ভর্তি: {statusText(latest.status)}
           </button>
         ) : null}
       </div>
@@ -296,7 +337,7 @@ export default function BulkEnrollmentImport({
           <div className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-800 px-6 py-4">
               <div>
-                <h3 className="font-bold text-blue-50">CSV দিয়ে শিক্ষার্থী ভর্তি</h3>
+                <h3 className="font-bold text-blue-50">শিক্ষার্থী ভর্তি</h3>
                 <p className="mt-0.5 text-xs text-slate-400">কোর্স: {courseTitle}</p>
               </div>
               <button type="button" onClick={() => setOpen(false)} className="grid size-9 place-items-center rounded-xl bg-white/5 text-slate-400 hover:bg-white/10">
@@ -305,17 +346,107 @@ export default function BulkEnrollmentImport({
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto p-6">
+              {!current && !isUploading ? (
+                <div className="mb-6 grid grid-cols-2 gap-1 rounded-lg bg-slate-950/70 p-1" role="tablist" aria-label="শিক্ষার্থী যোগ করার পদ্ধতি">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={mode === "manual"}
+                    onClick={() => {
+                      setMode("manual");
+                      setError(null);
+                    }}
+                    className={`inline-flex items-center justify-center gap-2 rounded-md px-3 py-2.5 text-sm font-bold transition ${mode === "manual" ? "bg-cyan-600 text-white" : "text-slate-400 hover:bg-white/5 hover:text-slate-200"}`}
+                  >
+                    <UserPlus size={16} /> ম্যানুয়াল
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={mode === "csv"}
+                    onClick={() => {
+                      setMode("csv");
+                      setError(null);
+                    }}
+                    className={`inline-flex items-center justify-center gap-2 rounded-md px-3 py-2.5 text-sm font-bold transition ${mode === "csv" ? "bg-cyan-600 text-white" : "text-slate-400 hover:bg-white/5 hover:text-slate-200"}`}
+                  >
+                    <FileSpreadsheet size={16} /> CSV
+                  </button>
+                </div>
+              ) : null}
+
               {isUploading ? (
                 <div className="py-16 text-center text-sm text-slate-300">
                   <Loader2 size={30} className="mx-auto mb-3 animate-spin text-cyan-400" />
-                  CSV যাচাই করা হচ্ছে—এখনও কোনো অ্যাকাউন্ট বা ভর্তি তৈরি হচ্ছে না।
+                  তথ্য যাচাই করা হচ্ছে। এখনো কোনো অ্যাকাউন্ট বা ভর্তি তৈরি হচ্ছে না।
                 </div>
               ) : current ? (
                 <JobDetails job={current} />
+              ) : mode === "manual" ? (
+                <form onSubmit={(event) => void submitManual(event)} className="space-y-5">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className="block text-sm font-semibold text-slate-300">
+                      শিক্ষার্থীর নাম
+                      <input
+                        type="text"
+                        required
+                        autoComplete="name"
+                        value={student.fullName}
+                        onChange={(event) => setStudent((currentStudent) => ({ ...currentStudent, fullName: event.target.value }))}
+                        placeholder="পূর্ণ নাম"
+                        className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950/60 px-3.5 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-500"
+                      />
+                    </label>
+                    <label className="block text-sm font-semibold text-slate-300">
+                      ইমেইল
+                      <input
+                        type="email"
+                        required
+                        autoComplete="email"
+                        value={student.email}
+                        onChange={(event) => setStudent((currentStudent) => ({ ...currentStudent, email: event.target.value }))}
+                        placeholder="student@example.com"
+                        className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950/60 px-3.5 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-500"
+                      />
+                    </label>
+                    <label className="block text-sm font-semibold text-slate-300">
+                      ফোন নম্বর
+                      <input
+                        type="tel"
+                        required
+                        autoComplete="tel"
+                        value={student.phone}
+                        onChange={(event) => setStudent((currentStudent) => ({ ...currentStudent, phone: event.target.value }))}
+                        placeholder="01XXXXXXXXX"
+                        className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950/60 px-3.5 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-500"
+                      />
+                    </label>
+                    <label className="block text-sm font-semibold text-slate-300">
+                      পাসওয়ার্ড
+                      <input
+                        type="password"
+                        required
+                        autoComplete="new-password"
+                        value={student.password}
+                        onChange={(event) => setStudent((currentStudent) => ({ ...currentStudent, password: event.target.value }))}
+                        placeholder="নিরাপদ পাসওয়ার্ড"
+                        className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950/60 px-3.5 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-500"
+                      />
+                    </label>
+                  </div>
+                  <div className="flex justify-end">
+                    <button type="submit" disabled={isUploading} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-500 disabled:opacity-50">
+                      <CheckCircle2 size={16} /> তথ্য যাচাই করুন
+                    </button>
+                  </div>
+                </form>
               ) : (
-                <div className="rounded-2xl border border-dashed border-slate-700 p-8 text-center">
+                <div className="rounded-lg border border-dashed border-slate-700 p-8 text-center">
                   <FileSpreadsheet size={32} className="mx-auto text-slate-500" />
                   <p className="mt-3 text-sm text-slate-300">name, email, phone ও password কলামসহ CSV নির্বাচন করুন।</p>
+                  <button type="button" onClick={() => inputRef.current?.click()} className="mt-5 inline-flex items-center gap-2 rounded-lg bg-cyan-600 px-5 py-3 text-sm font-bold text-white hover:bg-cyan-500">
+                    <Upload size={16} /> CSV নির্বাচন করুন
+                  </button>
                 </div>
               )}
 
@@ -325,9 +456,11 @@ export default function BulkEnrollmentImport({
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-800 px-6 py-4">
-              <button type="button" onClick={sample} className="inline-flex items-center gap-2 rounded-xl border border-slate-700 px-4 py-2.5 text-xs font-bold text-slate-300 hover:bg-white/5">
-                <Download size={15} /> নমুনা CSV
-              </button>
+              {!current && mode === "csv" ? (
+                <button type="button" onClick={sample} className="inline-flex items-center gap-2 rounded-lg border border-slate-700 px-4 py-2.5 text-xs font-bold text-slate-300 hover:bg-white/5">
+                  <Download size={15} /> নমুনা CSV
+                </button>
+              ) : <span />}
               <div className="flex flex-wrap justify-end gap-2">
                 {current?.status === "draft" ? (
                   <>

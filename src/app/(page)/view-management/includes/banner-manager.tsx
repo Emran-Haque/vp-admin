@@ -8,14 +8,24 @@ import { PageLoader } from "@/components/loaders";
 import { getMediaUrl } from "@/redux/api/baseApi";
 import {
   type HeroContent,
+  type HeroPageKey,
   useDeleteHeroSlideMutation,
   useGetHeroSlidesQuery,
   useUpdateHeroSlideMutation,
 } from "@/redux/api/contentApi";
 import BannerFormModal from "./banner-form-modal";
+import { getBannerImageSpec } from "./banner-image-spec";
 
-export default function BannerManager({ embedded = false }: { embedded?: boolean } = {}) {
-  const { data, isLoading, isError, refetch } = useGetHeroSlidesQuery();
+export default function BannerManager({
+  embedded = false,
+  pageKey = "home",
+  pageLabel = "হোমপেজ",
+}: {
+  embedded?: boolean;
+  pageKey?: HeroPageKey;
+  pageLabel?: string;
+} = {}) {
+  const { data, isLoading, isError, refetch } = useGetHeroSlidesQuery(pageKey);
   const [updateSlide, { isLoading: updating }] = useUpdateHeroSlideMutation();
   const [deleteSlide, { isLoading: deleting }] = useDeleteHeroSlideMutation();
   const [editing, setEditing] = useState<HeroContent | null | undefined>();
@@ -27,6 +37,7 @@ export default function BannerManager({ embedded = false }: { embedded?: boolean
     [data],
   );
   const activeCount = slides.filter((slide) => slide.is_active).length;
+  const imageSpec = getBannerImageSpec(pageKey);
 
   const toggleVisibility = async (slide: HeroContent) => {
     setActionError(null);
@@ -80,7 +91,7 @@ export default function BannerManager({ embedded = false }: { embedded?: boolean
       <div className={`flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 ${embedded ? "px-0 pt-0 pb-4" : "bg-slate-900/70 px-4 py-4 sm:px-5"}`}>
         <div>
           <div className="flex flex-wrap items-center gap-2.5">
-            <h2 className="text-lg font-black text-slate-50">হোমপেজ ব্যানার</h2>
+            <h2 className="text-lg font-black text-slate-50">{pageLabel} ব্যানার</h2>
             <span className="rounded-full border border-slate-700 bg-slate-800 px-2 py-0.5 text-[11px] font-bold text-slate-300">
               মোট {slides.length.toLocaleString("bn-BD")}
             </span>
@@ -88,9 +99,7 @@ export default function BannerManager({ embedded = false }: { embedded?: boolean
               চালু {activeCount.toLocaleString("bn-BD")}
             </span>
           </div>
-          <p className="mt-1 text-xs leading-5 text-slate-400">
-            চালু ব্যানারগুলো ক্রম অনুযায়ী হোমপেজের ক্যারোসেলে দেখাবে।
-          </p>
+          <p className="mt-1 text-xs leading-5 text-slate-400">চালু ব্যানারগুলো ক্রম অনুযায়ী এই পেজের ক্যারোসেলে দেখাবে।</p>
         </div>
 
         <button type="button" onClick={() => setEditing(null)} className="inline-flex h-10 items-center gap-2 rounded-lg bg-sky-500 px-4 text-sm font-black text-slate-950 hover:bg-sky-400">
@@ -125,7 +134,7 @@ export default function BannerManager({ embedded = false }: { embedded?: boolean
               const imageUrl = getMediaUrl(slide.image);
               return (
                 <article key={slide.id} className="min-w-0 overflow-hidden rounded-lg border border-slate-800 bg-slate-900">
-                  <div className="relative aspect-video overflow-hidden bg-slate-950">
+                  <div className={`relative overflow-hidden bg-slate-950 ${imageSpec.previewClass}`}>
                     {imageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={imageUrl} alt={slide.title} className="h-full w-full object-cover" />
@@ -161,7 +170,7 @@ export default function BannerManager({ embedded = false }: { embedded?: boolean
       </div>
 
       {editing !== undefined ? (
-        <BannerFormModal slide={editing} suggestedOrder={slides.length} onClose={() => setEditing(undefined)} onSaved={() => setEditing(undefined)} />
+        <BannerFormModal pageKey={pageKey} slide={editing} suggestedOrder={slides.length} onClose={() => setEditing(undefined)} onSaved={() => setEditing(undefined)} />
       ) : null}
 
       <ConfirmDeleteDialog

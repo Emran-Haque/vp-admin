@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowLeft, Pencil, Plus, Star, Trash2, Trophy } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowLeft, ImagePlus, Pencil, Plus, Star, Trash2, Trophy, UploadCloud } from "lucide-react";
 import ConfirmDeleteDialog from "@/components/confirm-delete-dialog";
 import { extractErrorMessage } from "@/lib/api-error";
+import { getMediaUrl } from "@/redux/api/baseApi";
 import {
   type SuccessStory,
   useCreateSuccessStoryMutation,
@@ -42,12 +43,22 @@ export default function SuccessStoriesModal({ onClose }: { onClose: () => void }
   const [editing, setEditing] = useState<SuccessStory | "new" | null>(null);
   const [toDelete, setToDelete] = useState<SuccessStory | null>(null);
   const [draft, setDraft] = useState<Omit<SuccessStory, "id">>(EMPTY);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview?.startsWith("blob:")) URL.revokeObjectURL(imagePreview);
+    };
+  }, [imagePreview]);
 
   const openForm = (story: SuccessStory | "new") => {
     setEditing(story);
     setDraft(story === "new" ? EMPTY : { ...story });
+    setImageFile(null);
+    setImagePreview(story === "new" ? null : getMediaUrl(story.image));
     setError(null);
     setSuccess(null);
   };
@@ -55,17 +66,42 @@ export default function SuccessStoriesModal({ onClose }: { onClose: () => void }
   const set = <K extends keyof typeof draft>(key: K, value: (typeof draft)[K]) =>
     setDraft((current) => ({ ...current, [key]: value }));
 
+  const chooseImage = (file: File | null) => {
+    setError(null);
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("শুধু JPG, PNG, WebP বা অন্য ছবি ফাইল নির্বাচন করুন।");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setError("ছবির সাইজ ১০ MB-এর বেশি হতে পারবে না।");
+      return;
+    }
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
   const save = async () => {
     setError(null);
     if (!draft.student_name.trim()) {
       setError("শিক্ষার্থীর নাম দিতে হবে।");
       return;
     }
+    const formData = new FormData();
+    formData.append("student_name", draft.student_name.trim());
+    formData.append("university", draft.university.trim());
+    formData.append("unit", draft.unit.trim());
+    formData.append("merit_position", draft.merit_position.trim());
+    formData.append("comment", draft.comment.trim());
+    formData.append("video_url", draft.video_url.trim());
+    formData.append("year", draft.year.trim());
+    formData.append("is_featured", String(draft.is_featured));
+    if (imageFile) formData.append("image", imageFile);
     try {
       if (editing === "new") {
-        await createStory(draft).unwrap();
+        await createStory(formData).unwrap();
       } else if (editing) {
-        await updateStory({ id: editing.id, data: draft }).unwrap();
+        await updateStory({ id: editing.id, data: formData }).unwrap();
       }
       setEditing(null);
       setSuccess("সাফল্যের গল্প সেভ হয়ে গেছে।");
@@ -100,6 +136,33 @@ export default function SuccessStoriesModal({ onClose }: { onClose: () => void }
               <ArrowLeft size={13} />
               তালিকায় ফিরে যান
             </button>
+
+            <div>
+              <p className="mb-2 text-xs font-bold text-slate-300">শিক্ষার্থীর ছবি</p>
+              <label className="group flex min-h-32 cursor-pointer items-center gap-4 rounded-lg border border-dashed border-slate-700 bg-slate-950/40 p-3 hover:border-sky-400/60">
+                <span className="grid size-24 shrink-0 place-items-center overflow-hidden rounded-lg bg-slate-900 text-slate-600">
+                  {imagePreview ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={imagePreview} alt="শিক্ষার্থীর ছবির প্রিভিউ" className="h-full w-full object-cover" />
+                  ) : (
+                    <ImagePlus size={28} />
+                  )}
+                </span>
+                <span className="min-w-0">
+                  <span className="inline-flex items-center gap-2 text-sm font-bold text-sky-300">
+                    <UploadCloud size={16} />
+                    {imagePreview ? "ছবি পরিবর্তন করুন" : "ছবি যোগ করুন"}
+                  </span>
+                  <span className="mt-1 block text-[11px] leading-5 text-slate-500">JPG, PNG বা WebP · সর্বোচ্চ ১০ MB</span>
+                </span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={(event) => chooseImage(event.target.files?.[0] ?? null)}
+                />
+              </label>
+            </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="শিক্ষার্থীর নাম">
@@ -199,6 +262,14 @@ export default function SuccessStoriesModal({ onClose }: { onClose: () => void }
                   className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-950/40 px-3.5 py-3"
                   key={story.id}
                 >
+                  <span className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-lg bg-slate-900 text-slate-600">
+                    {getMediaUrl(story.image) ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={getMediaUrl(story.image) ?? ""} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <ImagePlus size={18} />
+                    )}
+                  </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-slate-100">
                       {story.student_name}
