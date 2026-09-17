@@ -42,6 +42,93 @@ export type Course = {
   includes: IncludeItem[];
 };
 
+export type CourseStudentPreview = {
+  read_only: true;
+  course: {
+    id: number;
+    title: string;
+    slug: string;
+    short_description: string;
+    full_description: string;
+    thumbnail: string | null;
+    cover_image: string | null;
+    is_free: boolean;
+    level: string;
+    duration: string;
+    total_classes: number;
+    total_quizzes: number;
+    total_assignments: number;
+    category: { id: number; name: string };
+    subjects: { id: number; name: string; description: string }[];
+    enrollment_is_verified: boolean;
+    activation_pending: boolean;
+  };
+  classes: {
+    id: number;
+    subject: number | null;
+    subject_name: string;
+    title: string;
+    description: string;
+    class_date: string | null;
+    start_time: string | null;
+    status: string;
+    is_live: boolean;
+    stream_status: string;
+    thumbnail: string | null;
+    videos: {
+      id: number;
+      title: string;
+      duration: string;
+      thumbnail: string | null;
+      video_url: string;
+      source_type: string;
+    }[];
+    class_materials: { id: number; title: string; kind: string }[];
+    quizzes: {
+      id: number;
+      title: string;
+      duration_minutes: number;
+      total_questions: number;
+      total_marks: string;
+      status: string;
+    }[];
+  }[];
+  resources: {
+    id: number;
+    title: string;
+    subject: number | null;
+    subject_name: string;
+    resource_type: string;
+    file: string | null;
+    external_link: string;
+    file_size: string;
+    download_count: number;
+    created_at: string;
+  }[];
+  exams: {
+    id: number;
+    title: string;
+    subject: string | null;
+    total_questions: number;
+    duration_minutes: number;
+    total_marks: string;
+    exam_date: string | null;
+    start_time: string | null;
+    status: string;
+  }[];
+  assignments: {
+    id: number;
+    title: string;
+    description: string;
+    subject_name: string;
+    course_class_title: string;
+    due_date: string | null;
+    max_marks: string;
+    status: string;
+    attachments: { id: number; filename: string; size: string }[];
+  }[];
+};
+
 export type CourseListParams = {
   category?: number;
   is_published?: boolean;
@@ -144,6 +231,10 @@ export const coursesApi = baseApi.injectEndpoints({
     }),
     getCourse: builder.query<Course, number>({
       query: (id) => `admin/courses/${id}/`,
+      providesTags: (_result, _error, id) => [{ type: "Courses", id }],
+    }),
+    getCourseStudentPreview: builder.query<CourseStudentPreview, number>({
+      query: (id) => `admin/courses/${id}/student-preview/`,
       providesTags: (_result, _error, id) => [{ type: "Courses", id }],
     }),
     createCourse: builder.mutation<Course, CreateCourseInput | FormData>({
@@ -271,6 +362,7 @@ export const coursesApi = baseApi.injectEndpoints({
 export const {
   useGetCoursesQuery,
   useGetCourseQuery,
+  useGetCourseStudentPreviewQuery,
   useCreateCourseMutation,
   useUpdateCourseMutation,
   useDeleteCourseMutation,

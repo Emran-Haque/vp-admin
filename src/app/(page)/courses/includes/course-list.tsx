@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, Video, HelpCircle, ClipboardList, Users, Clock, Pencil, Trash2, Sparkles, ShieldCheck, Eye, EyeOff, Copy, Check, type LucideIcon } from "lucide-react";
+import { BookOpen, Video, HelpCircle, ClipboardList, Users, Clock, Pencil, Trash2, Sparkles, ShieldCheck, Eye, EyeOff, Copy, Check, GraduationCap, type LucideIcon } from "lucide-react";
 import { useGetCoursesQuery, useDeleteCourseMutation, usePublishCourseMutation, useUpdateCourseMutation, type Course } from "@/redux/api/coursesApi";
 import { usePermissions } from "@/hooks/use-permissions";
 import ConfirmDeleteDialog from "@/components/confirm-delete-dialog";
 import ErrorState from "@/components/error-state";
 import { PageLoader } from "@/components/loaders";
+import StudentPreviewModal from "../[id]/includes/student-preview-modal";
 
 const statusStyles = {
   published: { label: "প্রকাশিত", className: "bg-white text-blue-500 outline-emerald-500/40" },
@@ -50,6 +51,7 @@ export default function CourseList() {
   const [publishCourse, { isLoading: isPublishing }] = usePublishCourseMutation();
   const [updateCourse] = useUpdateCourseMutation();
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
+  const [previewCourse, setPreviewCourse] = useState<Course | null>(null);
   const [copiedCourseId, setCopiedCourseId] = useState<number | null>(null);
   const { hasPermission } = usePermissions();
   const router = useRouter();
@@ -193,12 +195,12 @@ export default function CourseList() {
               ))}
             </div>
 
-            <div className="flex items-center justify-between gap-3 p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3 p-5">
               <span className="flex min-w-0 items-center gap-1.5 text-sm text-slate-300">
                 <Clock size={16} />
                 <span className="truncate">{course.duration || "—"}</span>
               </span>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-end gap-2">
                 {hasPermission("can_view_course_enrollments") && (
                   <button
                     type="button"
@@ -240,6 +242,19 @@ export default function CourseList() {
                     {course.is_published ? "পাবলিশড" : "পাবলিশ করুন"}
                   </button>
                 )}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setPreviewCourse(course);
+                  }}
+                  title={`${course.title} কোর্সের শিক্ষার্থী প্রিভিউ দেখুন`}
+                  className="flex h-10 cursor-pointer items-center gap-2 rounded-xl border border-blue-500/35 bg-blue-500/10 px-3 text-xs font-bold text-blue-200 transition-colors duration-200 hover:bg-blue-500/20"
+                >
+                  <GraduationCap size={15} />
+                  শিক্ষার্থী প্রিভিউ
+                </button>
                 {hasPermission("can_edit_course") && (
                   <button
                     type="button"
@@ -297,6 +312,12 @@ export default function CourseList() {
         </p>
       )}
       </section>
+      {previewCourse && (
+        <StudentPreviewModal
+          course={previewCourse}
+          onClose={() => setPreviewCourse(null)}
+        />
+      )}
       <ConfirmDeleteDialog
         open={Boolean(courseToDelete)}
         itemType="কোর্স"

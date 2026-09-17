@@ -1,8 +1,10 @@
 "use client";
 
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
+  Eye,
   Video,
   HelpCircle,
   ClipboardList,
@@ -10,6 +12,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useGetCourseCategoriesQuery, type Course } from "@/redux/api/coursesApi";
+import StudentPreviewModal from "./student-preview-modal";
 
 const levelLabels: Record<string, string> = {
   beginner: "শুরুর স্তর",
@@ -44,6 +47,8 @@ export default function CourseDetailsHeader({
   course: Course;
   subjectCount: number;
 }) {
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const closePreview = useCallback(() => setIsPreviewOpen(false), []);
   const { data: categoriesData } = useGetCourseCategoriesQuery();
   const categories = Array.isArray(categoriesData) ? categoriesData : categoriesData?.results ?? [];
   const categoryName = categories.find((c) => c.id === course.category)?.name;
@@ -96,6 +101,19 @@ export default function CourseDetailsHeader({
           ))}
         </div>
       </div>
+
+      <div className="mt-4 flex justify-end">
+        <button
+          className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/20"
+          onClick={() => setIsPreviewOpen(true)}
+          type="button"
+        >
+          <Eye size={16} />
+          শিক্ষার্থী প্রিভিউ
+        </button>
+      </div>
+
+      {isPreviewOpen && <StudentPreviewModal course={course} onClose={closePreview} />}
     </section>
   );
 }
