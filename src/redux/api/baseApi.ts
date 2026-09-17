@@ -3,18 +3,12 @@ import type { RootState } from "../store";
 import { logout } from "../slices/authSlice";
 
 const MAIN_API_BASE_URL = "https://api.vaiyaderpathshala.com/api/v1/";
-const LOCAL_API_BASE_URL = "http://127.0.0.1:8000/api/v1/";
 const configuredApiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
 const configuredForLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\//i.test(
   configuredApiBaseUrl ?? "",
 );
-const defaultApiBaseUrl =
-  process.env.NODE_ENV === "production" ? MAIN_API_BASE_URL : LOCAL_API_BASE_URL;
-
 export const API_BASE_URL =
-  process.env.NODE_ENV === "production" && configuredForLocalhost
-    ? MAIN_API_BASE_URL
-    : configuredApiBaseUrl || defaultApiBaseUrl;
+  configuredApiBaseUrl && !configuredForLocalhost ? configuredApiBaseUrl : MAIN_API_BASE_URL;
 
 export function getMediaUrl(path: string | null | undefined): string | null {
   if (!path) return null;
@@ -52,6 +46,7 @@ export const baseApi = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
   tagTypes: [
+    "Ledger",
     "Dashboard",
     "Permissions",
     "Students",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BookMarked,
   Calendar,
@@ -52,9 +52,20 @@ export default function CourseEnrolledStudents({
   const [search, setSearch] = useState("");
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
   const { hasPermission } = usePermissions();
+  // Debounced so typing does not fire a request per keystroke.
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search.trim());
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   const { data, isLoading, isError, refetch } = useGetCourseEnrollmentsQuery({
     id: courseId,
     page,
+    search: debouncedSearch || undefined,
   });
 
   if (!hasPermission("can_view_course_enrollments")) {
@@ -69,7 +80,6 @@ export default function CourseEnrolledStudents({
   }
 
   const enrollments = data?.results ?? [];
-  const trimmedSearch = search.trim().toLowerCase();
 
   return (
     <section className="rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
@@ -121,7 +131,6 @@ export default function CourseEnrolledStudents({
               enrollment={enrollment}
               key={enrollment.id}
               onSelect={() => setSelectedStudentId(enrollment.student)}
-              search={trimmedSearch}
               verificationRequired={verificationRequired}
             />
           ))
@@ -165,7 +174,6 @@ export default function CourseEnrolledStudents({
 function EnrollmentStudentRow({
   enrollment,
   onSelect,
-  search,
   verificationRequired,
 }: {
   enrollment: {
@@ -181,7 +189,6 @@ function EnrollmentStudentRow({
     student_phone?: string | null;
   };
   onSelect: () => void;
-  search: string;
   verificationRequired: boolean;
 }) {
   const { data: student, isLoading } = useGetStudentQuery(enrollment.student);
@@ -189,20 +196,6 @@ function EnrollmentStudentRow({
   const studentName = student?.full_name || enrollment.student_name || `শিক্ষার্থী #${enrollment.student}`;
   const studentEmail = student?.email || enrollment.student_email || "-";
   const studentPhone = student?.phone || enrollment.student_phone || "-";
-  const haystack = [
-    studentName,
-    studentEmail,
-    studentPhone,
-    student?.student_profile?.batch,
-    student?.student_profile?.institution,
-    String(enrollment.student),
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-
-  if (search && !haystack.includes(search)) return null;
-
   const status = student
     ? studentStatusStyles[statusOf(student)]
     : {

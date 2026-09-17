@@ -168,8 +168,17 @@ export const coursesApi = baseApi.injectEndpoints({
         { type: "Courses", id: "LIST" },
       ],
     }),
-    getCourseEnrollments: builder.query<Paginated<Enrollment>, { id: number; page?: number }>({
-      query: ({ id, page }) => ({ url: `admin/courses/${id}/enrollments/`, params: { page } }),
+    getCourseEnrollments: builder.query<
+      Paginated<Enrollment>,
+      { id: number; page?: number; search?: string }
+    >({
+      // `search` is sent to the server: filtering the returned page in the
+      // browser hid any student who was not on the page already loaded.
+      query: ({ id, page, search }) => ({
+        url: `admin/courses/${id}/enrollments/`,
+        // `q`, not `search`: the course viewset's SearchFilter claims `search`.
+        params: { page, ...(search ? { q: search } : {}) },
+      }),
       providesTags: (_result, _error, { id }) => [{ type: "Enrollments", id }],
     }),
     updateEnrollmentVerification: builder.mutation<

@@ -12,6 +12,7 @@ export * from "./examsApi";
 export * from "./assignmentsApi";
 export * from "./booksApi";
 export * from "./ordersApi";
+export * from "./ledgersApi";
 export * from "./noticesApi";
 export * from "./contentApi";
 export * from "./communityLinksApi";

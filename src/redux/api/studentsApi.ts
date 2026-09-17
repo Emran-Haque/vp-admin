@@ -32,6 +32,11 @@ export type StudentListParams = {
   search?: string;
   ordering?: string;
   page?: number;
+  /** Server allows up to 100. */
+  page_size?: number;
+  /** A course id keeps students actively enrolled in it; "none" keeps students
+   *  enrolled nowhere. Filtered server-side so it holds across pages. */
+  course?: number | "none";
 };
 
 export type CreateStudentInput = {

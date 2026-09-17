@@ -2,79 +2,39 @@
 
 import { GraduationCap, Mail, Phone, BookMarked, Calendar, Trash2, UserCheck, UserX } from "lucide-react";
 import {
-  useGetStudentsQuery,
   useDeleteStudentMutation,
   useDeactivateStudentMutation,
   useReactivateStudentMutation,
+  type Student,
 } from "@/redux/api/studentsApi";
-import { useGetCourseEnrollmentsQuery, useGetCoursesQuery, coursesApi } from "@/redux/api/coursesApi";
-import { useAppDispatch } from "@/redux/hooks";
 import { usePermissions } from "@/hooks/use-permissions";
 import { statusOf, studentStatusStyles } from "@/lib/student-status";
-import { NOT_ENROLLED_VALUE, type StatusFilter } from "./toolbar";
-import { STATUS_PARAMS } from "./status-params";
 import StudentDetailModal from "./student-detail-modal";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import ErrorState from "@/components/error-state";
 import AdminDeleteButton from "@/components/admin-delete-button";
 import { PageLoader } from "@/components/loaders";
 
 export default function StudentList({
-  search,
-  course,
-  status,
+  students,
+  isLoading,
+  isFetching,
+  isError,
+  error,
 }: {
-  search: string;
-  course: string;
-  status: StatusFilter;
+  students: Student[];
+  isLoading: boolean;
+  isFetching: boolean;
+  isError: boolean;
+  error: unknown;
 }) {
-  const { data, isLoading, isError, error } = useGetStudentsQuery({
-    search: search || undefined,
-    ...(status ? STATUS_PARAMS[status] : {}),
-  });
-  const { data: courseEnrollments } = useGetCourseEnrollmentsQuery(
-    { id: Number(course) },
-    { skip: !course || course === NOT_ENROLLED_VALUE }
-  );
-
-  const dispatch = useAppDispatch();
-  const { data: allCourses } = useGetCoursesQuery(undefined, { skip: course !== NOT_ENROLLED_VALUE });
-  const [notEnrolledResult, setNotEnrolledResult] = useState<{ course: string; ids: Set<number> } | null>(null);
-
-  useEffect(() => {
-    if (course !== NOT_ENROLLED_VALUE || !allCourses) return;
-    let cancelled = false;
-    (async () => {
-      const ids = new Set<number>();
-      for (const c of allCourses.results) {
-        let page = 1;
-        while (true) {
-          const result = await dispatch(
-            coursesApi.endpoints.getCourseEnrollments.initiate({ id: c.id, page })
-          ).unwrap();
-          result.results.forEach((e) => ids.add(e.student));
-          if (!result.next) break;
-          page += 1;
-        }
-      }
-      if (!cancelled) setNotEnrolledResult({ course, ids });
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [course, allCourses, dispatch]);
-
-  const enrolledAnywhereIds = notEnrolledResult?.course === course ? notEnrolledResult.ids : null;
-
   const [deleteStudent] = useDeleteStudentMutation();
   const [deactivateStudent] = useDeactivateStudentMutation();
   const [reactivateStudent] = useReactivateStudentMutation();
   const { hasPermission } = usePermissions();
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
 
-  const notEnrolledLoading = course === NOT_ENROLLED_VALUE && enrolledAnywhereIds === null;
-
-  if (isLoading || notEnrolledLoading) {
+  if (isLoading) {
     return <PageLoader label="শিক্ষার্থীদের তালিকা লোড হচ্ছে…" />;
   }
 
@@ -84,103 +44,99 @@ export default function StudentList({
     );
   }
 
-  const enrolledStudentIds =
-    course && course !== NOT_ENROLLED_VALUE
-      ? new Set((courseEnrollments?.results ?? []).map((e) => e.student))
-      : null;
-
-  const students = (data?.results ?? []).filter((student) => {
-    if (course === NOT_ENROLLED_VALUE) return !enrolledAnywhereIds?.has(student.id);
-    return !enrolledStudentIds || enrolledStudentIds.has(student.id);
-  });
-
   return (
-    <section className="flex flex-col gap-6">
-      {students.map((student) => {
-        const status = studentStatusStyles[statusOf(student)];
-        return (
-          <div
-            key={student.id}
-            onClick={() => setSelectedStudentId(student.id)}
-            className="flex cursor-pointer flex-wrap items-center gap-6 rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)] transition-colors hover:border-slate-700"
-          >
-            <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-sky-500">
-              <GraduationCap size={28} className="text-white" strokeWidth={2} />
-            </span>
+    <>
+      {/* Keep the previous page on screen, dimmed, while the next one loads. */}
+      <section
+        aria-busy={isFetching}
+        className={`flex flex-col gap-6 transition-opacity ${isFetching ? "opacity-50" : ""}`}
+      >
+        {students.map((student) => {
+          const status = studentStatusStyles[statusOf(student)];
+          return (
+            <div
+              key={student.id}
+              onClick={() => setSelectedStudentId(student.id)}
+              className="flex cursor-pointer flex-wrap items-center gap-6 rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)] transition-colors hover:border-slate-700"
+            >
+              <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-sky-500">
+                <GraduationCap size={28} className="text-white" strokeWidth={2} />
+              </span>
 
-            <div className="min-w-64 flex-1">
-              <div className="flex items-center gap-3">
-                <p className="text-lg font-semibold text-blue-50">{student.full_name}</p>
-                <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${status.className}`}>
-                  {status.label}
-                </span>
+              <div className="min-w-64 flex-1">
+                <div className="flex items-center gap-3">
+                  <p className="text-lg font-semibold text-blue-50">{student.full_name}</p>
+                  <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${status.className}`}>
+                    {status.label}
+                  </span>
+                </div>
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-slate-400">
+                  <span className="flex items-center gap-1">
+                    <Mail size={14} />
+                    {student.email}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Phone size={14} />
+                    {student.phone || "—"}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <BookMarked size={14} />
+                    {student.student_profile?.batch || student.student_profile?.institution || "—"}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Calendar size={14} />
+                    যোগদান: {new Date(student.created_at).toLocaleDateString("bn-BD")}
+                  </span>
+                </div>
               </div>
-              <div className="mt-1.5 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-slate-400">
-                <span className="flex items-center gap-1">
-                  <Mail size={14} />
-                  {student.email}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Phone size={14} />
-                  {student.phone || "—"}
-                </span>
-                <span className="flex items-center gap-1">
-                  <BookMarked size={14} />
-                  {student.student_profile?.batch || student.student_profile?.institution || "—"}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Calendar size={14} />
-                  যোগদান: {new Date(student.created_at).toLocaleDateString("bn-BD")}
-                </span>
+
+              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                {hasPermission("can_edit_student") &&
+                  (student.is_active ? (
+                    <button
+                      type="button"
+                      onClick={() => deactivateStudent(student.id)}
+                      title="নিষ্ক্রিয় করুন"
+                      className="flex size-10 items-center justify-center rounded-xl border border-amber-500/30 bg-amber-500/5 text-amber-500"
+                    >
+                      <UserX size={16} />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => reactivateStudent(student.id)}
+                      title="সক্রিয় করুন"
+                      className="flex size-10 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/5 text-emerald-500"
+                    >
+                      <UserCheck size={16} />
+                    </button>
+                  ))}
+                {hasPermission("can_delete_student") && (
+                  <AdminDeleteButton
+                    itemName={student.full_name}
+                    itemType="শিক্ষার্থী"
+                    impact="শিক্ষার্থীর অ্যাকাউন্ট ও সংশ্লিষ্ট অ্যাক্সেস স্থায়ীভাবে মুছে যেতে পারে।"
+                    onDelete={() => deleteStudent(student.id).unwrap()}
+                    className="flex size-10 items-center justify-center rounded-xl border border-red-500/20 bg-red-500/5 text-red-500"
+                  >
+                    <Trash2 size={16} />
+                  </AdminDeleteButton>
+                )}
               </div>
             </div>
+          );
+        })}
 
-            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-              {hasPermission("can_edit_student") &&
-                (student.is_active ? (
-                  <button
-                    type="button"
-                    onClick={() => deactivateStudent(student.id)}
-                    title="নিষ্ক্রিয় করুন"
-                    className="flex size-10 items-center justify-center rounded-xl border border-amber-500/30 bg-amber-500/5 text-amber-500"
-                  >
-                    <UserX size={16} />
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => reactivateStudent(student.id)}
-                    title="সক্রিয় করুন"
-                    className="flex size-10 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/5 text-emerald-500"
-                  >
-                    <UserCheck size={16} />
-                  </button>
-                ))}
-              {hasPermission("can_delete_student") && (
-                <AdminDeleteButton
-                  itemName={student.full_name}
-                  itemType="শিক্ষার্থী"
-                  impact="শিক্ষার্থীর অ্যাকাউন্ট ও সংশ্লিষ্ট অ্যাক্সেস স্থায়ীভাবে মুছে যেতে পারে।"
-                  onDelete={() => deleteStudent(student.id).unwrap()}
-                  className="flex size-10 items-center justify-center rounded-xl border border-red-500/20 bg-red-500/5 text-red-500"
-                >
-                  <Trash2 size={16} />
-                </AdminDeleteButton>
-              )}
-            </div>
-          </div>
-        );
-      })}
-
-      {students.length === 0 && (
-        <p className="rounded-2xl border border-dashed border-slate-800 p-8 text-center text-sm text-slate-400">
-          কোনো শিক্ষার্থী পাওয়া যায়নি।
-        </p>
-      )}
+        {students.length === 0 && (
+          <p className="rounded-2xl border border-dashed border-slate-800 p-8 text-center text-sm text-slate-400">
+            কোনো শিক্ষার্থী পাওয়া যায়নি।
+          </p>
+        )}
+      </section>
 
       {selectedStudentId !== null && (
         <StudentDetailModal studentId={selectedStudentId} onClose={() => setSelectedStudentId(null)} />
       )}
-    </section>
+    </>
   );
 }
