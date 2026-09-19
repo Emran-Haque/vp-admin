@@ -15,7 +15,7 @@ export type StudentProfile = {
 
 export type Student = {
   id: number;
-  email: string;
+  email: string | null;
   full_name: string;
   phone: string;
   role: string;
@@ -40,7 +40,7 @@ export type StudentListParams = {
 };
 
 export type CreateStudentInput = {
-  email: string;
+  email?: string | null;
   full_name: string;
   phone: string;
   password: string;

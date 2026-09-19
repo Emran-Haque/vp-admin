@@ -17,7 +17,7 @@ export default function AddStudentModal({ onClose }: { onClose: () => void }) {
     try {
       await createStudent({
         full_name: fullName,
-        email,
+        email: email.trim() || null,
         phone,
         password,
         is_verified: isVerified,
@@ -28,7 +28,7 @@ export default function AddStudentModal({ onClose }: { onClose: () => void }) {
     }
   };
 
-  const canSave = fullName.trim() && email.trim() && phone.trim() && password.trim().length >= 8;
+  const canSave = fullName.trim() && phone.trim() && password.length >= 8;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-800/95 p-4">
@@ -64,7 +64,7 @@ export default function AddStudentModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <div>
-            <label className="block pb-1.5 text-xs font-semibold text-slate-400">ইমেইল</label>
+            <label className="block pb-1.5 text-xs font-semibold text-slate-400">ইমেইল (ঐচ্ছিক)</label>
             <input
               type="email"
               value={email}
@@ -92,9 +92,10 @@ export default function AddStudentModal({ onClose }: { onClose: () => void }) {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="কমপক্ষে ৮ অক্ষর"
+                placeholder="৮ বা তার বেশি অক্ষর"
                 className="w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 placeholder:text-slate-200/50 focus:outline-none"
               />
+              <p className="mt-1.5 text-[11px] text-slate-500">কমপক্ষে ৮ অক্ষর।</p>
             </div>
           </div>
 

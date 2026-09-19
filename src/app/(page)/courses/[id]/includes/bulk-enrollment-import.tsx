@@ -30,10 +30,10 @@ import { exportBulkEnrollmentReportPdf } from "./bulk-enrollment-report-pdf";
 
 const SAMPLE = `name,email,phone,password
 Rahim Ahmed,rahim@example.com,01710000001,Rahim@12345
-Nusrat Jahan,nusrat@example.com,01710000002,Nusrat@12345`;
+Nusrat Jahan,,01710000002,12345678`;
 
 const ACTIVE = new Set(["queued", "processing"]);
-const REQUIRED_COLUMNS = ["full_name", "email", "phone", "password"];
+const REQUIRED_COLUMNS = ["full_name", "phone", "password"];
 const HEADER_ALIASES: Record<string, string> = {
   name: "full_name",
 };
@@ -70,7 +70,7 @@ async function normalizeCsvFile(file: File): Promise<File> {
   const headers = parsed.data[0].map(cleanHeader);
   const missing = REQUIRED_COLUMNS.filter((column) => !headers.includes(column));
   if (missing.length) {
-    throw new Error("CSV header দিন: name, email, phone, password");
+    throw new Error("CSV header দিন: name, phone, password — email ঐচ্ছিক");
   }
 
   const rows = parsed.data.slice(1).filter((row) =>
@@ -221,8 +221,12 @@ export default function BulkEnrollmentImport({
       phone: student.phone.trim(),
       password: student.password,
     };
-    if (Object.values(values).some((value) => !value)) {
-      setError("নাম, ইমেইল, ফোন ও পাসওয়ার্ড সবগুলো পূরণ করুন।");
+    if (!values.fullName || !values.phone || !values.password) {
+      setError("নাম, ফোন ও পাসওয়ার্ড পূরণ করুন। ইমেইল ঐচ্ছিক।");
+      return;
+    }
+    if (values.password.length < 8) {
+      setError("পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।");
       return;
     }
 
@@ -398,10 +402,9 @@ export default function BulkEnrollmentImport({
                       />
                     </label>
                     <label className="block text-sm font-semibold text-slate-300">
-                      ইমেইল
+                      ইমেইল (ঐচ্ছিক)
                       <input
                         type="email"
-                        required
                         autoComplete="email"
                         value={student.email}
                         onChange={(event) => setStudent((currentStudent) => ({ ...currentStudent, email: event.target.value }))}
@@ -429,9 +432,12 @@ export default function BulkEnrollmentImport({
                         autoComplete="new-password"
                         value={student.password}
                         onChange={(event) => setStudent((currentStudent) => ({ ...currentStudent, password: event.target.value }))}
-                        placeholder="নিরাপদ পাসওয়ার্ড"
+                        placeholder="৮ বা তার বেশি অক্ষর"
                         className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950/60 px-3.5 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-500"
                       />
+                      <span className="mt-1.5 block text-xs font-normal text-slate-500">
+                        কমপক্ষে ৮ অক্ষর।
+                      </span>
                     </label>
                   </div>
                   <div className="flex justify-end">
@@ -443,7 +449,7 @@ export default function BulkEnrollmentImport({
               ) : (
                 <div className="rounded-lg border border-dashed border-slate-700 p-8 text-center">
                   <FileSpreadsheet size={32} className="mx-auto text-slate-500" />
-                  <p className="mt-3 text-sm text-slate-300">name, email, phone ও password কলামসহ CSV নির্বাচন করুন।</p>
+                  <p className="mt-3 text-sm text-slate-300">name, phone ও password কলামসহ CSV নির্বাচন করুন। email কলাম ঐচ্ছিক।</p>
                   <button type="button" onClick={() => inputRef.current?.click()} className="mt-5 inline-flex items-center gap-2 rounded-lg bg-cyan-600 px-5 py-3 text-sm font-bold text-white hover:bg-cyan-500">
                     <Upload size={16} /> CSV নির্বাচন করুন
                   </button>

@@ -70,7 +70,7 @@ export default function StudentDetailModal({
   const startEditing = () => {
     if (!student) return;
     setFullName(student.full_name);
-    setEmail(student.email);
+    setEmail(student.email ?? "");
     setPhone(student.phone);
     setIsVerified(student.is_verified);
     setProfile({
@@ -91,7 +91,7 @@ export default function StudentDetailModal({
         id: studentId,
         data: {
           full_name: fullName,
-          email,
+          email: email.trim() || null,
           phone,
           is_verified: isVerified,
           student_profile: profile,
@@ -103,7 +103,7 @@ export default function StudentDetailModal({
     }
   };
 
-  const canSave = fullName.trim() && email.trim() && phone.trim();
+  const canSave = fullName.trim() && phone.trim();
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-800/95 p-4">
@@ -167,7 +167,7 @@ export default function StudentDetailModal({
                   <p className="flex items-center gap-1.5 text-xs font-semibold text-slate-400">
                     <Mail size={13} /> ইমেইল
                   </p>
-                  <p className="pt-1 text-sm text-slate-200">{student.email}</p>
+                  <p className="pt-1 text-sm text-slate-200">{student.email || "—"}</p>
                 </div>
                 <div>
                   <p className="flex items-center gap-1.5 text-xs font-semibold text-slate-400">
@@ -247,7 +247,7 @@ export default function StudentDetailModal({
 
               <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block pb-1.5 text-xs font-semibold text-slate-400">ইমেইল</label>
+                  <label className="block pb-1.5 text-xs font-semibold text-slate-400">ইমেইল (ঐচ্ছিক)</label>
                   <input
                     type="email"
                     value={email}

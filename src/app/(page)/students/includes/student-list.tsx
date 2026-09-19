@@ -73,7 +73,7 @@ export default function StudentList({
                 <div className="mt-1.5 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-slate-400">
                   <span className="flex items-center gap-1">
                     <Mail size={14} />
-                    {student.email}
+                    {student.email || "—"}
                   </span>
                   <span className="flex items-center gap-1">
                     <Phone size={14} />

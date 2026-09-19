@@ -580,6 +580,21 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
           onClose={() => setViewSubmissions(null)}
         />
       ) : null}
+
+      <ConfirmDeleteDialog
+        open={Boolean(deleteTarget)}
+        itemType={deleteTarget ? deleteTypeLabels[deleteTarget.tab] : "কন্টেন্ট"}
+        itemName={deleteTarget?.title || ""}
+        impact="এটি মুছে ফেললে সংশ্লিষ্ট ভিডিও, ম্যাটেরিয়াল এবং শিক্ষার্থীদের অ্যাক্সেসও প্রভাবিত হতে পারে।"
+        error={deleteError}
+        isLoading={isDeleting}
+        onClose={() => {
+          if (isDeleting) return;
+          setDeleteTarget(null);
+          setDeleteError(null);
+        }}
+        onConfirm={confirmDelete}
+      />
     </section>
   );
 }

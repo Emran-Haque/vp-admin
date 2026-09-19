@@ -64,7 +64,7 @@ function buildReportHtml({
       const cells = [
         student.full_name,
         student.phone || "-",
-        student.email,
+        student.email || "-",
         ...(showEnrollmentDate ? [enrollment ? formatDate(enrollment.enrolled_at) : "-"] : []),
         formatDate(student.created_at),
       ];
