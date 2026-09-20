@@ -8,6 +8,7 @@ import { extractErrorMessage } from "@/lib/api-error";
 
 type AddExamModalProps = {
   courseId: number;
+  initialCourseClassId?: number;
   initialSubjectId?: number;
   initialSubjectName?: string;
   onClose: () => void;
@@ -15,6 +16,7 @@ type AddExamModalProps = {
 
 export default function AddExamModal({
   courseId,
+  initialCourseClassId,
   initialSubjectId,
   initialSubjectName,
   onClose,
@@ -32,6 +34,7 @@ export default function AddExamModal({
     try {
       const created = await createExam({
         course: courseId,
+        course_class: initialCourseClassId ?? null,
         title,
         subject: initialSubjectId ?? null,
         duration_minutes: Number(durationMinutes) || 0,

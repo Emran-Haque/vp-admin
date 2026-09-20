@@ -107,6 +107,7 @@ export type CourseStudentPreview = {
   }[];
   exams: {
     id: number;
+    course_class: number | null;
     title: string;
     subject: string | null;
     total_questions: number;
@@ -118,6 +119,7 @@ export type CourseStudentPreview = {
   }[];
   assignments: {
     id: number;
+    course_class: number | null;
     title: string;
     description: string;
     subject_name: string;

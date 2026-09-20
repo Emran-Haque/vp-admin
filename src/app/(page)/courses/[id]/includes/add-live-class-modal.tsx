@@ -72,6 +72,7 @@ export default function AddLiveClassModal({
           formData.append("class_date", classDate);
           formData.append("start_time", startTime);
           formData.append("live_url", liveUrl);
+          formData.append("is_live", "true");
           if (teacher) formData.append("teacher", teacher);
           if (subjectId) formData.append("subject", subjectId);
           formData.append("thumbnail", thumbnail);
@@ -84,6 +85,7 @@ export default function AddLiveClassModal({
             class_date: classDate,
             start_time: startTime,
             live_url: liveUrl,
+            is_live: true,
           };
           if (teacher) data.teacher = Number(teacher);
           if (subjectId) data.subject = subjectId;

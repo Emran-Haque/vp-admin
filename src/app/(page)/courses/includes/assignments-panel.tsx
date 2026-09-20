@@ -240,6 +240,7 @@ export function AssignmentTelegramButton({
 
 type AddAssignmentModalProps = {
   courseId: number;
+  initialCourseClassId?: number;
   initialSubjectId?: number;
   initialSubjectName?: string;
   editItem?: Assignment;
@@ -248,6 +249,7 @@ type AddAssignmentModalProps = {
 
 export function AddAssignmentModal({
   courseId,
+  initialCourseClassId,
   initialSubjectId,
   initialSubjectName,
   editItem,
@@ -257,7 +259,11 @@ export function AddAssignmentModal({
   const [title, setTitle] = useState(editItem?.title ?? "");
   const [description, setDescription] = useState(editItem?.description ?? "");
   const [courseClassId, setCourseClassId] = useState(
-    editItem?.course_class ? String(editItem.course_class) : "",
+    editItem?.course_class
+      ? String(editItem.course_class)
+      : initialCourseClassId
+        ? String(initialCourseClassId)
+        : "",
   );
   const [subjectId, setSubjectId] = useState(
     editItem?.subject

@@ -1,6 +1,8 @@
 ﻿"use client";
 
-import { useMemo, useState } from "react";
+import Image from "next/image";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -11,11 +13,11 @@ import {
   Eye,
   FileText,
   Pencil,
+  Play,
   Plus,
   Radio,
+  Trophy,
   Trash2,
-  Video,
-  type LucideIcon,
 } from "lucide-react";
 import {
   useGetAssignmentsQuery,
@@ -25,8 +27,11 @@ import {
 import {
   useGetClassesQuery,
   useDeleteClassMutation,
+  useDeleteClassMaterialMutation,
+  type ClassMaterial,
   type CourseClass,
 } from "@/redux/api/classesApi";
+import { getMediaUrl } from "@/redux/api/baseApi";
 import AssignmentCard from "./assignment-card";
 import ClassCard from "./class-card";
 import {
@@ -50,6 +55,7 @@ import AddExamModal from "./add-exam-modal";
 import AddLiveClassModal from "./add-live-class-modal";
 import AddRecordingModal from "./add-recording-modal";
 import AddResourceModal from "./add-resource-modal";
+import AddClassMaterialModal from "./add-class-material-modal";
 import {
   AddAssignmentModal,
   AssignmentSubmissionsModal,
@@ -57,7 +63,7 @@ import {
 } from "../../includes/assignments-panel";
 
 type SubjectTab = "lectures" | "live" | "notes" | "assignments" | "mcq";
-type ModalKey = "recording" | "live" | "resource" | "assignment" | "exam" | null;
+type ModalKey = "recording" | "live" | "material" | "resource" | "assignment" | "exam" | null;
 type DeleteTarget = { tab: SubjectTab; id: number; title: string };
 
 type SubjectBundle = {
@@ -77,14 +83,6 @@ type EditTarget =
 
 const GENERAL_SUBJECT = "সাধারণ";
 
-const tabs: { key: SubjectTab; label: string; icon: LucideIcon }[] = [
-  { key: "lectures", label: "লেকচার", icon: Video },
-  { key: "live", label: "লাইভ", icon: Radio },
-  { key: "notes", label: "নোট/ম্যাটেরিয়াল", icon: FileText },
-  { key: "assignments", label: "অ্যাসাইনমেন্ট", icon: ClipboardList },
-  { key: "mcq", label: "MCQ", icon: ClipboardCheck },
-];
-
 function cleanSubject(value: unknown, subjects: CourseSubject[]) {
   if (value === null || value === undefined || value === "") return GENERAL_SUBJECT;
   const raw = String(value).trim();
@@ -100,7 +98,6 @@ function sameSubject(value: unknown, subject: CourseSubject, subjects: CourseSub
 function totalItems(bundle: SubjectBundle) {
   return (
     bundle.classes.length +
-    bundle.recordings +
     bundle.resources.length +
     bundle.assignments.length +
     bundle.exams.length
@@ -109,7 +106,6 @@ function totalItems(bundle: SubjectBundle) {
 
 export default function CourseSubjectOverview({ courseId }: { courseId: number }) {
   const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<SubjectTab>("lectures");
   const [modal, setModal] = useState<ModalKey>(null);
   const { data: subjectsData, isLoading: subjectsLoading } =
     useGetCourseSubjectsQuery({ course: courseId });
@@ -170,14 +166,13 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
         const subjectClasses = classes.filter((item) =>
           sameSubject(item.subject, subject, subjects),
         );
-        const recordedClasses = subjectClasses.filter((item) => !item.is_live);
         return {
           subject,
-          // Lectures are recorded (non-live) classes only; live classes live in
-          // their own tab so they don't double-show in the lecture list.
-          classes: recordedClasses,
+          // Every CourseClass is one lecture container. It can carry a video,
+          // live settings, notes, assignments and MCQs at the same time.
+          classes: subjectClasses,
           liveClasses: subjectClasses.filter((item) => item.is_live),
-          recordings: recordedClasses.reduce((sum, item) => sum + item.videos.length, 0),
+          recordings: subjectClasses.reduce((sum, item) => sum + item.videos.length, 0),
           resources: resources.filter((item) => sameSubject(item.subject, subject, subjects)),
           assignments: assignments.filter((item) =>
             sameSubject(item.subject ?? item.subject_name, subject, subjects),
@@ -221,16 +216,23 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
     };
   }, [assignments, classes, exams, resources, subjects]);
 
-  const closeModal = () => setModal(null);
+  const closeModal = () => {
+    setModal(null);
+    setActionLecture(null);
+    setEditMaterial(null);
+  };
 
   const router = useRouter();
   const [editTarget, setEditTarget] = useState<EditTarget | null>(null);
+  const [actionLecture, setActionLecture] = useState<CourseClass | null>(null);
+  const [editMaterial, setEditMaterial] = useState<ClassMaterial | null>(null);
   const [viewSubmissions, setViewSubmissions] = useState<Assignment | null>(null);
   const [telegramMessage, setTelegramMessage] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteClass] = useDeleteClassMutation();
+  const [deleteClassMaterial] = useDeleteClassMaterialMutation();
   const [deleteResource] = useDeleteResourceMutation();
   const [deleteAssignment] = useDeleteAssignmentMutation();
   const [deleteExam] = useDeleteExamMutation();
@@ -329,7 +331,6 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
                   key={bundle.subject.id}
                   onClick={() => {
                     setSelectedSubjectId(bundle.subject.id);
-                    setActiveTab("lectures");
                   }}
                   type="button"
                 >
@@ -465,36 +466,46 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
                     </p>
                   ) : null}
                 </div>
-                <SubjectActions activeTab={activeTab} onOpen={setModal} />
+                <button
+                  className="flex items-center gap-1.5 rounded-xl bg-blue-500 px-3.5 py-2 text-xs font-bold text-white"
+                  onClick={() => setModal("recording")}
+                  type="button"
+                >
+                  <Plus size={14} />
+                  লেকচার যোগ করুন
+                </button>
               </div>
 
-              <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {tabs.map(({ icon: Icon, key, label }) => {
-                  const active = activeTab === key;
-                  return (
-                    <button
-                      className={`flex h-10 shrink-0 items-center gap-2 rounded-xl border px-3.5 text-xs font-bold ${
-                        active
-                          ? "border-blue-500 bg-blue-500/15 text-blue-50"
-                          : "border-slate-800 bg-slate-950/30 text-slate-400 hover:text-blue-50"
-                      }`}
-                      key={key}
-                      onClick={() => setActiveTab(key)}
-                      type="button"
-                    >
-                      <Icon size={14} />
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <SubjectTabContent
-                activeTab={activeTab}
+              <LectureAdminList
                 bundle={selectedBundle}
-                courseId={courseId}
-                onEdit={setEditTarget}
-                onDelete={handleDelete}
+                onAddAssignment={(item) => {
+                  setActionLecture(item);
+                  setModal("assignment");
+                }}
+                onAddExam={(item) => {
+                  setActionLecture(item);
+                  setModal("exam");
+                }}
+                onAddLive={(item) => {
+                  setActionLecture(item);
+                  setModal("live");
+                }}
+                onAddMaterial={(item) => {
+                  setActionLecture(item);
+                  setEditMaterial(null);
+                  setModal("material");
+                }}
+                onDeleteClass={(item) => handleDelete("lectures", item.id, item.title)}
+                onDeleteAssignment={(item) => handleDelete("assignments", item.id, item.title)}
+                onDeleteExam={(item) => handleDelete("mcq", item.id, item.title)}
+                onDeleteMaterial={(item) => void deleteClassMaterial(item.id)}
+                onEditClass={(item) => setEditTarget({ type: "lectures", item })}
+                onEditMaterial={(lecture, material) => {
+                  setActionLecture(lecture);
+                  setEditMaterial(material);
+                  setModal("material");
+                }}
+                onEditAssignment={(item) => setEditTarget({ type: "assignments", item })}
                 onViewSubmissions={setViewSubmissions}
                 onTelegramMessage={setTelegramMessage}
               />
@@ -514,6 +525,7 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
       {modal === "live" && selectedBundle ? (
         <AddLiveClassModal
           courseId={courseId}
+          editItem={actionLecture ?? undefined}
           initialSubjectId={selectedBundle.subject.id}
           initialSubjectName={selectedBundle.subject.name}
           onClose={closeModal}
@@ -530,6 +542,7 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
       {modal === "assignment" && selectedBundle ? (
         <AddAssignmentModal
           courseId={courseId}
+          initialCourseClassId={actionLecture?.id}
           initialSubjectId={selectedBundle.subject.id}
           initialSubjectName={selectedBundle.subject.name}
           onClose={closeModal}
@@ -538,6 +551,7 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
       {modal === "exam" && selectedBundle ? (
         <AddExamModal
           courseId={courseId}
+          initialCourseClassId={actionLecture?.id}
           initialSubjectId={selectedBundle.subject.id}
           initialSubjectName={selectedBundle.subject.name}
           onClose={closeModal}
@@ -580,6 +594,13 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
           onClose={() => setViewSubmissions(null)}
         />
       ) : null}
+      {modal === "material" && actionLecture ? (
+        <AddClassMaterialModal
+          courseClass={actionLecture}
+          editItem={editMaterial ?? undefined}
+          onClose={closeModal}
+        />
+      ) : null}
 
       <ConfirmDeleteDialog
         open={Boolean(deleteTarget)}
@@ -599,134 +620,643 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
   );
 }
 
-
-function SubjectActions({
-  activeTab,
-  onOpen,
-}: {
-  activeTab: SubjectTab;
-  onOpen: (modal: ModalKey) => void;
-}) {
-  const actions: { label: string; modal: ModalKey; icon: LucideIcon }[] =
-    activeTab === "live"
-      ? [{ label: "লাইভ ক্লাস যোগ", modal: "live", icon: Radio }]
-      : activeTab === "notes"
-        ? [{ label: "নোট/রিসোর্স যোগ", modal: "resource", icon: FileText }]
-        : activeTab === "assignments"
-          ? [{ label: "অ্যাসাইনমেন্ট যোগ", modal: "assignment", icon: ClipboardList }]
-      : activeTab === "mcq"
-        ? [{ label: "MCQ যোগ", modal: "exam", icon: ClipboardCheck }]
-        : [{ label: "লেকচার যোগ", modal: "recording", icon: Video }];
-
-  return (
-    <div className="flex flex-wrap gap-2">
-      {actions.map(({ icon: Icon, label, modal }) => (
-        <button
-          className="flex items-center gap-1.5 rounded-xl bg-blue-500 px-3.5 py-2 text-xs font-bold text-white"
-          key={label}
-          onClick={() => onOpen(modal)}
-          type="button"
-        >
-          <Icon size={14} />
-          {label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function SubjectTabContent({
-  activeTab,
+function LectureAdminList({
   bundle,
-  courseId,
-  onEdit,
-  onDelete,
-  onViewSubmissions,
+  onAddAssignment,
+  onAddExam,
+  onAddLive,
+  onAddMaterial,
+  onDeleteAssignment,
+  onDeleteClass,
+  onDeleteExam,
+  onDeleteMaterial,
+  onEditAssignment,
+  onEditClass,
+  onEditMaterial,
   onTelegramMessage,
+  onViewSubmissions,
 }: {
-  activeTab: SubjectTab;
   bundle: SubjectBundle;
-  courseId: number;
-  onEdit: (target: EditTarget) => void;
-  onDelete: (tab: SubjectTab, id: number, title: string) => void;
-  onViewSubmissions: (assignment: Assignment) => void;
+  onAddAssignment: (item: CourseClass) => void;
+  onAddExam: (item: CourseClass) => void;
+  onAddLive: (item: CourseClass) => void;
+  onAddMaterial: (item: CourseClass) => void;
+  onDeleteAssignment: (item: Assignment) => void;
+  onDeleteClass: (item: CourseClass) => void;
+  onDeleteExam: (item: Exam) => void;
+  onDeleteMaterial: (item: ClassMaterial) => void;
+  onEditAssignment: (item: Assignment) => void;
+  onEditClass: (item: CourseClass) => void;
+  onEditMaterial: (lecture: CourseClass, item: ClassMaterial) => void;
   onTelegramMessage: (message: string | null) => void;
+  onViewSubmissions: (item: Assignment) => void;
 }) {
   const router = useRouter();
-
-  if (activeTab === "lectures") {
-    return (
-      <ClassCardList
-        empty="এই বিষয়ে এখনো কোনো লেকচার নেই।"
-        items={bundle.classes}
-        onDelete={(item) => onDelete("lectures", item.id, item.title)}
-        onEdit={(item) => onEdit({ type: "lectures", item })}
-        variant="lecture"
-      />
-    );
-  }
-
-  if (activeTab === "live") {
-    return (
-      <ClassCardList
-        empty="এই বিষয়ে এখনো কোনো লাইভ ক্লাস নেই।"
-        items={bundle.liveClasses}
-        onDelete={(item) => onDelete("live", item.id, item.title)}
-        onEdit={(item) => onEdit({ type: "live", item })}
-        variant="live"
-      />
-    );
-  }
-
-  if (activeTab === "notes") {
-    return (
-      <ItemList
-        empty="এই বিষয়ে এখনো কোনো নোট বা রিসোর্স নেই।"
-        items={bundle.resources.map((item) => ({
-          id: item.id,
-          title: item.title,
-          meta: item.resource_type,
-          onEdit: () => onEdit({ type: "notes", item }),
-          onDelete: () => onDelete("notes", item.id, item.title),
-        }))}
-      />
-    );
-  }
-
-  if (activeTab === "assignments") {
-    return (
-      <AssignmentCardList
-        empty="এই বিষয়ে এখনো কোনো অ্যাসাইনমেন্ট নেই।"
-        items={bundle.assignments}
-        onDelete={(item) => onDelete("assignments", item.id, item.title)}
-        onEdit={(item) => onEdit({ type: "assignments", item })}
-        onTelegramMessage={onTelegramMessage}
-        onView={(item) => onViewSubmissions(item)}
-      />
-    );
-  }
+  const unlinkedAssignments = bundle.assignments.filter((item) => !item.course_class);
+  const unlinkedExams = bundle.exams.filter((item) => !item.course_class);
+  const hasLegacy =
+    bundle.resources.length > 0 || unlinkedAssignments.length > 0 || unlinkedExams.length > 0;
 
   return (
-    <div className="mt-4">
-      <ItemList
-        empty="এই বিষয়ে এখনো কোনো MCQ পরীক্ষা নেই।"
-        items={bundle.exams.map((item) => ({
-          id: item.id,
-          title: item.title,
-          meta: `${item.total_questions} প্রশ্ন · ${item.duration_minutes} মিনিট`,
-          onEdit: () => router.push(`/mcq/${item.id}/edit`),
-          onDelete: () => onDelete("mcq", item.id, item.title),
-        }))}
-      />
-      <Link
-        className="mt-3 inline-flex rounded-xl border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-xs font-bold text-blue-100"
-        href={`/courses/${courseId}/edit`}
-      >
-        কোর্সের সব কন্টেন্ট এডিট করুন
-      </Link>
+    <div className="mt-4 space-y-3">
+      {bundle.classes.length === 0 ? (
+        <p className="rounded-2xl border border-dashed border-slate-800 p-6 text-center text-sm text-slate-400">
+          এই বিষয়ে এখনো কোনো লেকচার নেই। প্রথমে একটি লেকচার যোগ করুন।
+        </p>
+      ) : (
+        bundle.classes.map((lecture) => (
+          <AdminLectureCard
+            assignments={bundle.assignments.filter(
+              (item) => item.course_class === lecture.id,
+            )}
+            exams={bundle.exams.filter((item) => item.course_class === lecture.id)}
+            key={lecture.id}
+            lecture={lecture}
+            onAddAssignment={() => onAddAssignment(lecture)}
+            onAddExam={() => onAddExam(lecture)}
+            onAddLive={() => onAddLive(lecture)}
+            onAddMaterial={() => onAddMaterial(lecture)}
+            onDeleteAssignment={onDeleteAssignment}
+            onDeleteClass={() => onDeleteClass(lecture)}
+            onDeleteExam={onDeleteExam}
+            onDeleteMaterial={onDeleteMaterial}
+            onEditAssignment={onEditAssignment}
+            onEditClass={() => onEditClass(lecture)}
+            onEditMaterial={(material) => onEditMaterial(lecture, material)}
+            onTelegramMessage={onTelegramMessage}
+            onViewSubmissions={onViewSubmissions}
+            subjectName={bundle.subject.name}
+          />
+        ))
+      )}
+
+      {hasLegacy ? (
+        <details className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.04]">
+          <summary className="cursor-pointer list-none p-4 text-sm font-bold text-amber-100">অন্যান্য কন্টেন্ট (লেকচারে যুক্ত নয়)</summary>
+          <div className="space-y-4 border-t border-amber-500/20 p-4">
+            <ItemList empty="" items={bundle.resources.map((item) => ({ id: item.id, title: item.title, meta: item.resource_type }))} />
+            <AssignmentCardList empty="" items={unlinkedAssignments} onDelete={onDeleteAssignment} onEdit={onEditAssignment} onTelegramMessage={onTelegramMessage} onView={onViewSubmissions} />
+            <ItemList empty="" items={unlinkedExams.map((exam) => ({ id: exam.id, title: exam.title, meta: `${exam.total_questions} প্রশ্ন`, onEdit: () => router.push(`/mcq/${exam.id}/edit`), onDelete: () => onDeleteExam(exam) }))} />
+          </div>
+        </details>
+      ) : null}
     </div>
   );
 }
+
+type AdminLectureModal = "live" | "notes" | "assignments" | "mcq" | "results" | null;
+
+type AdminVideoSource = {
+  title: string;
+  url: string;
+  sourceType?: string;
+  isLive?: boolean;
+};
+
+function AdminLectureCard({
+  assignments,
+  exams,
+  lecture,
+  onAddAssignment,
+  onAddExam,
+  onAddLive,
+  onAddMaterial,
+  onDeleteAssignment,
+  onDeleteClass,
+  onDeleteExam,
+  onDeleteMaterial,
+  onEditAssignment,
+  onEditClass,
+  onEditMaterial,
+  onTelegramMessage,
+  onViewSubmissions,
+  subjectName,
+}: {
+  assignments: Assignment[];
+  exams: Exam[];
+  lecture: CourseClass;
+  onAddAssignment: () => void;
+  onAddExam: () => void;
+  onAddLive: () => void;
+  onAddMaterial: () => void;
+  onDeleteAssignment: (item: Assignment) => void;
+  onDeleteClass: () => void;
+  onDeleteExam: (item: Exam) => void;
+  onDeleteMaterial: (item: ClassMaterial) => void;
+  onEditAssignment: (item: Assignment) => void;
+  onEditClass: () => void;
+  onEditMaterial: (item: ClassMaterial) => void;
+  onTelegramMessage: (message: string | null) => void;
+  onViewSubmissions: (item: Assignment) => void;
+  subjectName: string;
+}) {
+  const router = useRouter();
+  const [activeModal, setActiveModal] = useState<AdminLectureModal>(null);
+  const [activeVideo, setActiveVideo] = useState<AdminVideoSource | null>(null);
+  const firstVideo = lecture.videos[0];
+  const poster =
+    getMediaUrl(firstVideo?.thumbnail ?? null) ?? getMediaUrl(lecture.thumbnail);
+  const publishedResults = exams.filter(
+    (exam) => exam.result_status === "published" || exam.is_result_published,
+  ).length;
+  const chips = [
+    { key: "live" as const, label: "লাইভ", icon: Radio, count: lecture.is_live ? 1 : 0 },
+    {
+      key: "notes" as const,
+      label: "নোট",
+      icon: FileText,
+      count: lecture.class_materials.length,
+    },
+    {
+      key: "assignments" as const,
+      label: "অ্যাসাইনমেন্ট",
+      icon: ClipboardList,
+      count: assignments.length,
+    },
+    { key: "mcq" as const, label: "MCQ", icon: ClipboardCheck, count: exams.length },
+    {
+      key: "results" as const,
+      label: "ফলাফল",
+      icon: Trophy,
+      count: publishedResults,
+    },
+  ];
+
+  const closeThen = (action: () => void) => {
+    setActiveModal(null);
+    action();
+  };
+
+  const openLectureVideo = () => {
+    if (!firstVideo?.video_url) return;
+    setActiveVideo({
+      title: firstVideo.title || lecture.title,
+      url: firstVideo.video_url,
+      sourceType: firstVideo.source_type,
+    });
+  };
+
+  return (
+    <>
+      <article className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/30 p-3 max-[720px]:p-2.5">
+        <span className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-blue-500 via-sky-400 to-cyan-400" />
+
+        <div className="flex items-stretch gap-4 max-[720px]:grid max-[720px]:grid-cols-[132px_minmax(0,1fr)] max-[720px]:gap-2.5 max-[380px]:grid-cols-[112px_minmax(0,1fr)]">
+          <button
+            aria-label={`${lecture.title} ভিডিও দেখুন`}
+            className="relative aspect-video w-[176px] shrink-0 self-center overflow-hidden rounded-[12px] bg-black max-[720px]:w-full"
+            disabled={!firstVideo?.video_url}
+            onClick={openLectureVideo}
+            type="button"
+          >
+            {poster ? (
+              <Image
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover opacity-90"
+                height={275}
+                src={poster}
+                unoptimized
+                width={440}
+              />
+            ) : null}
+            <span className="absolute inset-0 bg-black/30" />
+            <span className="absolute inset-0 grid place-items-center">
+              <span
+                className={`grid size-12 place-items-center rounded-full border border-white/30 bg-white/15 text-white backdrop-blur-sm transition max-[720px]:size-9 ${
+                  firstVideo?.video_url ? "hover:scale-105 hover:bg-white/25" : "opacity-50"
+                }`}
+              >
+                <Play fill="currentColor" size={22} />
+              </span>
+            </span>
+          </button>
+
+          <div className="flex min-w-0 flex-1 flex-col justify-center">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-[8px] border border-blue-400/30 bg-blue-500/10 px-2.5 py-1 text-[11px] font-black text-blue-300 max-[720px]:px-2 max-[720px]:py-0.5 max-[720px]:text-[9px]">
+                {subjectName}
+              </span>
+              {lecture.is_live ? (
+                <span className="rounded-[8px] border border-red-500/40 bg-red-500/10 px-2.5 py-1 text-[11px] font-black text-red-400 max-[720px]:px-2 max-[720px]:py-0.5 max-[720px]:text-[9px]">
+                  লাইভ যুক্ত
+                </span>
+              ) : null}
+            </div>
+            <h4 className="mt-2 truncate text-[16px] font-black leading-snug text-blue-50 max-[720px]:mt-1.5 max-[720px]:line-clamp-2 max-[720px]:whitespace-normal max-[720px]:text-[13px]">
+              {lecture.title}
+            </h4>
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] text-slate-400 max-[720px]:mt-1.5 max-[720px]:gap-x-2 max-[720px]:gap-y-0.5 max-[720px]:text-[9px]">
+              {lecture.class_date ? <span>📅 {lecture.class_date}</span> : null}
+              {lecture.start_time ? <span>🕐 {lecture.start_time.slice(0, 5)}</span> : null}
+              <span>🎬 {lecture.videos.length}টি ভিডিও</span>
+            </div>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2 max-[720px]:col-span-2 max-[720px]:justify-end">
+            <button
+              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-[12px] border border-slate-700 bg-white/[0.03] px-4 text-[13px] font-bold text-blue-50 hover:bg-white/[0.07] max-[720px]:h-8 max-[720px]:px-3 max-[720px]:text-[10px]"
+              onClick={onEditClass}
+              type="button"
+            >
+              <Pencil size={14} />
+              লেকচার এডিট
+            </button>
+            <button
+              aria-label={`${lecture.title} মুছুন`}
+              className="inline-flex size-10 items-center justify-center rounded-[12px] border border-red-600/40 bg-red-600/10 text-red-500 hover:bg-red-600/20 max-[720px]:size-8"
+              onClick={onDeleteClass}
+              type="button"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-3 grid grid-cols-5 gap-2 border-t border-white/[0.06] pt-3 max-[720px]:mt-2.5 max-[720px]:grid-cols-3 max-[720px]:gap-1.5 max-[720px]:pt-2.5">
+          {chips.map(({ count, icon: Icon, key, label }) => (
+            <button
+              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-[11px] border border-white/[0.08] bg-white/[0.035] px-2.5 py-2 text-[11px] font-black text-white/70 transition hover:border-blue-400/30 hover:bg-blue-500/10 hover:text-white max-[720px]:min-h-9 max-[720px]:gap-1 max-[720px]:px-1 max-[720px]:py-1.5 max-[720px]:text-[9px]"
+              key={key}
+              onClick={() => setActiveModal(key)}
+              type="button"
+            >
+              <Icon className="shrink-0 text-blue-300 max-[720px]:size-[11px]" size={14} />
+              {label}
+              <span className="rounded-full bg-white/[0.07] px-1.5 py-0.5 text-[9px] text-white/55 max-[720px]:px-1 max-[720px]:text-[8px]">
+                {count}
+              </span>
+            </button>
+          ))}
+        </div>
+      </article>
+
+      {activeModal ? (
+        <AdminLectureContentModal
+          onClose={() => setActiveModal(null)}
+          title={`${lecture.title} · ${chips.find((chip) => chip.key === activeModal)?.label ?? ""}`}
+        >
+          {activeModal === "live" ? (
+            <div className="space-y-4">
+              <ModalActionBar
+                label={lecture.is_live ? "লাইভ ক্লাস এডিট করুন" : "লাইভ ক্লাস যোগ করুন"}
+                onClick={() => closeThen(onAddLive)}
+              />
+              {lecture.is_live ? (
+                <div className="relative overflow-hidden rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.06] p-4">
+                  <span className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400" />
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="grid size-11 place-items-center rounded-xl border border-red-500/30 bg-red-500/10 text-red-400">
+                      <Radio size={19} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-black text-white">{lecture.title}</p>
+                      <p className="mt-1 truncate text-xs text-emerald-100/65">
+                        {lecture.live_url || "লাইভ ক্লাস কনফিগার করা হয়েছে"}
+                      </p>
+                    </div>
+                    {lecture.live_url ? (
+                      <button
+                        className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-red-500 px-4 text-xs font-black text-white"
+                        onClick={() =>
+                          setActiveVideo({
+                            isLive: true,
+                            title: lecture.title,
+                            url: lecture.live_url,
+                          })
+                        }
+                        type="button"
+                      >
+                        <Play fill="currentColor" size={14} />
+                        লাইভ দেখুন
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              ) : (
+                <AdminEmpty text="লাইভ ক্লাস কনফিগার করা হয়নি" />
+              )}
+            </div>
+          ) : null}
+
+          {activeModal === "notes" ? (
+            <div className="space-y-4">
+              <ModalActionBar label="নোট যোগ করুন" onClick={() => closeThen(onAddMaterial)} />
+              {lecture.class_materials.length > 0 ? (
+                <div className="space-y-2">
+                  {lecture.class_materials.map((material) => (
+                    <div
+                      className="flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/60 p-3"
+                      key={material.id}
+                    >
+                      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-blue-500/10 text-blue-300">
+                        <FileText size={15} />
+                      </span>
+                      <span className="min-w-0 flex-1 truncate text-xs font-semibold text-slate-200">
+                        {material.title}
+                      </span>
+                      <button
+                        className="text-xs font-bold text-blue-300"
+                        onClick={() => closeThen(() => onEditMaterial(material))}
+                        type="button"
+                      >
+                        এডিট
+                      </button>
+                      <button
+                        aria-label={`${material.title} মুছুন`}
+                        className="text-red-400"
+                        onClick={() => {
+                          if (window.confirm(`“${material.title}” মুছে ফেলবেন?`)) {
+                            onDeleteMaterial(material);
+                          }
+                        }}
+                        type="button"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <AdminEmpty text="নোট বা ম্যাটেরিয়াল যোগ করা হয়নি" />
+              )}
+            </div>
+          ) : null}
+
+          {activeModal === "assignments" ? (
+            <div className="space-y-4">
+              <ModalActionBar
+                label="অ্যাসাইনমেন্ট যোগ করুন"
+                onClick={() => closeThen(onAddAssignment)}
+              />
+              <AssignmentCardList
+                empty="অ্যাসাইনমেন্ট যোগ করা হয়নি"
+                items={assignments}
+                onDelete={onDeleteAssignment}
+                onEdit={(item) => closeThen(() => onEditAssignment(item))}
+                onTelegramMessage={onTelegramMessage}
+                onView={(item) => closeThen(() => onViewSubmissions(item))}
+              />
+            </div>
+          ) : null}
+
+          {activeModal === "mcq" ? (
+            <div className="space-y-4">
+              <ModalActionBar label="MCQ যোগ করুন" onClick={() => closeThen(onAddExam)} />
+              <ItemList
+                empty="MCQ যোগ করা হয়নি"
+                items={exams.map((exam) => ({
+                  id: exam.id,
+                  title: exam.title,
+                  meta: `${exam.total_questions} প্রশ্ন · ${exam.status}`,
+                  onEdit: () => router.push(`/mcq/${exam.id}/edit`),
+                  onDelete: () => onDeleteExam(exam),
+                }))}
+              />
+            </div>
+          ) : null}
+
+          {activeModal === "results" ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-3 max-[680px]:grid-cols-1">
+                <ResultStat label="মোট MCQ" value={exams.length} />
+                <ResultStat label="প্রকাশিত ফলাফল" value={publishedResults} />
+                <ResultStat label="অপ্রকাশিত" value={Math.max(exams.length - publishedResults, 0)} />
+              </div>
+              <ItemList
+                empty="এই লেকচারে কোনো MCQ ফলাফল নেই"
+                items={exams.map((exam) => ({
+                  id: exam.id,
+                  title: exam.title,
+                  meta: `ফলাফল: ${exam.result_status} · ${exam.total_questions} প্রশ্ন`,
+                  onEdit: () => router.push(`/mcq/${exam.id}/edit`),
+                }))}
+              />
+            </div>
+          ) : null}
+        </AdminLectureContentModal>
+      ) : null}
+
+      <AdminVideoModal onClose={() => setActiveVideo(null)} video={activeVideo} />
+    </>
+  );
+}
+
+function ModalActionBar({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <div className="flex justify-end">
+      <button
+        className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-blue-500 px-4 text-xs font-black text-white hover:bg-blue-400"
+        onClick={onClick}
+        type="button"
+      >
+        <Plus size={14} />
+        {label}
+      </button>
+    </div>
+  );
+}
+
+function ResultStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-xl border border-emerald-400/15 bg-emerald-500/[0.045] p-4">
+      <p className="text-xs font-bold text-emerald-100/65">{label}</p>
+      <strong className="mt-2 block text-2xl font-black text-white">{value}</strong>
+    </div>
+  );
+}
+
+function AdminLectureContentModal({
+  children,
+  onClose,
+  title,
+}: {
+  children: ReactNode;
+  onClose: () => void;
+  title: string;
+}) {
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", closeOnEscape);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [onClose]);
+
+  return createPortal(
+    <div
+      aria-label={title}
+      aria-modal="true"
+      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm max-[640px]:p-0"
+      onClick={onClose}
+      role="dialog"
+    >
+      <div
+        className="flex max-h-[88vh] w-full max-w-[960px] flex-col overflow-hidden rounded-[18px] border border-white/10 bg-[#0b0f17] shadow-2xl max-[640px]:h-full max-[640px]:max-h-none max-[640px]:rounded-none"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <header className="flex items-center gap-3 border-b border-white/[0.07] px-4 py-3.5">
+          <h3 className="min-w-0 flex-1 truncate text-[15px] font-black text-white">
+            {title}
+          </h3>
+          <button
+            aria-label="বন্ধ করুন"
+            className="grid size-9 place-items-center rounded-[10px] border border-white/10 bg-white/[0.05] text-xl text-white/75 hover:bg-red-500/15 hover:text-red-300"
+            onClick={onClose}
+            type="button"
+          >
+            ×
+          </button>
+        </header>
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">{children}</div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+function AdminVideoModal({
+  onClose,
+  video,
+}: {
+  onClose: () => void;
+  video: AdminVideoSource | null;
+}) {
+  useEffect(() => {
+    if (!video) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", closeOnEscape);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [onClose, video]);
+
+  if (!video || typeof document === "undefined") return null;
+  const embed = adminVideoEmbed(video.url, video.sourceType);
+
+  return createPortal(
+    <div
+      aria-label={video.title}
+      aria-modal="true"
+      className="fixed inset-0 z-[140] flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm max-[640px]:p-0"
+      onClick={onClose}
+      role="dialog"
+    >
+      <div
+        className="flex w-full max-w-[960px] flex-col overflow-hidden rounded-[16px] border border-white/10 bg-[#0b0f17] shadow-2xl max-[640px]:h-full max-[640px]:rounded-none"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <header className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-3">
+          {video.isLive ? (
+            <span className="rounded-full bg-red-500 px-2.5 py-1 text-[11px] font-black text-white">
+              LIVE
+            </span>
+          ) : null}
+          <h3 className="min-w-0 flex-1 truncate text-sm font-black text-white">
+            {video.title}
+          </h3>
+          <button
+            aria-label="বন্ধ করুন"
+            className="grid size-9 place-items-center rounded-[10px] border border-white/10 bg-white/[0.05] text-xl text-white/75"
+            onClick={onClose}
+            type="button"
+          >
+            ×
+          </button>
+        </header>
+        <div className="relative aspect-video w-full bg-black max-[640px]:flex-1">
+          {embed.kind === "iframe" ? (
+            <iframe
+              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+              allowFullScreen
+              className="absolute inset-0 h-full w-full"
+              src={embed.src}
+              title={video.title}
+            />
+          ) : embed.kind === "video" ? (
+            <video
+              autoPlay
+              className="absolute inset-0 h-full w-full"
+              controls
+              playsInline
+              src={embed.src}
+            />
+          ) : (
+            <div className="absolute inset-0 grid place-items-center p-6 text-center">
+              <div>
+                <p className="text-sm font-bold text-white/80">
+                  এই ভিডিওটি এখানে চালানো যাচ্ছে না।
+                </p>
+                <a
+                  className="mt-3 inline-flex rounded-[10px] bg-blue-500 px-4 py-2.5 text-[13px] font-black text-white no-underline"
+                  href={embed.src}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  নতুন ট্যাবে খুলুন ↗
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+function adminVideoEmbed(url: string, sourceType = "") {
+  const value = url.trim();
+  const hint = sourceType.toLowerCase();
+  if (hint === "facebook" || /facebook\.com|fb\.watch/i.test(value)) {
+    return {
+      kind: "iframe" as const,
+      src: `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(value)}&show_text=false&autoplay=true`,
+    };
+  }
+  const driveMatch = value.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) ?? value.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if ((hint === "drive" || /drive\.google\.com/i.test(value)) && driveMatch) {
+    return {
+      kind: "iframe" as const,
+      src: `https://drive.google.com/file/d/${driveMatch[1]}/preview`,
+    };
+  }
+  const vimeoMatch = value.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if ((hint === "vimeo" || /vimeo\.com/i.test(value)) && vimeoMatch) {
+    return {
+      kind: "iframe" as const,
+      src: `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`,
+    };
+  }
+  const youtubeMatch = value.match(
+    /(?:youtube\.com\/watch\?(?:.*&)?v=|youtu\.be\/|youtube\.com\/(?:embed|live|shorts)\/)([a-zA-Z0-9_-]{11})/,
+  );
+  const youtubeId = /^[a-zA-Z0-9_-]{11}$/.test(value) ? value : youtubeMatch?.[1];
+  if (youtubeId) {
+    return {
+      kind: "iframe" as const,
+      src: `https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0&modestbranding=1`,
+    };
+  }
+  if (/\.(mp4|webm|ogg|mov|m3u8)(\?.*)?$/i.test(value)) {
+    return { kind: "video" as const, src: value };
+  }
+  return { kind: "unsupported" as const, src: value };
+}
+
+function AdminEmpty({ text }: { text: string }) {
+  return <p className="rounded-xl border border-dashed border-slate-800 p-3 text-xs text-slate-500">{text}</p>;
+}
+
 
 /**
  * Lecture / live-class list, rendered as the cards a student would see.

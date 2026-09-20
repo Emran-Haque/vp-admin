@@ -39,16 +39,6 @@ const bnDate = new Intl.DateTimeFormat("bn-BD", {
 });
 
 type PreviewTab = "public" | "private";
-type SubjectTab = "lectures" | "live" | "notes" | "assignments" | "mcq" | "results";
-
-const SUBJECT_TABS: { key: SubjectTab; label: string; icon: LucideIcon }[] = [
-  { key: "lectures", label: "লেকচার", icon: PlayCircle },
-  { key: "live", label: "লাইভ", icon: Radio },
-  { key: "notes", label: "নোট/ম্যাটেরিয়াল", icon: FileText },
-  { key: "assignments", label: "অ্যাসাইনমেন্ট", icon: ClipboardList },
-  { key: "mcq", label: "MCQ", icon: HelpCircle },
-  { key: "results", label: "রেজাল্ট", icon: Trophy },
-];
 
 function subjectName(value?: string | null) {
   return value?.trim() || "সাধারণ";
@@ -68,7 +58,17 @@ type PreviewResource = CourseStudentPreview["resources"][number];
 type PreviewAssignment = CourseStudentPreview["assignments"][number];
 type PreviewExam = CourseStudentPreview["exams"][number];
 
-function ClassPreviewCard({ item, live = false }: { item: PreviewClass; live?: boolean }) {
+function ClassPreviewCard({
+  footer,
+  item,
+  live = false,
+  showActions = true,
+}: {
+  footer?: ReactNode;
+  item: PreviewClass;
+  live?: boolean;
+  showActions?: boolean;
+}) {
   const poster = item.videos[0]?.thumbnail || item.thumbnail;
   return (
     <article className="relative overflow-hidden rounded-[16px] border border-white/[0.07] bg-[#0c111d] p-3">
@@ -110,15 +110,16 @@ function ClassPreviewCard({ item, live = false }: { item: PreviewClass; live?: b
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-3 max-[860px]:items-stretch">
+        {showActions ? <div className="flex shrink-0 items-center gap-3 max-[860px]:items-stretch">
           <span className="inline-flex h-10 items-center justify-center gap-2 rounded-[12px] border border-white/[0.07] bg-white/[0.05] px-4 text-[13px] font-black text-[#e2e8f0]">
             <PlayCircle size={15} /> ভিডিও <ChevronDown size={14} />
           </span>
           <span className="inline-flex h-10 items-center justify-center gap-2 rounded-[12px] border border-white/[0.07] bg-white/[0.03] px-4 text-[13px] font-black text-[#e2e8f0]">
             <FileText size={15} /> ম্যাটেরিয়াল <ChevronDown size={14} />
           </span>
-        </div>
+        </div> : null}
       </div>
+      {footer}
     </article>
   );
 }
@@ -233,6 +234,98 @@ function ResultPreview() {
   );
 }
 
+function PreviewLectureCard({
+  assignments,
+  exams,
+  item,
+}: {
+  assignments: PreviewAssignment[];
+  exams: PreviewExam[];
+  item: PreviewClass;
+}) {
+  const [activeModal, setActiveModal] = useState<PreviewLectureModal>(null);
+  const chips: {
+    key: Exclude<PreviewLectureModal, null>;
+    label: string;
+    icon: LucideIcon;
+    count: number;
+  }[] = [
+    { key: "live", label: "লাইভ", icon: Radio, count: item.is_live ? 1 : 0 },
+    { key: "notes", label: "নোট", icon: FileText, count: item.class_materials.length },
+    { key: "assignments", label: "অ্যাসাইনমেন্ট", icon: ClipboardList, count: assignments.length },
+    { key: "mcq", label: "MCQ", icon: HelpCircle, count: exams.length },
+    { key: "results", label: "ফলাফল", icon: Trophy, count: 0 },
+  ];
+
+  return (
+    <>
+      <ClassPreviewCard
+        footer={
+          <div className="mt-3 grid grid-cols-5 gap-2 border-t border-white/[0.06] pt-3 max-[720px]:grid-cols-2">
+            {chips.map(({ count, icon: Icon, key, label }) => (
+              <button
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-[11px] border border-white/[0.08] bg-white/[0.035] px-2.5 py-2 text-[11px] font-black text-white/70 transition hover:border-blue-400/30 hover:bg-blue-500/10 hover:text-white"
+                key={key}
+                onClick={() => setActiveModal(key)}
+                type="button"
+              >
+                <Icon className="text-blue-300" size={14} />
+                {label}
+                <span className="rounded-full bg-white/[0.07] px-1.5 py-0.5 text-[9px] text-white/55">{bnNumber.format(count)}</span>
+              </button>
+            ))}
+          </div>
+        }
+        item={item}
+        showActions={false}
+      />
+
+      {activeModal ? (
+        <PreviewLectureModalView onClose={() => setActiveModal(null)} title={`${item.title} · ${chips.find((chip) => chip.key === activeModal)?.label ?? ""}`}>
+          {activeModal === "live" ? (item.is_live ? <ClassPreviewCard item={item} live /> : <EmptyContent>লাইভ ক্লাস নির্ধারণ করা হয়নি।</EmptyContent>) : null}
+          {activeModal === "notes" ? (item.class_materials.length > 0 ? (
+            <div className="grid gap-2 sm:grid-cols-2">
+              {item.class_materials.map((material) => (
+                <div className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] p-3 text-xs font-bold text-white/75" key={material.id}>
+                  <FileText className="text-blue-300" size={16} /> {material.title}
+                </div>
+              ))}
+            </div>
+          ) : <EmptyContent>নোট বা ম্যাটেরিয়াল যোগ করা হয়নি।</EmptyContent>) : null}
+          {activeModal === "assignments" ? (assignments.length > 0 ? <div className="space-y-2">{assignments.map((assignment) => <AssignmentPreviewRow item={assignment} key={assignment.id} />)}</div> : <EmptyContent>অ্যাসাইনমেন্ট যোগ করা হয়নি।</EmptyContent>) : null}
+          {activeModal === "mcq" ? (exams.length > 0 ? <div className="space-y-2">{exams.map((exam) => <ExamPreviewRow item={exam} key={exam.id} />)}</div> : <EmptyContent>MCQ যোগ করা হয়নি।</EmptyContent>) : null}
+          {activeModal === "results" ? <ResultPreview /> : null}
+        </PreviewLectureModalView>
+      ) : null}
+    </>
+  );
+}
+
+type PreviewLectureModal = "live" | "notes" | "assignments" | "mcq" | "results" | null;
+
+function PreviewLectureModalView({ children, onClose, title }: { children: ReactNode; onClose: () => void; title: string }) {
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [onClose]);
+
+  return createPortal(
+    <div aria-label={title} aria-modal="true" className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm max-[640px]:p-0" onClick={onClose} role="dialog">
+      <div className="flex max-h-[88vh] w-full max-w-[960px] flex-col overflow-hidden rounded-[18px] border border-white/10 bg-[#0b0f17] shadow-2xl max-[640px]:h-full max-[640px]:max-h-none max-[640px]:rounded-none" onClick={(event) => event.stopPropagation()}>
+        <header className="flex items-center gap-3 border-b border-white/[0.07] px-4 py-3.5">
+          <h3 className="min-w-0 flex-1 truncate text-[15px] font-black text-white">{title}</h3>
+          <button aria-label="বন্ধ করুন" className="grid size-9 place-items-center rounded-[10px] border border-white/10 bg-white/[0.05] text-xl text-white/75" onClick={onClose} type="button">×</button>
+        </header>
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">{children}</div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 function PrivateStudentView({ data }: { data: CourseStudentPreview }) {
   const subjectNames = Array.from(
     new Set([
@@ -244,7 +337,6 @@ function PrivateStudentView({ data }: { data: CourseStudentPreview }) {
     ]),
   );
   const [selectedSubject, setSelectedSubject] = useState(subjectNames[0] || "সাধারণ");
-  const [activeSubjectTab, setActiveSubjectTab] = useState<SubjectTab>("lectures");
   const activeSubject = subjectNames.includes(selectedSubject)
     ? selectedSubject
     : subjectNames[0] || "সাধারণ";
@@ -252,8 +344,6 @@ function PrivateStudentView({ data }: { data: CourseStudentPreview }) {
   const subjectClasses = data.classes.filter(
     (item) => subjectName(item.subject_name) === activeSubject,
   );
-  const recordings = subjectClasses.filter((item) => !item.is_live);
-  const liveClasses = subjectClasses.filter((item) => item.is_live);
   const resources = data.resources.filter(
     (item) => subjectName(item.subject_name) === activeSubject,
   );
@@ -261,15 +351,9 @@ function PrivateStudentView({ data }: { data: CourseStudentPreview }) {
     (item) => subjectName(item.subject_name) === activeSubject,
   );
   const exams = data.exams.filter((item) => subjectName(item.subject) === activeSubject);
+  const unlinkedAssignments = assignments.filter((item) => !item.course_class);
+  const unlinkedExams = exams.filter((item) => !item.course_class);
 
-  const subjectCounts: Record<SubjectTab, number> = {
-    lectures: recordings.length,
-    live: liveClasses.length,
-    notes: resources.length,
-    assignments: assignments.length,
-    mcq: exams.length,
-    results: 0,
-  };
   const courseStats = [
     { label: "ক্লাস", value: data.course.total_classes, icon: PlayCircle },
     { label: "কুইজ", value: data.course.total_quizzes, icon: HelpCircle },
@@ -409,10 +493,7 @@ function PrivateStudentView({ data }: { data: CourseStudentPreview }) {
                 <button
                   key={name}
                   className={`inline-flex h-10 shrink-0 items-center gap-2 rounded-full border px-4 text-[13px] font-black transition ${isActive ? "border-blue-400/50 bg-blue-500/15 text-white" : "border-white/[0.08] bg-[#0c111d] text-white/75 hover:border-white/15"}`}
-                  onClick={() => {
-                    setSelectedSubject(name);
-                    setActiveSubjectTab("lectures");
-                  }}
+                  onClick={() => setSelectedSubject(name)}
                   type="button"
                 >
                   <BookOpen size={15} />
@@ -434,95 +515,37 @@ function PrivateStudentView({ data }: { data: CourseStudentPreview }) {
                 <h3 className="mt-1 text-[18px] font-black text-white sm:text-[22px]">{activeSubject}</h3>
               </div>
 
-              <div className="mt-4 grid grid-cols-4 gap-2 max-[420px]:grid-cols-2">
-                {[
-                  ["ক্লাস", recordings.length + liveClasses.length],
-                  ["রিসোর্স", resources.length],
-                  ["পরীক্ষা", exams.length],
-                  ["অ্যাসাইনমেন্ট", assignments.length],
-                ].map(([label, value]) => (
-                  <div key={label} className="rounded-[10px] border border-white/[0.06] bg-white/[0.03] px-2 py-2 text-center">
-                    <strong className="block text-[16px] font-black text-white">{bnNumber.format(Number(value))}</strong>
-                    <span className="text-[10px] font-bold text-white/45">{label}</span>
+              <div className="mt-5 space-y-3">
+                {subjectClasses.length > 0 ? (
+                  subjectClasses.map((item) => (
+                    <PreviewLectureCard
+                      assignments={assignments.filter((assignment) => assignment.course_class === item.id)}
+                      exams={exams.filter((exam) => exam.course_class === item.id)}
+                      item={item}
+                      key={item.id}
+                    />
+                  ))
+                ) : (
+                  <EmptyContent>এই বিষয়ে এখনো কোনো লেকচার যোগ করা হয়নি।</EmptyContent>
+                )}
+              </div>
+
+              {resources.length > 0 || unlinkedAssignments.length > 0 || unlinkedExams.length > 0 ? (
+                <details className="mt-4 rounded-[14px] border border-amber-400/20 bg-amber-400/[0.05]">
+                  <summary className="cursor-pointer list-none px-4 py-3 text-[13px] font-black text-amber-100">
+                    অন্যান্য উপকরণ (লেকচারে যুক্ত নয়)
+                  </summary>
+                  <div className="space-y-4 border-t border-amber-400/15 p-4">
+                    {resources.length > 0 ? (
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {resources.map((item) => <ResourcePreviewCard item={item} key={item.id} />)}
+                      </div>
+                    ) : null}
+                    {unlinkedAssignments.map((item) => <AssignmentPreviewRow item={item} key={item.id} />)}
+                    {unlinkedExams.map((item) => <ExamPreviewRow item={item} key={item.id} />)}
                   </div>
-                ))}
-              </div>
-
-              <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {SUBJECT_TABS.map(({ key, label, icon: Icon }) => {
-                  const isActive = activeSubjectTab === key;
-                  const count = subjectCounts[key];
-                  return (
-                    <button
-                      key={key}
-                      className={`inline-flex h-10 shrink-0 items-center gap-2 rounded-[11px] border px-3.5 text-[12px] font-black transition ${isActive ? "border-blue-400/45 bg-blue-500/15 text-white" : "border-white/[0.08] bg-white/[0.03] text-white/60 hover:text-white"}`}
-                      onClick={() => setActiveSubjectTab(key)}
-                      type="button"
-                    >
-                      <Icon size={14} /> {label}
-                      {count > 0 && (
-                        <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${isActive ? "bg-white/20 text-white" : "bg-white/[0.06] text-white/50"}`}>
-                          {bnNumber.format(count)}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="mt-5">
-                {activeSubjectTab === "lectures" && (
-                  recordings.length ? (
-                    <div className="space-y-3">
-                      {recordings.map((item) => (
-                        <ClassPreviewCard item={item} key={item.id} />
-                      ))}
-                    </div>
-                  ) : <EmptyContent>এই বিষয়ে এখনো কোনো লেকচার রেকর্ডিং নেই।</EmptyContent>
-                )}
-
-                {activeSubjectTab === "live" && (
-                  liveClasses.length ? (
-                    <div className="space-y-3">
-                      {liveClasses.map((item) => (
-                        <ClassPreviewCard item={item} key={item.id} live />
-                      ))}
-                    </div>
-                  ) : <EmptyContent>এই বিষয়ে এখন কোনো লাইভ ক্লাস নেই।</EmptyContent>
-                )}
-
-                {activeSubjectTab === "notes" && (
-                  resources.length ? (
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {resources.map((item) => (
-                        <ResourcePreviewCard item={item} key={item.id} />
-                      ))}
-                    </div>
-                  ) : <EmptyContent>এই বিষয়ে এখনো কোনো নোট বা ম্যাটেরিয়াল নেই।</EmptyContent>
-                )}
-
-                {activeSubjectTab === "assignments" && (
-                  assignments.length ? (
-                    <div className="space-y-3">
-                      {assignments.map((item) => (
-                        <AssignmentPreviewRow item={item} key={item.id} />
-                      ))}
-                    </div>
-                  ) : <EmptyContent>এই বিষয়ে এখনো কোনো অ্যাসাইনমেন্ট নেই।</EmptyContent>
-                )}
-
-                {activeSubjectTab === "mcq" && (
-                  exams.length ? (
-                    <div className="space-y-3">
-                      {exams.map((item) => (
-                        <ExamPreviewRow item={item} key={item.id} />
-                      ))}
-                    </div>
-                  ) : <EmptyContent>এই বিষয়ে এখনো কোনো MCQ পরীক্ষা নেই।</EmptyContent>
-                )}
-
-                {activeSubjectTab === "results" && <ResultPreview />}
-              </div>
+                </details>
+              ) : null}
             </div>
           )}
         </section>

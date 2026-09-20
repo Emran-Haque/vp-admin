@@ -74,6 +74,13 @@ export type CreateClassMaterialInput =
     }
   | FormData;
 
+export type UpdateClassMaterialInput = {
+  title?: string;
+  drive_link?: string;
+  kind?: string;
+  downloadable?: boolean;
+} | FormData;
+
 export type ClassListParams = {
   course?: number;
   is_live?: boolean;
@@ -155,6 +162,17 @@ export const classesApi = baseApi.injectEndpoints({
       query: (body) => ({ url: "admin/class-materials/", method: "POST", body }),
       invalidatesTags: [{ type: "Classes", id: "LIST" }],
     }),
+    updateClassMaterial: builder.mutation<
+      ClassMaterial,
+      { id: number; data: UpdateClassMaterialInput }
+    >({
+      query: ({ id, data }) => ({
+        url: `admin/class-materials/${id}/`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: [{ type: "Classes", id: "LIST" }],
+    }),
     deleteClassMaterial: builder.mutation<void, number>({
       query: (id) => ({ url: `admin/class-materials/${id}/`, method: "DELETE" }),
       invalidatesTags: [{ type: "Classes", id: "LIST" }],
@@ -173,5 +191,6 @@ export const {
   useUpdateClassVideoMutation,
   useDeleteClassVideoMutation,
   useCreateClassMaterialMutation,
+  useUpdateClassMaterialMutation,
   useDeleteClassMaterialMutation,
 } = classesApi;
