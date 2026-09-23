@@ -67,7 +67,7 @@ export default function AddClassMaterialModal({
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-base font-bold text-slate-50">
-              {editItem ? "নোট/ম্যাটেরিয়াল সম্পাদনা" : "নোট/ম্যাটেরিয়াল যোগ করুন"}
+              {editItem ? "নোট/ম্যাটেরিয়াল এডিট" : "নোট/ম্যাটেরিয়াল যোগ করুন"}
             </h2>
             <p className="mt-1 text-xs text-slate-400">লেকচার: {courseClass.title}</p>
           </div>

@@ -10,6 +10,7 @@ import {
   Clock,
   HelpCircle,
   ListChecks,
+  MessageSquare,
   Pencil,
   RefreshCw,
   Trash2,
@@ -105,6 +106,20 @@ export default function ExamList() {
                   রেজাল্ট পাবলিশ করুন
                 </button>
               )}
+
+              {/* Publishing a result only *prepares* the guardian SMS draft, so
+                  there has to be a way to reach it — otherwise the messages the
+                  client asked for sit in a queue nobody opens. */}
+              {(exam.is_result_published || exam.result_status === "published") &&
+                hasPermission("can_send_guardian_sms") && (
+                  <Link
+                    href="/guardian-sms"
+                    className="flex items-center gap-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3.5 py-1.5 text-sm font-semibold text-cyan-100"
+                  >
+                    <MessageSquare size={14} />
+                    অভিভাবক SMS
+                  </Link>
+                )}
 
               {hasPermission("can_view_results") && <ExamAttemptsButton exam={exam} />}
 

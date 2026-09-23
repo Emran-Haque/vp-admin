@@ -57,7 +57,7 @@ export default function EditNoticeModal({ notice, onClose }: { notice: Notice; o
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-800/95 p-4">
       <div className="w-full max-w-[520px] rounded-[20px] border border-white/5 bg-gray-900/75 p-7 shadow-[0px_15px_30px_0px_rgba(59,130,246,0.46)]">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-slate-50">নোটিশ সম্পাদনা করুন</h2>
+          <h2 className="text-base font-bold text-slate-50">নোটিশ এডিট করুন</h2>
           <button
             type="button"
             onClick={onClose}

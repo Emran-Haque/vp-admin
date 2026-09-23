@@ -71,7 +71,7 @@ export default function CommunityFormModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" onClick={onClose}>
       <div className="flex max-h-[92vh] w-full max-w-[560px] flex-col overflow-hidden rounded-3xl border border-slate-800 bg-slate-900" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-slate-800 px-6 py-4">
-          <h2 className="text-lg font-bold text-blue-50">{link ? "সোশ্যাল লিংক সম্পাদনা" : "নতুন সোশ্যাল লিংক"}</h2>
+          <h2 className="text-lg font-bold text-blue-50">{link ? "সোশ্যাল লিংক এডিট" : "নতুন সোশ্যাল লিংক"}</h2>
           <button type="button" onClick={onClose} className="grid size-9 place-items-center rounded-xl bg-white/5 text-slate-400 hover:bg-white/10">
             <X size={16} />
           </button>

@@ -171,7 +171,7 @@ export default function AddRecordingModal({
       <div className="max-h-[92vh] w-full max-w-[560px] overflow-y-auto rounded-[20px] border border-white/5 bg-gray-900/75 p-7 shadow-[0px_15px_30px_0px_rgba(59,130,246,0.46)]">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-slate-50">
-            {isEdit ? "লেকচার সম্পাদনা" : "ক্লাস রেকর্ডিং যোগ করুন"}
+            {isEdit ? "লেকচার এডিট" : "ক্লাস রেকর্ডিং যোগ করুন"}
           </h2>
           <button
             type="button"

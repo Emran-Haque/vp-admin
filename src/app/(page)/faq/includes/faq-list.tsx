@@ -235,7 +235,7 @@ export default function FaqList({ onEdit }: { onEdit: (faq: Faq) => void }) {
                       <button
                         type="button"
                         onClick={() => onEdit(faq)}
-                        title="সম্পাদনা করুন"
+                        title="এডিট করুন"
                         className="flex size-9 items-center justify-center rounded-xl border border-slate-800 text-blue-50 transition-colors hover:bg-white/5"
                       >
                         <Pencil size={15} />

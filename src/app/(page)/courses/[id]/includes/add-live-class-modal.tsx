@@ -118,7 +118,7 @@ export default function AddLiveClassModal({
       <div className="w-full max-w-[560px] rounded-[20px] border border-white/5 bg-gray-900/75 p-7 shadow-[0px_15px_30px_0px_rgba(59,130,246,0.46)]">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-slate-50">
-            {isEdit ? "লাইভ ক্লাস সম্পাদনা" : "লাইভ ক্লাস যোগ করুন"}
+            {isEdit ? "লাইভ ক্লাস এডিট" : "লাইভ ক্লাস যোগ করুন"}
           </h2>
           <button
             type="button"

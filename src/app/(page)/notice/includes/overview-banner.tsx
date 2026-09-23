@@ -12,7 +12,7 @@ export default function OverviewBanner({ onAddClick }: { onAddClick: () => void 
           </span>
           <div>
             <h1 className="text-2xl font-bold leading-9 text-blue-50">নোটিশ ম্যানেজমেন্ট</h1>
-            <p className="mt-1 text-base text-slate-400">সকল নোটিশ তৈরি, সম্পাদনা ও প্রকাশ করুন</p>
+            <p className="mt-1 text-base text-slate-400">সকল নোটিশ তৈরি, এডিট ও প্রকাশ করুন</p>
           </div>
         </div>
 

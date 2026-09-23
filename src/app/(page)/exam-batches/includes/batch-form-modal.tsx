@@ -171,7 +171,7 @@ export default function BatchFormModal({
       >
         <div className="flex items-center justify-between border-b border-slate-800 px-6 py-4">
           <h2 className="text-lg font-bold text-blue-50">
-            {batch ? "ব্যাচ সম্পাদনা করুন" : "নতুন ব্যাচ তৈরি করুন"}
+            {batch ? "ব্যাচ এডিট করুন" : "নতুন ব্যাচ তৈরি করুন"}
           </h2>
           <button
             type="button"

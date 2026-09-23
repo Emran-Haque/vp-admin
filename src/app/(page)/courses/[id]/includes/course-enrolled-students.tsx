@@ -253,9 +253,7 @@ function EnrollmentStudentRow({
           </span>
           <span className="flex items-center gap-1">
             <BookMarked size={13} />
-            {student?.student_profile?.batch ||
-              student?.student_profile?.institution ||
-              "-"}
+            {student?.student_profile?.institution || "-"}
           </span>
           <span className="flex items-center gap-1">
             <Calendar size={13} />

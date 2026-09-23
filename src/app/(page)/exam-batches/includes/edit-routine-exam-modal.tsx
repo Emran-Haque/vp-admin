@@ -77,7 +77,7 @@ export default function EditRoutineExamModal({
       <div className="flex max-h-[92vh] w-full max-w-[560px] flex-col overflow-hidden rounded-3xl border border-slate-800 bg-slate-900" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-slate-800 px-6 py-4">
           <h3 className="flex items-center gap-2 text-base font-bold text-blue-50">
-            <CalendarClock size={18} className="text-cyan-400" /> রুটিন সম্পাদনা করুন
+            <CalendarClock size={18} className="text-cyan-400" /> রুটিন এডিট করুন
           </h3>
           <button type="button" onClick={onClose} className="grid size-8 place-items-center rounded-lg bg-white/5 text-slate-400 hover:bg-white/10">
             <X size={16} />

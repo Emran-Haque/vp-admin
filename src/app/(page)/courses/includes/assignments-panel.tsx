@@ -322,7 +322,7 @@ export function AddAssignmentModal({
       <div className="max-h-[92vh] w-full max-w-[640px] overflow-y-auto rounded-[20px] border border-white/5 bg-gray-900/75 p-7 shadow-[0px_15px_30px_0px_rgba(59,130,246,0.46)]">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-slate-50">
-            {isEdit ? "অ্যাসাইনমেন্ট সম্পাদনা" : "অ্যাসাইনমেন্ট যোগ করুন"}
+            {isEdit ? "অ্যাসাইনমেন্ট এডিট" : "অ্যাসাইনমেন্ট যোগ করুন"}
           </h2>
           <button
             type="button"

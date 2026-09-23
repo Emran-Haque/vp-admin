@@ -552,8 +552,8 @@ export default function Page() {
     <div className="flex flex-col gap-7">
       <WizardHeader
         step={step}
-        title="কোর্স সম্পাদনা করুন"
-        subtitle="কোর্সের সব তথ্য, ম্যাটেরিয়াল, সাবজেক্ট ও FAQ সম্পাদনা করুন"
+        title="কোর্স এডিট করুন"
+        subtitle="কোর্সের সব তথ্য, ম্যাটেরিয়াল, সাবজেক্ট ও FAQ এডিট করুন"
         backHref={`/courses/${courseId}`}
         onStepChange={setStep}
       />

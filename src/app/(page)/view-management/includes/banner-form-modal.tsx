@@ -141,7 +141,7 @@ export default function BannerFormModal({
       <div className="flex max-h-[94vh] w-full max-w-[820px] flex-col overflow-hidden rounded-lg border border-slate-700 bg-slate-900 shadow-[0_24px_90px_rgba(0,0,0,0.55)]" onMouseDown={(event) => event.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3.5 sm:px-5">
           <div>
-            <h2 className="text-base font-black text-slate-50">{slide ? "ব্যানার সম্পাদনা" : "নতুন ব্যানার যোগ করুন"}</h2>
+            <h2 className="text-base font-black text-slate-50">{slide ? "ব্যানার এডিট" : "নতুন ব্যানার যোগ করুন"}</h2>
             <p className="mt-0.5 text-xs text-slate-500">ছবি ও দেখানোর নিয়ম এক জায়গা থেকে ঠিক করুন।</p>
           </div>
           <button type="button" onClick={onClose} disabled={isBusy} className="grid size-9 place-items-center rounded-lg border border-slate-700 text-slate-400 hover:bg-white/5" aria-label="বন্ধ করুন">

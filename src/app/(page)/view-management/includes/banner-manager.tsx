@@ -158,7 +158,7 @@ export default function BannerManager({
                       <IconButton label="এক ধাপ আগে নিন" disabled={index === 0 || updating} onClick={() => move(slide, -1)}><ArrowUp size={15} /></IconButton>
                       <IconButton label="এক ধাপ পরে নিন" disabled={index === slides.length - 1 || updating} onClick={() => move(slide, 1)}><ArrowDown size={15} /></IconButton>
                       <IconButton label={slide.is_active ? "ব্যানার লুকান" : "ব্যানার দেখান"} disabled={updating} onClick={() => toggleVisibility(slide)}>{slide.is_active ? <EyeOff size={15} /> : <Eye size={15} />}</IconButton>
-                      <IconButton label="সম্পাদনা করুন" onClick={() => setEditing(slide)}><Pencil size={15} /></IconButton>
+                      <IconButton label="এডিট করুন" onClick={() => setEditing(slide)}><Pencil size={15} /></IconButton>
                       <IconButton label="মুছে ফেলুন" danger onClick={() => setDeletingSlide(slide)}><Trash2 size={15} /></IconButton>
                     </div>
                   </div>

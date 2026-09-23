@@ -48,7 +48,7 @@ export default function EditTeacherModal({ teacher, onClose }: { teacher: Teache
       <div className="flex max-h-[88vh] w-full max-w-[640px] flex-col rounded-[20px] border border-white/5 bg-gray-900/75 shadow-[0px_15px_30px_0px_rgba(59,130,246,0.46)]">
         <div className="flex items-center justify-between p-7 pb-0">
           <div>
-            <h2 className="text-base font-bold text-slate-50">শিক্ষক সম্পাদনা করুন</h2>
+            <h2 className="text-base font-bold text-slate-50">শিক্ষক এডিট করুন</h2>
             <p className="mt-1 text-xs text-slate-400">কার্ড, মেন্টর পেজ এবং শিক্ষক প্রোফাইলের তথ্য এখান থেকে যাবে।</p>
           </div>
           <button type="button" onClick={onClose} className="flex size-8 cursor-pointer items-center justify-center rounded-lg bg-white/5 text-slate-400">

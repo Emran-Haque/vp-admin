@@ -197,7 +197,7 @@ export default function EditBookModal({ book, onClose }: { book: Book; onClose: 
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-800/95 p-4">
       <div className="flex max-h-[85vh] w-full max-w-[600px] flex-col rounded-[20px] border border-white/5 bg-gray-900/75 shadow-[0px_15px_30px_0px_rgba(59,130,246,0.46)]">
         <div className="flex items-center justify-between p-7 pb-0">
-          <h2 className="text-base font-bold text-slate-50">বই সম্পাদনা করুন</h2>
+          <h2 className="text-base font-bold text-slate-50">বই এডিট করুন</h2>
           <button
             type="button"
             onClick={onClose}

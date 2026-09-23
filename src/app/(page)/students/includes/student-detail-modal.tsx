@@ -10,7 +10,6 @@ import {
   Phone,
   Calendar,
   GraduationCap,
-  BookMarked,
   MapPin,
 } from "lucide-react";
 import {
@@ -20,25 +19,39 @@ import {
 } from "@/redux/api/studentsApi";
 import { usePermissions } from "@/hooks/use-permissions";
 import { statusOf, studentStatusStyles } from "@/lib/student-status";
+import {
+  emptyProfileForm,
+  examYearOptions,
+  genderLabel,
+  GENDER_OPTIONS,
+  profileFieldLabel,
+  toProfileForm,
+  toProfilePayload,
+  type ProfileFormState,
+} from "@/lib/student-profile";
 
-const PROFILE_FIELDS: { key: keyof ProfileFormState; label: string; placeholder: string }[] = [
-  { key: "batch", label: "ব্যাচ", placeholder: "যেমন: HSC 26" },
-  { key: "session", label: "সেশন", placeholder: "যেমন: ২০২৫-২৬" },
-  { key: "institution", label: "প্রতিষ্ঠান", placeholder: "যেমন: ঢাকা কলেজ" },
-  { key: "admission_unit", label: "ভর্তি ইউনিট", placeholder: "যেমন: বিজ্ঞান" },
-  { key: "group", label: "গ্রুপ", placeholder: "যেমন: বিজ্ঞান" },
-  { key: "guardian_phone", label: "অভিভাবকের ফোন", placeholder: "01700000000" },
+type ProfileField =
+  | { key: keyof ProfileFormState; type: "text"; label: string; placeholder: string }
+  | { key: keyof ProfileFormState; type: "select"; label: string; options: { value: string; label: string }[] };
+
+const YEAR_OPTIONS = examYearOptions().map((year) => ({
+  value: String(year),
+  label: String(year),
+}));
+
+// Ordered so the fields a guardian SMS depends on come first.
+const PROFILE_FIELDS: ProfileField[] = [
+  { key: "institution", type: "text", label: "প্রতিষ্ঠানের নাম", placeholder: "যেমন: ঢাকা কলেজ" },
+  { key: "guardian_phone", type: "text", label: "অভিভাবকের ফোন", placeholder: "01700000000" },
+  { key: "gender", type: "select", label: "জেন্ডার", options: [...GENDER_OPTIONS] },
+  { key: "ssc_year", type: "select", label: "SSC পরীক্ষার বছর", options: YEAR_OPTIONS },
+  { key: "hsc_year", type: "select", label: "HSC পরীক্ষার বছর", options: YEAR_OPTIONS },
+  { key: "admission_unit", type: "text", label: "ভর্তি ইউনিট", placeholder: "যেমন: বিজ্ঞান" },
+  { key: "group", type: "text", label: "গ্রুপ", placeholder: "যেমন: বিজ্ঞান" },
 ];
 
-type ProfileFormState = {
-  batch: string;
-  session: string;
-  institution: string;
-  admission_unit: string;
-  group: string;
-  address: string;
-  guardian_phone: string;
-};
+const fieldClass =
+  "w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 placeholder:text-slate-200/50 focus:outline-none";
 
 export default function StudentDetailModal({
   studentId,
@@ -57,15 +70,7 @@ export default function StudentDetailModal({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [isVerified, setIsVerified] = useState(true);
-  const [profile, setProfile] = useState<ProfileFormState>({
-    batch: "",
-    session: "",
-    institution: "",
-    admission_unit: "",
-    group: "",
-    address: "",
-    guardian_phone: "",
-  });
+  const [profile, setProfile] = useState<ProfileFormState>(emptyProfileForm);
 
   const startEditing = () => {
     if (!student) return;
@@ -73,15 +78,7 @@ export default function StudentDetailModal({
     setEmail(student.email ?? "");
     setPhone(student.phone);
     setIsVerified(student.is_verified);
-    setProfile({
-      batch: student.student_profile?.batch ?? "",
-      session: student.student_profile?.session ?? "",
-      institution: student.student_profile?.institution ?? "",
-      admission_unit: student.student_profile?.admission_unit ?? "",
-      group: student.student_profile?.group ?? "",
-      address: student.student_profile?.address ?? "",
-      guardian_phone: student.student_profile?.guardian_phone ?? "",
-    });
+    setProfile(toProfileForm(student.student_profile));
     setIsEditing(true);
   };
 
@@ -94,7 +91,7 @@ export default function StudentDetailModal({
           email: email.trim() || null,
           phone,
           is_verified: isVerified,
-          student_profile: profile,
+          student_profile: toProfilePayload(profile),
         },
       }).unwrap();
       setIsEditing(false);
@@ -110,7 +107,7 @@ export default function StudentDetailModal({
       <div className="flex max-h-[85vh] w-full max-w-[640px] flex-col rounded-[20px] border border-white/5 bg-gray-900/75 shadow-[0px_15px_30px_0px_rgba(59,130,246,0.46)]">
         <div className="flex items-center justify-between p-7 pb-0">
           <h2 className="text-base font-bold text-slate-50">
-            {isEditing ? "শিক্ষার্থী সম্পাদনা করুন" : "শিক্ষার্থীর বিস্তারিত তথ্য"}
+            {isEditing ? "শিক্ষার্থী এডিট করুন" : "শিক্ষার্থীর বিস্তারিত তথ্য"}
           </h2>
           <button
             type="button"
@@ -162,6 +159,21 @@ export default function StudentDetailModal({
                 </div>
               </div>
 
+              {student.profile_completion && !student.profile_completion.is_complete && (
+                <div className="flex items-start gap-2 rounded-[10px] border border-amber-500/30 bg-amber-500/5 p-3">
+                  <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-400" />
+                  <p className="text-xs text-amber-200">
+                    প্রোফাইল অসম্পূর্ণ — বাকি আছে:{" "}
+                    {student.profile_completion.missing.map(profileFieldLabel).join(", ")}
+                    {!student.student_profile?.guardian_phone && (
+                      <span className="block pt-1 text-amber-300/80">
+                        অভিভাবকের ফোন নম্বর ছাড়া এই শিক্ষার্থীর অভিভাবক রেজাল্ট SMS পাবেন না।
+                      </span>
+                    )}
+                  </p>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3.5 rounded-[10px] border border-white/10 bg-white/5 p-4">
                 <div>
                   <p className="flex items-center gap-1.5 text-xs font-semibold text-slate-400">
@@ -174,16 +186,6 @@ export default function StudentDetailModal({
                     <Phone size={13} /> ফোন
                   </p>
                   <p className="pt-1 text-sm text-slate-200">{student.phone || "—"}</p>
-                </div>
-                <div>
-                  <p className="flex items-center gap-1.5 text-xs font-semibold text-slate-400">
-                    <BookMarked size={13} /> ব্যাচ
-                  </p>
-                  <p className="pt-1 text-sm text-slate-200">{student.student_profile?.batch || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-slate-400">সেশন</p>
-                  <p className="pt-1 text-sm text-slate-200">{student.student_profile?.session || "—"}</p>
                 </div>
                 <div>
                   <p className="text-xs font-semibold text-slate-400">প্রতিষ্ঠান</p>
@@ -200,6 +202,18 @@ export default function StudentDetailModal({
                 <div>
                   <p className="text-xs font-semibold text-slate-400">অভিভাবকের ফোন</p>
                   <p className="pt-1 text-sm text-slate-200">{student.student_profile?.guardian_phone || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-400">জেন্ডার</p>
+                  <p className="pt-1 text-sm text-slate-200">{genderLabel(student.student_profile?.gender) || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-400">SSC পরীক্ষার বছর</p>
+                  <p className="pt-1 text-sm text-slate-200">{student.student_profile?.ssc_year || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-400">HSC পরীক্ষার বছর</p>
+                  <p className="pt-1 text-sm text-slate-200">{student.student_profile?.hsc_year || "—"}</p>
                 </div>
                 <div className="col-span-2">
                   <p className="flex items-center gap-1.5 text-xs font-semibold text-slate-400">
@@ -270,13 +284,28 @@ export default function StudentDetailModal({
                 {PROFILE_FIELDS.map((field) => (
                   <div key={field.key}>
                     <label className="block pb-1.5 text-xs font-semibold text-slate-400">{field.label}</label>
-                    <input
-                      type="text"
-                      value={profile[field.key]}
-                      onChange={(e) => setProfile((prev) => ({ ...prev, [field.key]: e.target.value }))}
-                      placeholder={field.placeholder}
-                      className="w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 placeholder:text-slate-200/50 focus:outline-none"
-                    />
+                    {field.type === "select" ? (
+                      <select
+                        value={profile[field.key]}
+                        onChange={(e) => setProfile((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                        className={fieldClass}
+                      >
+                        <option value="">নির্বাচন করুন</option>
+                        {field.options.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        value={profile[field.key]}
+                        onChange={(e) => setProfile((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                        placeholder={field.placeholder}
+                        className={fieldClass}
+                      />
+                    )}
                   </div>
                 ))}
               </div>
@@ -340,7 +369,7 @@ export default function StudentDetailModal({
                   className="flex cursor-pointer items-center gap-1.5 rounded-[10px] bg-gradient-to-br from-blue-500 to-blue-600 px-4 py-2 text-xs font-bold text-white shadow-[0px_4px_12px_0px_rgba(0,200,150,0.19)]"
                 >
                   <Pencil size={14} />
-                  সম্পাদনা করুন
+                  এডিট করুন
                 </button>
               )}
             </>

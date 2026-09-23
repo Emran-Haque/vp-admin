@@ -148,7 +148,7 @@ export default function AddResourceModal({
       <div className="w-full max-w-[560px] rounded-[20px] border border-white/5 bg-gray-900/75 p-7 shadow-[0px_15px_30px_0px_rgba(59,130,246,0.46)]">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-slate-50">
-            {isEdit ? "রিসোর্স সম্পাদনা" : "রিসোর্স যোগ করুন"}
+            {isEdit ? "রিসোর্স এডিট" : "রিসোর্স যোগ করুন"}
           </h2>
           <button
             type="button"

@@ -72,7 +72,7 @@ export default function EditFaqModal({
             <span className="flex size-9 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-400">
               <HelpCircle size={18} />
             </span>
-            <h2 className="text-lg font-bold text-blue-50">FAQ সম্পাদনা করুন</h2>
+            <h2 className="text-lg font-bold text-blue-50">FAQ এডিট করুন</h2>
           </div>
           <button
             type="button"

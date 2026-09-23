@@ -10,7 +10,17 @@ export type StudentProfile = {
   group: string;
   address: string;
   guardian_phone: string;
+  gender: "" | "male" | "female";
+  /** null when the student has not chosen a year yet. */
+  ssc_year: number | null;
+  hsc_year: number | null;
   extra: Record<string, unknown>;
+};
+
+/** Which required profile fields a student still has to fill in. */
+export type ProfileCompletion = {
+  is_complete: boolean;
+  missing: string[];
 };
 
 export type Student = {
@@ -24,6 +34,8 @@ export type Student = {
   is_verified: boolean;
   created_at: string;
   student_profile: StudentProfile;
+  /** Optional: absent from responses served by an older backend. */
+  profile_completion?: ProfileCompletion;
 };
 
 export type StudentListParams = {
@@ -45,6 +57,8 @@ export type CreateStudentInput = {
   phone: string;
   password: string;
   is_verified?: boolean;
+  /** Optional, so an admin-created student isn't born "incomplete". */
+  student_profile?: Partial<StudentProfile>;
 };
 
 export type UpdateStudentInput = Partial<

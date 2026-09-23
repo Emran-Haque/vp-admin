@@ -14,5 +14,6 @@ export * from "./booksApi";
 export * from "./ordersApi";
 export * from "./ledgersApi";
 export * from "./noticesApi";
+export * from "./guardianSmsApi";
 export * from "./contentApi";
 export * from "./communityLinksApi";

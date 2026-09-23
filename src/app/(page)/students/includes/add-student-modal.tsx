@@ -3,6 +3,17 @@
 import { useState } from "react";
 import { X, Save, AlertTriangle } from "lucide-react";
 import { useCreateStudentMutation } from "@/redux/api/studentsApi";
+import {
+  emptyProfileForm,
+  examYearOptions,
+  GENDER_OPTIONS,
+  toProfilePayload,
+  type ProfileFormState,
+} from "@/lib/student-profile";
+
+const fieldClass =
+  "w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 placeholder:text-slate-200/50 focus:outline-none";
+const YEARS = examYearOptions();
 
 export default function AddStudentModal({ onClose }: { onClose: () => void }) {
   const [fullName, setFullName] = useState("");
@@ -10,8 +21,12 @@ export default function AddStudentModal({ onClose }: { onClose: () => void }) {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [isVerified, setIsVerified] = useState(true);
+  const [profile, setProfile] = useState<ProfileFormState>(emptyProfileForm);
 
   const [createStudent, { isLoading, isError }] = useCreateStudentMutation();
+
+  const updateProfile = (field: keyof ProfileFormState, value: string) =>
+    setProfile((prev) => ({ ...prev, [field]: value }));
 
   const handleSave = async () => {
     try {
@@ -21,6 +36,7 @@ export default function AddStudentModal({ onClose }: { onClose: () => void }) {
         phone,
         password,
         is_verified: isVerified,
+        student_profile: toProfilePayload(profile),
       }).unwrap();
       onClose();
     } catch {
@@ -32,7 +48,9 @@ export default function AddStudentModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-800/95 p-4">
-      <div className="w-full max-w-[520px] rounded-[20px] border border-white/5 bg-gray-900/75 p-7 shadow-[0px_15px_30px_0px_rgba(59,130,246,0.46)]">
+      {/* The form grew past one screen once the profile fields were added, so it
+          scrolls rather than overflowing on a laptop or phone. */}
+      <div className="max-h-[88vh] w-full max-w-[520px] overflow-y-auto rounded-[20px] border border-white/5 bg-gray-900/75 p-7 shadow-[0px_15px_30px_0px_rgba(59,130,246,0.46)]">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-bold text-slate-50">নতুন শিক্ষার্থী যোগ করুন</h2>
           <button
@@ -96,6 +114,76 @@ export default function AddStudentModal({ onClose }: { onClose: () => void }) {
                 className="w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 placeholder:text-slate-200/50 focus:outline-none"
               />
               <p className="mt-1.5 text-[11px] text-slate-500">কমপক্ষে ৮ অক্ষর।</p>
+            </div>
+          </div>
+
+          <div className="border-t border-white/10 pt-3.5">
+            <p className="pb-3 text-[11px] font-bold uppercase tracking-wide text-slate-500">
+              প্রোফাইল তথ্য (ঐচ্ছিক)
+            </p>
+            <div className="grid grid-cols-2 gap-3.5">
+              <div>
+                <label className="block pb-1.5 text-xs font-semibold text-slate-400">
+                  অভিভাবকের ফোন
+                </label>
+                <input
+                  type="text"
+                  value={profile.guardian_phone}
+                  onChange={(e) => updateProfile("guardian_phone", e.target.value)}
+                  placeholder="01700000000"
+                  className={fieldClass}
+                />
+                <p className="mt-1.5 text-[11px] text-slate-500">
+                  এই নম্বরেই রেজাল্টের SMS যাবে।
+                </p>
+              </div>
+
+              <div>
+                <label className="block pb-1.5 text-xs font-semibold text-slate-400">
+                  প্রতিষ্ঠানের নাম
+                </label>
+                <input
+                  type="text"
+                  value={profile.institution}
+                  onChange={(e) => updateProfile("institution", e.target.value)}
+                  placeholder="যেমন: ঢাকা কলেজ"
+                  className={fieldClass}
+                />
+              </div>
+
+              <div>
+                <label className="block pb-1.5 text-xs font-semibold text-slate-400">জেন্ডার</label>
+                <select
+                  value={profile.gender}
+                  onChange={(e) => updateProfile("gender", e.target.value)}
+                  className={fieldClass}
+                >
+                  <option value="">নির্বাচন করুন</option>
+                  {GENDER_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block pb-1.5 text-xs font-semibold text-slate-400">
+                  HSC পরীক্ষার বছর
+                </label>
+                <select
+                  value={profile.hsc_year}
+                  onChange={(e) => updateProfile("hsc_year", e.target.value)}
+                  className={fieldClass}
+                >
+                  <option value="">নির্বাচন করুন</option>
+                  {YEARS.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 

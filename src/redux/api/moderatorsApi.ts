@@ -30,6 +30,7 @@ export type ModeratorPermissions = {
   can_publish_result: boolean;
   can_view_results: boolean;
   can_view_leaderboard: boolean;
+  can_send_guardian_sms: boolean;
   can_manage_assignments: boolean;
   can_evaluate_assignments: boolean;
   can_view_books: boolean;

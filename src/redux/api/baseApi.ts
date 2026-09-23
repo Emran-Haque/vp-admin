@@ -78,6 +78,9 @@ export const baseApi = createApi({
     "HomeContent",
     "CommunityLinks",
     "Notifications",
+    "SmsCampaigns",
+    "SmsRecipients",
+    "SmsTemplates",
   ],
   endpoints: () => ({}),
 });
