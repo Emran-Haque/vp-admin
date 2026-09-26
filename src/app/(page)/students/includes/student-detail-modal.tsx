@@ -19,6 +19,7 @@ import {
 } from "@/redux/api/studentsApi";
 import { usePermissions } from "@/hooks/use-permissions";
 import { statusOf, studentStatusStyles } from "@/lib/student-status";
+import StudentDevicePanel from "./student-device-panel";
 import {
   emptyProfileForm,
   examYearOptions,
@@ -244,6 +245,8 @@ export default function StudentDetailModal({
                   )}
                 </div>
               </div>
+
+              {hasPermission("can_view_login_requests") && <StudentDevicePanel studentId={studentId} />}
             </>
           )}
 

@@ -7,6 +7,7 @@ import Toolbar, { type StatusFilter, NOT_ENROLLED_VALUE } from "./includes/toolb
 import StudentList from "./includes/student-list";
 import Pagination from "./includes/pagination";
 import AddStudentModal from "./includes/add-student-modal";
+import StudentsTabs from "./includes/students-tabs";
 import { useGetCoursesQuery, coursesApi, type Enrollment } from "@/redux/api/coursesApi";
 import { studentsApi, useGetStudentsQuery, type Student, type StudentListParams } from "@/redux/api/studentsApi";
 import { useAppDispatch } from "@/redux/hooks";
@@ -129,6 +130,7 @@ export default function Page() {
 
   return (
     <div className="flex flex-col gap-7">
+      <StudentsTabs />
       <OverviewBanner onAddClick={() => setModalOpen(true)} />
       <Stats />
       <Toolbar

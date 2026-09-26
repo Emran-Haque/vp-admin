@@ -6,6 +6,8 @@ export type ModeratorPermissions = {
   granted: string[];
   can_view_dashboard: boolean;
   can_view_students: boolean;
+  can_view_login_requests: boolean;
+  can_manage_login_requests: boolean;
   can_create_student: boolean;
   can_edit_student: boolean;
   can_delete_student: boolean;

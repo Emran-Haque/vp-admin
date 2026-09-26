@@ -12,6 +12,8 @@ export const groupLabels: Record<string, string> = {
 export const permissionLabels: Record<string, string> = {
   can_view_dashboard: "ড্যাশবোর্ড দেখা",
   can_view_students: "শিক্ষার্থী দেখা",
+  can_view_login_requests: "লগইন রিকোয়েস্ট ও লগইন ইতিহাস দেখা",
+  can_manage_login_requests: "লগইন রিকোয়েস্ট অনুমোদন/বাতিল ও সব ডিভাইস থেকে লগআউট",
   can_create_student: "শিক্ষার্থী যোগ করা",
   can_edit_student: "শিক্ষার্থী এডিট",
   can_delete_student: "শিক্ষার্থী মুছে ফেলা",

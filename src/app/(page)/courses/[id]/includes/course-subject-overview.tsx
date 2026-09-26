@@ -32,6 +32,7 @@ import {
   type CourseClass,
 } from "@/redux/api/classesApi";
 import { getMediaUrl } from "@/redux/api/baseApi";
+import CopyExamLinkButton from "./copy-exam-link-button";
 import AssignmentCard from "./assignment-card";
 import ClassCard from "./class-card";
 import {
@@ -773,7 +774,7 @@ function AdminLectureCard({
       icon: ClipboardList,
       count: assignments.length,
     },
-    { key: "mcq" as const, label: "MCQ", icon: ClipboardCheck, count: exams.length },
+    { key: "mcq" as const, label: "মডেল টেস্ট", icon: ClipboardCheck, count: exams.length },
     {
       key: "results" as const,
       label: "ফলাফল",
@@ -1001,13 +1002,14 @@ function AdminLectureCard({
 
           {activeModal === "mcq" ? (
             <div className="space-y-4">
-              <ModalActionBar label="MCQ যোগ করুন" onClick={() => closeThen(onAddExam)} />
+              <ModalActionBar label="মডেল টেস্ট যোগ করুন" onClick={() => closeThen(onAddExam)} />
               <ItemList
-                empty="MCQ যোগ করা হয়নি"
+                empty="মডেল টেস্ট যোগ করা হয়নি"
                 items={exams.map((exam) => ({
                   id: exam.id,
                   title: exam.title,
-                  meta: `${exam.total_questions} প্রশ্ন · ${exam.status}`,
+                  meta: `${exam.total_questions} প্রশ্ন · ${EXAM_STATUS_LABELS[exam.status] ?? exam.status}`,
+                  copyLink: { examId: exam.id, isDraft: exam.status !== "published" },
                   onEdit: () => router.push(`/mcq/${exam.id}/edit`),
                   onDelete: () => onDeleteExam(exam),
                 }))}
@@ -1018,12 +1020,12 @@ function AdminLectureCard({
           {activeModal === "results" ? (
             <div className="space-y-4">
               <div className="grid grid-cols-3 gap-3 max-[680px]:grid-cols-1">
-                <ResultStat label="মোট MCQ" value={exams.length} />
+                <ResultStat label="মোট মডেল টেস্ট" value={exams.length} />
                 <ResultStat label="প্রকাশিত ফলাফল" value={publishedResults} />
                 <ResultStat label="অপ্রকাশিত" value={Math.max(exams.length - publishedResults, 0)} />
               </div>
               <ItemList
-                empty="এই লেকচারে কোনো MCQ ফলাফল নেই"
+                empty="এই লেকচারে কোনো মডেল টেস্টের ফলাফল নেই"
                 items={exams.map((exam) => ({
                   id: exam.id,
                   title: exam.title,
@@ -1350,6 +1352,14 @@ type ListItem = {
   onEdit?: () => void;
   onDelete?: () => void;
   telegramAssignmentId?: number;
+  /** Model tests: a button that copies the student link to this test. */
+  copyLink?: { examId: number; isDraft: boolean };
+};
+
+const EXAM_STATUS_LABELS: Record<string, string> = {
+  published: "প্রকাশিত",
+  draft: "খসড়া",
+  closed: "বন্ধ",
 };
 
 function ItemList({
@@ -1382,8 +1392,15 @@ function ItemList({
           item.onView ||
           item.onEdit ||
           item.onDelete ||
+          item.copyLink ||
           item.telegramAssignmentId ? (
             <div className="flex shrink-0 items-center gap-2">
+              {item.copyLink ? (
+                <CopyExamLinkButton
+                  examId={item.copyLink.examId}
+                  isDraft={item.copyLink.isDraft}
+                />
+              ) : null}
               {item.telegramAssignmentId ? (
                 <AssignmentTelegramButton
                   assignmentId={item.telegramAssignmentId}

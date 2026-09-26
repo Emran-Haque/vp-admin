@@ -8,6 +8,7 @@ import { User, LogOut } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { logout } from "@/redux/slices/authSlice";
 import { useNavPermissions } from "@/hooks/use-nav-permissions";
+import { usePendingLoginRequests } from "@/hooks/use-pending-login-requests";
 import LogoutConfirmModal from "./logout-confirm-modal";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -22,6 +23,7 @@ export default function Sidebar() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
   const { visibleNavItems } = useNavPermissions();
+  const pendingLoginRequests = usePendingLoginRequests();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const handleLogout = () => {
@@ -40,7 +42,9 @@ export default function Sidebar() {
           মেনু
         </p>
         {visibleNavItems.map((item) => {
-          const isActive = pathname === item.href;
+          // Sub-pages (e.g. /students/login-requests) keep their section lit.
+          const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const badge = item.href === "/students" ? pendingLoginRequests : 0;
           const Icon = item.icon;
           return (
             <Link
@@ -60,6 +64,14 @@ export default function Sidebar() {
                 <Icon size={16} className={isActive ? "text-blue-500" : "text-white"} />
               </span>
               <span className="flex-1">{item.label}</span>
+              {badge > 0 ? (
+                <span
+                  className="min-w-5 rounded-full bg-amber-500 px-1.5 py-0.5 text-center text-[10px] font-bold text-gray-950"
+                  title="অপেক্ষমাণ লগইন রিকোয়েস্ট"
+                >
+                  {badge.toLocaleString("bn-BD")}
+                </span>
+              ) : null}
             </Link>
           );
         })}

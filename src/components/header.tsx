@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Menu, Bell, User, X, Mail, Phone, Shield, Pencil, Check, LogOut, type LucideIcon } from "lucide-react";
 import { navItems } from "./nav-items";
 import { useNavPermissions } from "@/hooks/use-nav-permissions";
+import { usePendingLoginRequests } from "@/hooks/use-pending-login-requests";
 import { logout } from "@/redux/slices/authSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { useGetAdminDashboardQuery } from "@/redux/api/dashboardApi";
@@ -24,10 +25,15 @@ export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const current = navItems.find((item) => item.href === pathname);
+  // Longest match, so a sub-page like /students/login-requests is titled by
+  // its section instead of falling back to "ড্যাশবোর্ড".
+  const current = navItems
+    .filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))
+    .sort((a, b) => b.href.length - a.href.length)[0];
   const user = useAppSelector((state) => state.auth.user);
   const isSuperAdmin = user?.role === "super_admin";
   const { visibleNavItems } = useNavPermissions();
+  const pendingLoginRequests = usePendingLoginRequests();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -218,7 +224,8 @@ export default function Header() {
             </div>
             <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-3">
               {visibleNavItems.map((item) => {
-                const isActive = pathname === item.href;
+                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                const badge = item.href === "/students" ? pendingLoginRequests : 0;
                 const Icon = item.icon;
                 return (
                   <Link
@@ -239,6 +246,11 @@ export default function Header() {
                       <Icon size={16} className={isActive ? "text-blue-500" : "text-white"} />
                     </span>
                     <span className="flex-1">{item.label}</span>
+                    {badge > 0 ? (
+                      <span className="min-w-5 rounded-full bg-amber-500 px-1.5 py-0.5 text-center text-[10px] font-bold text-gray-950">
+                        {badge.toLocaleString("bn-BD")}
+                      </span>
+                    ) : null}
                   </Link>
                 );
               })}

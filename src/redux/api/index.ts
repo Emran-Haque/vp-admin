@@ -3,6 +3,7 @@ export * from "./types";
 export * from "./authApi";
 export * from "./dashboardApi";
 export * from "./studentsApi";
+export * from "./deviceLockApi";
 export * from "./moderatorsApi";
 export * from "./coursesApi";
 export * from "./courseSubjectsApi";

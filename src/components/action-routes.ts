@@ -7,4 +7,5 @@ import type { RouteGuard } from "./nav-items";
 export const actionRoutes: RouteGuard[] = [
   { href: "/courses/create", permission: "can_create_course" },
   { href: "/mcq/create", permission: "can_create_exam" },
+  { href: "/students/login-requests", permission: "can_view_login_requests" },
 ];

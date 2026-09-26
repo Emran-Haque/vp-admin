@@ -81,6 +81,9 @@ export const baseApi = createApi({
     "SmsCampaigns",
     "SmsRecipients",
     "SmsTemplates",
+    "DeviceRequests",
+    "StudentDevices",
+    "DeviceLock",
   ],
   endpoints: () => ({}),
 });
