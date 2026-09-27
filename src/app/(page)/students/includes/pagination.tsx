@@ -10,10 +10,7 @@ type Props = {
   ariaLabel?: string;
   /** "Showing x–y of n" line. Defaults to the student list's wording. */
   summary?: (range: { start: number; end: number; count: number }) => string;
-  /**
-   * For a pager inside an existing card: no box of its own, and on phones a
-   * compact "‹ 3 / 12 ›" instead of the full row of page numbers.
-   */
+  /** For a pager inside an existing card: no box of its own. */
   compact?: boolean;
 };
 
@@ -63,14 +60,14 @@ export default function Pagination({
       className={
         compact
           ? "flex flex-col items-center gap-2.5 sm:flex-row sm:justify-between sm:gap-3"
-          : "flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-800 bg-slate-900 px-5 py-4"
+          : "flex flex-col items-center gap-2.5 rounded-2xl border border-slate-800 bg-slate-900 px-3 py-3 sm:flex-row sm:flex-wrap sm:justify-between sm:gap-3 sm:rounded-3xl sm:px-5 sm:py-4"
       }
     >
       <p className="text-xs text-slate-400">
         {summary ? summary({ start, end, count }) : `মোট ${count} জন শিক্ষার্থীর মধ্যে ${start}–${end} দেখানো হচ্ছে`}
       </p>
 
-      {totalPages > 1 && compact && (
+      {totalPages > 1 && (
         // Phones: prev · "3 / 12" · next, so the bar never wraps or overflows.
         <div className="flex items-center gap-2 sm:hidden">
           <button
@@ -98,7 +95,7 @@ export default function Pagination({
       )}
 
       {totalPages > 1 && (
-        <div className={`${compact ? "hidden sm:flex" : "flex"} flex-wrap items-center gap-1.5`}>
+        <div className="hidden flex-wrap items-center gap-1.5 sm:flex">
           <button
             type="button"
             disabled={disabled || page <= 1}

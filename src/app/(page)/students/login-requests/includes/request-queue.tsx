@@ -50,13 +50,15 @@ export default function RequestQueue() {
   }
 
   return (
-    <section className="rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)] sm:p-7">
+    // Phones: no outer box, so each request card gets the full screen width.
+    <section className="sm:rounded-3xl sm:border sm:border-slate-800 sm:bg-slate-900 sm:p-7 sm:shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex gap-1 overflow-x-auto rounded-2xl border border-slate-800 bg-gray-900/60 p-1" role="tablist">
           {TABS.map((item) => (
             <button
               aria-selected={tab === item.value}
-              className={`shrink-0 rounded-xl px-4 py-2 text-sm font-bold transition-colors ${
+              // Phones: the four tabs share the row evenly instead of scrolling.
+              className={`flex-1 shrink-0 rounded-xl px-2 py-2 text-xs font-bold transition-colors sm:flex-none sm:px-4 sm:text-sm ${
                 tab === item.value ? "bg-cyan-500/20 text-cyan-300" : "text-slate-400 hover:text-slate-200"
               }`}
               key={item.value}
@@ -87,7 +89,7 @@ export default function RequestQueue() {
         </div>
       </div>
 
-      <div className="mt-5 flex flex-col gap-3">
+      <div className="mt-4 flex flex-col gap-2.5 sm:mt-5 sm:gap-3">
         {isLoading ? <PageLoader /> : null}
         {isError ? <ErrorState message="লগইন রিকোয়েস্ট লোড করা যায়নি।" error={error} /> : null}
 
@@ -151,7 +153,7 @@ function RequestCard({
   const status = requestStatusStyles[request.status];
 
   return (
-    <article className="min-w-0 rounded-2xl border border-slate-800 bg-gray-800 p-4">
+    <article className="min-w-0 rounded-2xl border border-slate-800 bg-gray-800 p-3.5 sm:p-4">
       <div className="flex flex-wrap items-center gap-2">
         <span className="min-w-0 truncate text-sm font-bold text-blue-50">{request.student.full_name}</span>
         <span className="text-xs text-slate-400">
@@ -169,7 +171,7 @@ function RequestCard({
         ) : null}
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+      <div className="mt-2.5 flex flex-wrap items-center gap-2 text-xs sm:mt-3 sm:text-sm">
         <span className="rounded-lg bg-white/5 px-2.5 py-1 text-slate-300">
           {request.locked_device_label || "কোনো ডিভাইস নেই"}
         </span>
@@ -177,12 +179,12 @@ function RequestCard({
         <span className="rounded-lg bg-cyan-500/10 px-2.5 py-1 font-semibold text-cyan-300">{request.label}</span>
       </div>
 
-      <p className="mt-2.5 text-sm text-slate-300">
+      <p className="mt-2 text-[13px] text-slate-300 sm:mt-2.5 sm:text-sm">
         <span className="font-semibold text-slate-200">কারণ:</span> {request.reason_label}
         {request.note ? <span className="text-slate-400"> — “{request.note}”</span> : null}
       </p>
 
-      <footer className="mt-3 flex flex-col gap-2.5 border-t border-slate-700/60 pt-3 sm:flex-row sm:items-center sm:gap-3">
+      <footer className="mt-2.5 flex flex-col gap-2 border-t border-slate-700/60 pt-2.5 sm:mt-3 sm:flex-row sm:items-center sm:gap-3 sm:pt-3">
         <p className="min-w-0 text-xs text-slate-400">
           {formatDateTime(request.created_at)}
           {request.ip_address ? ` · IP ${request.ip_address}` : ""}

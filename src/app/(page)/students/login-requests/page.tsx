@@ -6,7 +6,7 @@ import RequestQueue from "./includes/request-queue";
 
 export default function Page() {
   return (
-    <div className="flex flex-col gap-7">
+    <div className="flex flex-col gap-4 sm:gap-7">
       <StudentsTabs />
       <LoginRequestsOverview />
       <RequestQueue />

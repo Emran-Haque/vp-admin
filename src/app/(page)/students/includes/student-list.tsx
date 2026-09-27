@@ -49,7 +49,7 @@ export default function StudentList({
       {/* Keep the previous page on screen, dimmed, while the next one loads. */}
       <section
         aria-busy={isFetching}
-        className={`flex flex-col gap-6 transition-opacity ${isFetching ? "opacity-50" : ""}`}
+        className={`flex flex-col gap-3 transition-opacity sm:gap-6 ${isFetching ? "opacity-50" : ""}`}
       >
         {students.map((student) => {
           const status = studentStatusStyles[statusOf(student)];
@@ -57,47 +57,49 @@ export default function StudentList({
             <div
               key={student.id}
               onClick={() => setSelectedStudentId(student.id)}
-              className="flex cursor-pointer flex-wrap items-center gap-6 rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)] transition-colors hover:border-slate-700"
+              className="relative flex cursor-pointer flex-wrap items-center gap-6 rounded-2xl border border-slate-800 bg-slate-900 p-3.5 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)] transition-colors hover:border-slate-700 sm:static sm:rounded-3xl sm:p-5"
             >
-              <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-sky-500">
+              <span className="hidden size-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-sky-500 sm:flex">
                 <GraduationCap size={28} className="text-white" strokeWidth={2} />
               </span>
 
-              <div className="min-w-64 flex-1">
-                <div className="flex items-center gap-3">
-                  <p className="text-lg font-semibold text-blue-50">{student.full_name}</p>
-                  <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${status.className}`}>
+              <div className="w-full min-w-0 sm:w-auto sm:min-w-64 sm:flex-1">
+                {/* Phones: right padding leaves room for the action buttons pinned top-right. */}
+                <div className="flex min-h-9 flex-wrap items-center gap-x-3 gap-y-1 pr-[5.25rem] sm:min-h-0 sm:pr-0">
+                  <p className="min-w-0 break-words text-base font-semibold text-blue-50 sm:text-lg">{student.full_name}</p>
+                  <span className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold sm:px-3 sm:py-1 sm:text-xs ${status.className}`}>
                     {status.label}
                   </span>
                 </div>
-                <div className="mt-1.5 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-slate-400">
-                  <span className="flex items-center gap-1">
-                    <Mail size={14} />
-                    {student.email || "—"}
+                {/* Phones: email / phone + joined / institution, each on one line. */}
+                <div className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-slate-400 sm:flex sm:flex-wrap sm:items-center sm:gap-x-6 sm:text-sm">
+                  <span className="col-span-2 flex min-w-0 items-center gap-1">
+                    <Mail size={14} className="shrink-0" />
+                    <span className="truncate">{student.email || "—"}</span>
                   </span>
-                  <span className="flex items-center gap-1">
-                    <Phone size={14} />
-                    {student.phone || "—"}
+                  <span className="flex min-w-0 items-center gap-1">
+                    <Phone size={14} className="shrink-0" />
+                    <span className="truncate">{student.phone || "—"}</span>
                   </span>
-                  <span className="flex items-center gap-1">
-                    <BookMarked size={14} />
-                    {student.student_profile?.institution || "—"}
+                  <span className="order-last col-span-2 flex min-w-0 items-center gap-1 sm:order-none">
+                    <BookMarked size={14} className="shrink-0" />
+                    <span className="truncate">{student.student_profile?.institution || "—"}</span>
                   </span>
-                  <span className="flex items-center gap-1">
-                    <Calendar size={14} />
-                    যোগদান: {new Date(student.created_at).toLocaleDateString("bn-BD")}
+                  <span className="flex min-w-0 items-center gap-1">
+                    <Calendar size={14} className="shrink-0" />
+                    <span className="truncate">যোগদান: {new Date(student.created_at).toLocaleDateString("bn-BD")}</span>
                   </span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+              <div className="absolute right-3 top-3 flex items-center gap-1.5 sm:static sm:gap-2" onClick={(e) => e.stopPropagation()}>
                 {hasPermission("can_edit_student") &&
                   (student.is_active ? (
                     <button
                       type="button"
                       onClick={() => deactivateStudent(student.id)}
                       title="নিষ্ক্রিয় করুন"
-                      className="flex size-10 items-center justify-center rounded-xl border border-amber-500/30 bg-amber-500/5 text-amber-500"
+                      className="flex size-9 items-center justify-center rounded-xl border sm:size-10 border-amber-500/30 bg-amber-500/5 text-amber-500"
                     >
                       <UserX size={16} />
                     </button>
@@ -106,7 +108,7 @@ export default function StudentList({
                       type="button"
                       onClick={() => reactivateStudent(student.id)}
                       title="সক্রিয় করুন"
-                      className="flex size-10 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/5 text-emerald-500"
+                      className="flex size-9 items-center justify-center rounded-xl border sm:size-10 border-emerald-500/30 bg-emerald-500/5 text-emerald-500"
                     >
                       <UserCheck size={16} />
                     </button>
@@ -117,7 +119,7 @@ export default function StudentList({
                     itemType="শিক্ষার্থী"
                     impact="শিক্ষার্থীর অ্যাকাউন্ট ও সংশ্লিষ্ট অ্যাক্সেস স্থায়ীভাবে মুছে যেতে পারে।"
                     onDelete={() => deleteStudent(student.id).unwrap()}
-                    className="flex size-10 items-center justify-center rounded-xl border border-red-500/20 bg-red-500/5 text-red-500"
+                    className="flex size-9 items-center justify-center rounded-xl border sm:size-10 border-red-500/20 bg-red-500/5 text-red-500"
                   >
                     <Trash2 size={16} />
                   </AdminDeleteButton>

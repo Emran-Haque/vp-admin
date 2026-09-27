@@ -33,11 +33,14 @@ function FilterDropdown({
   value,
   options,
   onChange,
+  className = "",
 }: {
   label: string;
   value: string;
   options: Option[];
   onChange: (value: string) => void;
+  /** Wrapper width on phones (desktop keeps its natural width). */
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -53,18 +56,19 @@ function FilterDropdown({
   const selectedLabel = options.find((o) => o.value === value)?.label;
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className={`relative sm:w-auto ${className}`}>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-6 rounded-xl border border-slate-800 bg-gray-800 px-5 py-3 text-base text-white"
+        className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-800 bg-gray-800 px-3.5 py-2.5 text-sm text-white sm:w-auto sm:justify-start sm:gap-6 sm:px-5 sm:py-3 sm:text-base"
       >
-        {selectedLabel ?? label}
-        <ChevronDown size={16} />
+        <span className="min-w-0 truncate">{selectedLabel ?? label}</span>
+        <ChevronDown size={16} className="shrink-0" />
       </button>
 
       {open && (
-        <div className="absolute right-0 z-20 mt-2 w-48 rounded-xl border border-slate-800 bg-gray-800 p-1 shadow-lg">
+        // Phones: as wide as its button, so it never runs off the screen.
+        <div className="absolute left-0 right-0 z-20 mt-2 rounded-xl border border-slate-800 bg-gray-800 p-1 shadow-lg sm:left-auto sm:w-48">
           <button
             type="button"
             onClick={() => {
@@ -111,28 +115,35 @@ export default function Toolbar({
   isExporting,
 }: Props) {
   return (
-    <section className="flex flex-wrap items-center gap-4 rounded-3xl border border-slate-800 bg-slate-900 p-6">
-      <div className="relative min-w-64 flex-1">
+    <section className="flex flex-wrap items-center gap-2.5 rounded-2xl border border-slate-800 bg-slate-900 p-3 sm:gap-4 sm:rounded-3xl sm:p-6">
+      <div className="relative w-full sm:w-auto sm:min-w-64 sm:flex-1">
         <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
         <input
           type="text"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="নাম, ইমেইল বা ফোন দিয়ে খুঁজুন..."
-          className="w-full rounded-xl border border-slate-800 bg-gray-800 py-3 pl-11 pr-4 text-base text-white placeholder:text-slate-400 focus:outline-none"
+          className="w-full rounded-xl border border-slate-800 bg-gray-800 py-2.5 pl-11 pr-4 text-sm text-white placeholder:text-slate-400 focus:outline-none sm:py-3 sm:text-base"
         />
       </div>
 
-      <SlidersHorizontal size={20} className="shrink-0 text-slate-400" />
+      <SlidersHorizontal size={20} className="hidden shrink-0 text-slate-400 sm:block" />
 
       <FilterDropdown
         label="সব কোর্স"
         value={course}
         onChange={onCourseChange}
         options={courseOptions}
+        className="w-full"
       />
 
-      <FilterDropdown label="স্ট্যাটাস" value={status} onChange={(v) => onStatusChange(v as StatusFilter)} options={STATUS_OPTIONS} />
+      <FilterDropdown
+        label="স্ট্যাটাস"
+        value={status}
+        onChange={(v) => onStatusChange(v as StatusFilter)}
+        options={STATUS_OPTIONS}
+        className="flex-1 sm:flex-none"
+      />
 
       {canExport && (
         <button
@@ -140,7 +151,7 @@ export default function Toolbar({
           onClick={onExport}
           disabled={!course || isExporting}
           title={!course ? "এক্সপোর্ট করতে একটি কোর্স নির্বাচন করুন" : undefined}
-          className="flex items-center gap-2 rounded-2xl border border-slate-800 px-4 py-2 text-base font-semibold text-blue-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-800 px-4 py-2.5 text-sm font-semibold text-blue-50 disabled:cursor-not-allowed disabled:opacity-40 sm:flex-none sm:rounded-2xl sm:py-2 sm:text-base"
         >
           <Download size={16} />
           {isExporting ? "এক্সপোর্ট হচ্ছে…" : "এক্সপোর্ট"}

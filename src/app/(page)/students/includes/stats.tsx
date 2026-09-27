@@ -49,19 +49,19 @@ export default function Stats() {
   ];
 
   return (
-    <section className="flex flex-wrap gap-4 sm:gap-6">
+    <section className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:gap-6">
       {stats.map(({ label, value, icon: Icon, card, iconBg, iconColor, valueColor }) => (
         <div
           key={label}
-          className={`flex min-w-[200px] flex-1 items-center justify-between rounded-2xl border p-4.5 transition-all ${card}`}
+          className={`flex min-w-0 flex-1 items-center justify-between rounded-2xl border p-3 transition-all sm:min-w-[200px] sm:p-4.5 ${card}`}
         >
-          <div className="flex items-center gap-3.5">
-            <span className={`flex size-11 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
-              <Icon size={22} className={iconColor} />
+          <div className="flex min-w-0 items-center gap-2.5 sm:gap-3.5">
+            <span className={`flex size-9 shrink-0 items-center justify-center rounded-xl sm:size-11 ${iconBg}`}>
+              <Icon className={`size-[18px] sm:size-[22px] ${iconColor}`} />
             </span>
             <div>
               <p className="text-xs font-medium text-slate-300">{label}</p>
-              <p className={`mt-0.5 text-2xl font-bold ${valueColor}`}>{value}</p>
+              <p className={`mt-0.5 text-xl font-bold sm:text-2xl ${valueColor}`}>{value}</p>
             </div>
           </div>
         </div>

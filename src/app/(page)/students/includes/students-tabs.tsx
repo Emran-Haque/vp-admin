@@ -35,11 +35,11 @@ export default function StudentsTabs() {
             key={href}
             href={href}
             aria-current={isActive ? "page" : undefined}
-            className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-colors ${
+            className={`flex flex-1 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-2 py-2 text-[13px] font-bold transition-colors sm:flex-none sm:justify-start sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm ${
               isActive ? "bg-cyan-500/20 text-cyan-300" : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            <Icon size={15} />
+            <Icon size={15} className="hidden shrink-0 sm:block" />
             {label}
             {badge > 0 ? (
               <span className="min-w-5 rounded-full bg-amber-500 px-1.5 py-0.5 text-center text-[11px] font-bold text-gray-950">

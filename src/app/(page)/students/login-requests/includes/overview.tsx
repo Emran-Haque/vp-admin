@@ -15,27 +15,28 @@ export default function LoginRequestsOverview() {
   const { data: summary } = useGetDeviceRequestSummaryQuery();
 
   return (
-    <section className="flex flex-col gap-6 rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)] lg:flex-row lg:items-center lg:justify-between">
-      <div className="flex items-center gap-4">
-        <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-[0px_4px_20px_0px_rgba(6,182,212,0.30)]">
-          <ShieldCheck size={28} className="text-white" />
+    <section className="flex flex-col gap-4 rounded-3xl border border-slate-800 bg-slate-900 p-4 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)] sm:gap-6 sm:p-7 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex items-center gap-3 sm:gap-4">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-[0px_4px_20px_0px_rgba(6,182,212,0.30)] sm:size-14">
+          <ShieldCheck className="size-6 text-white sm:size-7" />
         </span>
         <div>
-          <h1 className="text-2xl font-bold leading-8 text-blue-50">লগইন রিকোয়েস্ট</h1>
-          <p className="mt-1 text-sm text-slate-400">
+          <h1 className="text-lg font-bold leading-7 text-blue-50 sm:text-2xl sm:leading-8">লগইন রিকোয়েস্ট</h1>
+          <p className="mt-0.5 text-xs text-slate-400 sm:mt-1 sm:text-sm">
             প্রতিটি শিক্ষার্থী একটি ডিভাইসে ব্যবহার করতে পারে। অন্য ডিভাইসে ব্যবহারের অনুমতি
             চাইলে রিকোয়েস্ট এখানে আসে।
           </p>
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
-        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-5 py-3 text-center text-amber-400">
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-stretch sm:gap-3">
+        {/* Phones: one slim row ("অপেক্ষমাণ … ৩") instead of a tall tile. */}
+        <div className="flex items-center justify-between rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-amber-400 sm:block sm:px-5 sm:py-3 sm:text-center">
           <div className="flex items-center justify-center gap-1">
             <Clock size={12} />
             <p className="text-[11px] font-medium">অপেক্ষমাণ</p>
           </div>
-          <p className="mt-0.5 text-xl font-bold">{(summary?.pending ?? 0).toLocaleString("bn-BD")}</p>
+          <p className="text-lg font-bold sm:mt-0.5 sm:text-xl">{(summary?.pending ?? 0).toLocaleString("bn-BD")}</p>
         </div>
         <LockSwitch />
       </div>
@@ -53,7 +54,7 @@ function LockSwitch() {
 
   return (
     <div
-      className={`flex items-center gap-3 rounded-2xl border px-4 py-3 ${
+      className={`flex items-center gap-3 rounded-2xl border px-3.5 py-2.5 sm:px-4 sm:py-3 ${
         isOn ? "border-emerald-500/30 bg-emerald-500/10" : "border-slate-700 bg-gray-900/60"
       }`}
     >
