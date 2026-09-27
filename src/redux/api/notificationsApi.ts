@@ -9,6 +9,8 @@ export type AdminNotification = {
   is_read: boolean;
   related_object_type: string;
   related_object_id: number | null;
+  /** Admin-panel path to open; empty on older notifications. */
+  link?: string;
   created_at: string;
 };
 

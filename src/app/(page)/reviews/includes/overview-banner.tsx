@@ -13,14 +13,14 @@ export default function OverviewBanner() {
   const rejected = data?.rejected ?? 0;
 
   return (
-    <section className="flex flex-col gap-6 rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)] sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-center gap-4">
-        <span className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-500 shadow-[0px_4px_20px_0px_rgba(245,158,11,0.30)]">
-          <Star size={28} className="fill-white text-white" />
+    <section className="flex flex-col gap-4 rounded-3xl border border-slate-800 bg-slate-900 p-4 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)] sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:p-7">
+      <div className="flex items-center gap-3 sm:gap-4">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl sm:size-14 bg-gradient-to-br from-amber-500 to-yellow-500 shadow-[0px_4px_20px_0px_rgba(245,158,11,0.30)]">
+          <Star className="size-6 fill-white text-white sm:size-7" />
         </span>
         <div>
-          <h1 className="text-2xl font-bold leading-8 text-blue-50">শিক্ষার্থী রিভিউ ম্যানেজমেন্ট</h1>
-          <p className="mt-1 text-sm text-slate-400">
+          <h1 className="text-lg font-bold leading-7 text-blue-50 sm:text-2xl sm:leading-8">শিক্ষার্থী রিভিউ ম্যানেজমেন্ট</h1>
+          <p className="mt-0.5 text-xs text-slate-400 sm:mt-1 sm:text-sm">
             অনুমোদনের পরই রিভিউ ওয়েবসাইটে প্রকাশ পাবে
           </p>
         </div>
@@ -63,7 +63,7 @@ function Stat({
   className: string;
 }) {
   return (
-    <div className={`rounded-2xl border px-3 py-2.5 text-center sm:px-4 ${className}`}>
+    <div className={`rounded-2xl border px-2 py-2 text-center sm:px-4 sm:py-2.5 ${className}`}>
       <div className="flex items-center justify-center gap-1">
         <Icon size={12} />
         <p className="text-[11px] font-medium">{label}</p>

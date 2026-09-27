@@ -65,11 +65,20 @@ export function getNotificationVisual(type: string): NotificationVisual {
   return visuals[type] ?? visuals.general;
 }
 
+/** An in-panel path from the backend ("/reviews?status=pending"), never a full URL. */
+function isPanelPath(link: string | undefined): link is string {
+  return Boolean(link && link.startsWith("/") && !link.startsWith("//"));
+}
+
 export function getNotificationHref(notification: {
   notification_type: string;
   related_object_type: string;
   related_object_id: number | null;
+  /** Set by the backend on staff notifications; the admin app follows it too. */
+  link?: string;
 }) {
+  if (isPanelPath(notification.link)) return notification.link;
+  // Below: notifications stored before `link` existed.
   const id = notification.related_object_id;
   switch (notification.related_object_type) {
     case "order":
@@ -84,6 +93,13 @@ export function getNotificationHref(notification: {
       return "/notice";
     case "inactivity":
       return "/students";
+    case "sms_failure":
+    case "sms_campaign":
+      return "/guardian-sms";
+    case "exam_missed_digest":
+      return "/results";
+    case "login_request":
+      return "/students/login-requests";
     default:
       return null;
   }

@@ -20,6 +20,7 @@ export type AdminDashboard = {
     is_read: boolean;
     related_object_type: string;
     related_object_id: number | null;
+    link?: string;
     created_at: string;
   }[];
   unread_notifications?: number;

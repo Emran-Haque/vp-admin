@@ -52,16 +52,19 @@ export default function BatchManageView({
   batchId,
   onBack,
   onEditBatch,
+  initialShowJoinRequests = false,
 }: {
   batchId: number;
   onBack: () => void;
   onEditBatch: (batch: ExamBatch) => void;
+  /** Open with the join-request list showing (from a join-request notification). */
+  initialShowJoinRequests?: boolean;
 }) {
   const { data: batch, isLoading, isError, error, refetch } = useGetExamBatchQuery(batchId);
   const [deleteExam] = useDeleteExamMutation();
   const [showAdd, setShowAdd] = useState(false);
   const [showStudents, setShowStudents] = useState(false);
-  const [showJoinRequests, setShowJoinRequests] = useState(false);
+  const [showJoinRequests, setShowJoinRequests] = useState(initialShowJoinRequests);
   const [editingExam, setEditingExam] = useState<{ id: number; title: string } | null>(null);
   const [editingRow, setEditingRow] = useState<ExamBatchExam | null>(null);
 

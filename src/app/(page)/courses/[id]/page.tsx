@@ -25,6 +25,10 @@ export default function Page() {
   const params = useParams<{ id: string }>();
   const searchParams = useSearchParams();
   const courseId = Number(params.id);
+  // "?assignment=<id>" (from a submission notification) opens its submissions.
+  const assignmentParam = Number(searchParams.get("assignment"));
+  const linkedAssignmentId =
+    Number.isInteger(assignmentParam) && assignmentParam > 0 ? assignmentParam : null;
   const [activeTab, setActiveTab] = useState<CourseManagementTab>(
     searchParams.get("tab") === "students" ? "students" : "subjects"
   );
@@ -71,7 +75,12 @@ export default function Page() {
       </div>
 
       {activeTab === "subjects" ? (
-        <CourseSubjectOverview courseId={course.id} />
+        <CourseSubjectOverview
+          courseId={course.id}
+          // Keyed so a second notification link to another assignment re-opens.
+          key={linkedAssignmentId ?? "none"}
+          linkedAssignmentId={linkedAssignmentId}
+        />
       ) : (
         <CourseEnrolledStudents
           courseId={course.id}

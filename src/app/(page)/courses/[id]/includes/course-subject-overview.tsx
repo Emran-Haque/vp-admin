@@ -20,6 +20,7 @@ import {
   Trash2,
 } from "lucide-react";
 import {
+  useGetAssignmentQuery,
   useGetAssignmentsQuery,
   useDeleteAssignmentMutation,
   type Assignment,
@@ -105,7 +106,14 @@ function totalItems(bundle: SubjectBundle) {
   );
 }
 
-export default function CourseSubjectOverview({ courseId }: { courseId: number }) {
+export default function CourseSubjectOverview({
+  courseId,
+  linkedAssignmentId = null,
+}: {
+  courseId: number;
+  /** From a submission notification: open this assignment's submissions. */
+  linkedAssignmentId?: number | null;
+}) {
   const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null);
   const [modal, setModal] = useState<ModalKey>(null);
   const { data: subjectsData, isLoading: subjectsLoading } =
@@ -228,6 +236,14 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
   const [actionLecture, setActionLecture] = useState<CourseClass | null>(null);
   const [editMaterial, setEditMaterial] = useState<ClassMaterial | null>(null);
   const [viewSubmissions, setViewSubmissions] = useState<Assignment | null>(null);
+  // Fetched by id (not picked from the paginated list) so it is always found.
+  const { data: linkedAssignment } = useGetAssignmentQuery(linkedAssignmentId ?? 0, {
+    skip: !linkedAssignmentId,
+  });
+  const [linkDismissed, setLinkDismissed] = useState(false);
+  const submissionsFor =
+    viewSubmissions ??
+    (!linkDismissed && linkedAssignment?.course === courseId ? linkedAssignment : null);
   const [telegramMessage, setTelegramMessage] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -589,10 +605,13 @@ export default function CourseSubjectOverview({ courseId }: { courseId: number }
         />
       ) : null}
 
-      {viewSubmissions ? (
+      {submissionsFor ? (
         <AssignmentSubmissionsModal
-          assignment={viewSubmissions}
-          onClose={() => setViewSubmissions(null)}
+          assignment={submissionsFor}
+          onClose={() => {
+            setViewSubmissions(null);
+            setLinkDismissed(true);
+          }}
         />
       ) : null}
       {modal === "material" && actionLecture ? (

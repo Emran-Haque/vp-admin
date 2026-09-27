@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ClipboardCheck, Plus } from "lucide-react";
 import ConfirmDeleteDialog from "@/components/confirm-delete-dialog";
 import ErrorState from "@/components/error-state";
@@ -14,12 +15,45 @@ import BatchManageView from "./includes/batch-manage-view";
 // `null` = closed; "new" = create; an ExamBatch = edit.
 type ModalState = null | "new" | ExamBatch;
 
+/**
+ * "?batch=<id>" (from a batch notification) opens that batch; adding
+ * "&view=join-requests" also opens its join-request list. Keyed so a second
+ * notification link re-applies it.
+ */
+function ExamBatchesFromUrl() {
+  const params = useSearchParams();
+  const batchParam = Number(params.get("batch"));
+  const batchId = Number.isInteger(batchParam) && batchParam > 0 ? batchParam : null;
+  const showJoinRequests = params.get("view") === "join-requests";
+  return (
+    <ExamBatchesPage
+      initialBatchId={batchId}
+      initialShowJoinRequests={showJoinRequests}
+      key={`${batchId ?? "list"}-${showJoinRequests}`}
+    />
+  );
+}
+
 export default function Page() {
+  return (
+    <Suspense fallback={<PageLoader label="পরীক্ষা ব্যাচ লোড হচ্ছে..." />}>
+      <ExamBatchesFromUrl />
+    </Suspense>
+  );
+}
+
+function ExamBatchesPage({
+  initialBatchId,
+  initialShowJoinRequests,
+}: {
+  initialBatchId: number | null;
+  initialShowJoinRequests: boolean;
+}) {
   const { hasPermission } = usePermissions();
   const { data, isLoading, isError, error } = useGetExamBatchesQuery();
   const [deleteExamBatch, { isLoading: isDeleting }] = useDeleteExamBatchMutation();
   const [modal, setModal] = useState<ModalState>(null);
-  const [manageId, setManageId] = useState<number | null>(null);
+  const [manageId, setManageId] = useState<number | null>(initialBatchId);
   const [batchToDelete, setBatchToDelete] = useState<ExamBatch | null>(null);
 
   if (isLoading) return <PageLoader label="পরীক্ষা ব্যাচ লোড হচ্ছে..." />;
@@ -35,6 +69,7 @@ export default function Page() {
       <>
         <BatchManageView
           batchId={manageId}
+          initialShowJoinRequests={manageId === initialBatchId && initialShowJoinRequests}
           onBack={() => setManageId(null)}
           onEditBatch={(batch) => setModal(batch)}
         />

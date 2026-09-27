@@ -6,6 +6,15 @@ type Props = {
   pageSize: number;
   disabled?: boolean;
   onPageChange: (page: number) => void;
+  /** Screen-reader name of the list. Defaults to the student list's. */
+  ariaLabel?: string;
+  /** "Showing x–y of n" line. Defaults to the student list's wording. */
+  summary?: (range: { start: number; end: number; count: number }) => string;
+  /**
+   * For a pager inside an existing card: no box of its own, and on phones a
+   * compact "‹ 3 / 12 ›" instead of the full row of page numbers.
+   */
+  compact?: boolean;
 };
 
 /** First, last, and the current page with one neighbour each side; gaps become "…". */
@@ -32,7 +41,16 @@ function pageItems(page: number, totalPages: number): (number | "gap")[] {
 const navButton =
   "flex size-8 cursor-pointer items-center justify-center rounded-lg border border-slate-800 text-slate-400 transition-colors duration-200 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent";
 
-export default function Pagination({ count, page, pageSize, disabled = false, onPageChange }: Props) {
+export default function Pagination({
+  count,
+  page,
+  pageSize,
+  disabled = false,
+  onPageChange,
+  ariaLabel = "শিক্ষার্থী তালিকার পাতা",
+  summary,
+  compact = false,
+}: Props) {
   if (count === 0) return null;
 
   const totalPages = Math.max(1, Math.ceil(count / pageSize));
@@ -41,15 +59,46 @@ export default function Pagination({ count, page, pageSize, disabled = false, on
 
   return (
     <nav
-      aria-label="শিক্ষার্থী তালিকার পাতা"
-      className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-800 bg-slate-900 px-5 py-4"
+      aria-label={ariaLabel}
+      className={
+        compact
+          ? "flex flex-col items-center gap-2.5 sm:flex-row sm:justify-between sm:gap-3"
+          : "flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-800 bg-slate-900 px-5 py-4"
+      }
     >
       <p className="text-xs text-slate-400">
-        মোট {count} জন শিক্ষার্থীর মধ্যে {start}–{end} দেখানো হচ্ছে
+        {summary ? summary({ start, end, count }) : `মোট ${count} জন শিক্ষার্থীর মধ্যে ${start}–${end} দেখানো হচ্ছে`}
       </p>
 
+      {totalPages > 1 && compact && (
+        // Phones: prev · "3 / 12" · next, so the bar never wraps or overflows.
+        <div className="flex items-center gap-2 sm:hidden">
+          <button
+            type="button"
+            disabled={disabled || page <= 1}
+            onClick={() => onPageChange(page - 1)}
+            aria-label="আগের পাতা"
+            className={navButton}
+          >
+            <ChevronLeft size={14} />
+          </button>
+          <span aria-current="page" className="min-w-16 text-center text-sm font-medium text-slate-300">
+            {page} / {totalPages}
+          </span>
+          <button
+            type="button"
+            disabled={disabled || page >= totalPages}
+            onClick={() => onPageChange(page + 1)}
+            aria-label="পরের পাতা"
+            className={navButton}
+          >
+            <ChevronRight size={14} />
+          </button>
+        </div>
+      )}
+
       {totalPages > 1 && (
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className={`${compact ? "hidden sm:flex" : "flex"} flex-wrap items-center gap-1.5`}>
           <button
             type="button"
             disabled={disabled || page <= 1}

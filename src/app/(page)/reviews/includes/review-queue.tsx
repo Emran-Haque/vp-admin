@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Award, BookOpen, Check, ClipboardList, GraduationCap, Package,
   Search, Star, Trash2, X,
@@ -18,6 +18,8 @@ import {
 import { usePermissions } from "@/hooks/use-permissions";
 import ErrorState from "@/components/error-state";
 import { PageLoader } from "@/components/loaders";
+import { getApiErrorStatus } from "@/lib/api-error";
+import Pagination from "../../students/includes/pagination";
 
 /**
  * The moderation queue. Nothing a student writes reaches the public site until
@@ -26,6 +28,9 @@ import { PageLoader } from "@/components/loaders";
  */
 
 type ReviewTab = ReviewStatus | "all";
+
+/** The API's default page size; the pager's maths must match it. */
+const PAGE_SIZE = 20;
 
 const TABS: { value: ReviewTab; label: string }[] = [
   { value: "all", label: "সকল" },
@@ -53,14 +58,22 @@ const TARGETS: Record<ReviewTarget, { label: string; className: string; Icon: ty
   },
 };
 
-export default function ReviewQueue() {
-  const [status, setStatus] = useState<ReviewTab>("all");
-  const [search, setSearch] = useState("");
-  const [rejecting, setRejecting] = useState<Review | null>(null);
+/** Reads a tab from a link (e.g. a notification's "/reviews?status=pending"). */
+export function toReviewTab(value: string | null): ReviewTab {
+  return TABS.some((tab) => tab.value === value) ? (value as ReviewTab) : "all";
+}
 
-  const { data, isLoading, isError, error } = useGetReviewsQuery({
+export default function ReviewQueue({ initialStatus = "all" }: { initialStatus?: ReviewTab }) {
+  const [status, setStatus] = useState<ReviewTab>(initialStatus);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [rejecting, setRejecting] = useState<Review | null>(null);
+  const listTop = useRef<HTMLElement>(null);
+
+  const { data, isLoading, isFetching, isError, error } = useGetReviewsQuery({
     status,
     search: search.trim() || undefined,
+    page,
   });
   const [approve, { isLoading: isApproving }] = useApproveReviewMutation();
   const [updateReview] = useUpdateReviewMutation();
@@ -69,9 +82,26 @@ export default function ReviewQueue() {
 
   const canModerate = hasPermission("can_manage_reviews");
   const reviews = data?.results ?? [];
+  const count = data?.count ?? 0;
+
+  // Publishing, rejecting or deleting the only review on the last page leaves
+  // that page past the end, and the API answers 404. Step back instead.
+  if (page > 1 && isError && getApiErrorStatus(error) === 404) {
+    setPage(page - 1);
+  }
+
+  const changePage = (next: number) => {
+    setPage(next);
+    // Back to the top of the list, so a phone doesn't land mid-way down.
+    listTop.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
-    <section className="rounded-3xl border border-slate-800 bg-slate-900 p-5 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)] sm:p-7">
+    // Phones: no outer box, so each review card gets the full screen width.
+    <section
+      className="scroll-mt-4 sm:rounded-3xl sm:border sm:border-slate-800 sm:bg-slate-900 sm:p-7 sm:shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]"
+      ref={listTop}
+    >
       {/* Tabs + search — stacks on mobile, sits inline from sm up */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div
@@ -81,13 +111,17 @@ export default function ReviewQueue() {
           {TABS.map((tab) => (
             <button
               aria-selected={status === tab.value}
-              className={`shrink-0 rounded-xl px-4 py-2 text-sm font-bold transition-colors ${
+              // Phones: the four tabs share the row evenly instead of scrolling.
+              className={`flex-1 shrink-0 rounded-xl px-2 py-2 text-xs font-bold transition-colors sm:flex-none sm:px-4 sm:text-sm ${
                 status === tab.value
                   ? "bg-cyan-500/20 text-cyan-300"
                   : "text-slate-400 hover:text-slate-200"
               }`}
               key={tab.value}
-              onClick={() => setStatus(tab.value)}
+              onClick={() => {
+                setStatus(tab.value);
+                setPage(1);
+              }}
               role="tab"
               type="button"
             >
@@ -101,14 +135,21 @@ export default function ReviewQueue() {
           <input
             aria-label="রিভিউ খুঁজুন"
             className="w-full rounded-xl border border-slate-800 bg-gray-800 py-2.5 pl-9 pr-3 text-sm text-blue-50 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/40"
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
             placeholder="নাম বা মন্তব্য"
             value={search}
           />
         </div>
       </div>
 
-      <div className="mt-5 flex flex-col gap-3">
+      <div
+        className={`mt-4 flex flex-col gap-2.5 transition-opacity sm:mt-5 sm:gap-3 ${
+          isFetching && !isLoading ? "opacity-60" : ""
+        }`}
+      >
         {isLoading ? <PageLoader /> : null}
         {isError ? <ErrorState message="রিভিউ লোড করা যায়নি।" error={error} /> : null}
 
@@ -135,6 +176,21 @@ export default function ReviewQueue() {
           />
         ))}
       </div>
+
+      {!isError && count > PAGE_SIZE ? (
+        <div className="mt-4 border-t border-slate-800 pt-4 sm:mt-5">
+          <Pagination
+            ariaLabel="রিভিউ তালিকার পাতা"
+            compact
+            count={count}
+            disabled={isFetching}
+            onPageChange={changePage}
+            page={page}
+            pageSize={PAGE_SIZE}
+            summary={({ start, end }) => `মোট ${count}টি রিভিউয়ের মধ্যে ${start}–${end}`}
+          />
+        </div>
+      ) : null}
 
       {rejecting ? (
         <RejectDialog review={rejecting} onClose={() => setRejecting(null)} />
@@ -167,7 +223,7 @@ export function ReviewCard({
   return (
     // `min-w-0`: without it the card is a flex item with min-width:auto, so a
     // long title makes the whole card wider than the screen instead of truncating.
-    <article className="min-w-0 rounded-2xl border border-slate-800 bg-gray-800 p-4">
+    <article className="min-w-0 rounded-2xl border border-slate-800 bg-gray-800 p-3.5 sm:p-4">
       <div className="flex items-center gap-2">
         <span
           className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-bold ${target.className}`}
@@ -181,7 +237,7 @@ export function ReviewCard({
         <Stars value={review.rating} />
       </div>
 
-      <p className="mt-3 text-sm leading-relaxed text-slate-300">
+      <p className="mt-2.5 text-sm leading-relaxed text-slate-300 sm:mt-3">
         {review.comment || <span className="text-slate-500">কোনো মন্তব্য লেখা হয়নি — শুধু রেটিং।</span>}
       </p>
 
@@ -206,9 +262,14 @@ export function ReviewCard({
         </p>
       ) : null}
 
-      <footer className="mt-4 flex flex-col gap-2.5 border-t border-slate-700/60 pt-3 sm:flex-row sm:items-center sm:gap-3">
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <span className="min-w-0 truncate text-xs text-slate-400">
+      {/* Name and buttons share one line when the name keeps at least 9rem
+          (it then shortens with "…"); otherwise the buttons wrap below. */}
+      <footer className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-slate-700/60 pt-2.5 sm:mt-4 sm:pt-3">
+        <div className="flex min-w-36 max-w-full flex-1 flex-wrap items-center gap-2">
+          <span
+            className="min-w-0 max-w-full truncate text-xs text-slate-400"
+            title={`${review.student_name || "—"}${review.institution ? ` · ${review.institution}` : ""}`}
+          >
             {review.student_name || "—"}
             {review.institution ? ` · ${review.institution}` : ""}
           </span>
@@ -220,7 +281,7 @@ export function ReviewCard({
         </div>
 
         {canModerate ? (
-          <div className="flex items-center justify-end gap-1.5 sm:ml-auto">
+          <div className="ml-auto flex items-center justify-end gap-1.5">
             <IconButton
               active={review.is_featured}
               label={review.is_featured ? "ফিচার্ড থেকে সরান" : "ফিচার্ড করুন"}
