@@ -181,7 +181,23 @@ export type Enrollment = {
   student_name?: string;
   student_email?: string | null;
   student_phone?: string | null;
+  /** The 8-digit roll shown to students. */
+  student_code?: string | null;
+  /** Blocked by an admin (নিষ্ক্রিয়): still enrolled, but cannot open the course. */
+  is_suspended: boolean;
+  suspended_at: string | null;
+  suspended_by_name: string;
+  /** Set when an admin removed the student (null if an order refund did it). */
+  removed_at: string | null;
+  removed_by_name: string;
 };
+
+/** Enrolled-student tabs: everyone enrolled, only the blocked, or removed. */
+export type EnrollmentTab = "" | "suspended" | "removed";
+
+export type EnrollmentCounts = { enrolled: number; suspended: number; removed: number };
+
+export type EnrollmentStatusAction = "suspend" | "activate" | "remove" | "restore";
 
 export type BulkEnrollmentIssue = {
   row_number: number;
@@ -262,17 +278,37 @@ export const coursesApi = baseApi.injectEndpoints({
       ],
     }),
     getCourseEnrollments: builder.query<
-      Paginated<Enrollment>,
-      { id: number; page?: number; search?: string }
+      Paginated<Enrollment> & { counts?: EnrollmentCounts },
+      { id: number; page?: number; search?: string; status?: EnrollmentTab }
     >({
       // `search` is sent to the server: filtering the returned page in the
       // browser hid any student who was not on the page already loaded.
-      query: ({ id, page, search }) => ({
+      query: ({ id, page, search, status }) => ({
         url: `admin/courses/${id}/enrollments/`,
         // `q`, not `search`: the course viewset's SearchFilter claims `search`.
-        params: { page, ...(search ? { q: search } : {}) },
+        params: {
+          page,
+          ...(search ? { q: search } : {}),
+          ...(status ? { status } : {}),
+        },
       }),
       providesTags: (_result, _error, { id }) => [{ type: "Enrollments", id }],
+    }),
+    /** Block (নিষ্ক্রিয়), unblock, remove from, or restore to one course. */
+    updateEnrollmentStatus: builder.mutation<
+      Enrollment,
+      { courseId: number; enrollmentId: number; action: EnrollmentStatusAction }
+    >({
+      query: ({ courseId, enrollmentId, action }) => ({
+        url: `admin/courses/${courseId}/enrollments/${enrollmentId}/status/`,
+        method: "POST",
+        body: { action },
+      }),
+      // The course's enrolled count changes on remove/restore too.
+      invalidatesTags: (_result, _error, { courseId }) => [
+        { type: "Enrollments", id: courseId },
+        { type: "Courses", id: courseId },
+      ],
     }),
     updateEnrollmentVerification: builder.mutation<
       Enrollment,
@@ -371,6 +407,7 @@ export const {
   usePublishCourseMutation,
   useGetCourseEnrollmentsQuery,
   useUpdateEnrollmentVerificationMutation,
+  useUpdateEnrollmentStatusMutation,
   useGetBulkEnrollmentJobsQuery,
   useGetBulkEnrollmentJobQuery,
   useUploadBulkEnrollmentCsvMutation,

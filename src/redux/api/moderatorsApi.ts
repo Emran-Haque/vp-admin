@@ -12,6 +12,7 @@ export type ModeratorPermissions = {
   can_edit_student: boolean;
   can_delete_student: boolean;
   can_view_course_enrollments: boolean;
+  can_manage_course_enrollments: boolean;
   can_view_courses: boolean;
   can_create_course: boolean;
   can_edit_course: boolean;

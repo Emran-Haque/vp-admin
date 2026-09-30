@@ -18,6 +18,7 @@ export const permissionLabels: Record<string, string> = {
   can_edit_student: "শিক্ষার্থী এডিট",
   can_delete_student: "শিক্ষার্থী মুছে ফেলা",
   can_view_course_enrollments: "কোর্স ভর্তির তথ্য দেখা",
+  can_manage_course_enrollments: "কোর্সে শিক্ষার্থী নিষ্ক্রিয় করা ও কোর্স থেকে সরানো",
   can_view_courses: "কোর্স দেখা",
   can_create_course: "কোর্স তৈরি করা",
   can_edit_course: "কোর্স এডিট",
