@@ -330,6 +330,23 @@ export const examsApi = baseApi.injectEndpoints({
             ]
           : [{ type: "Exams" as const, id: "LIST" }],
     }),
+    /** Scroll-to-load exam list for pickers that must reach every exam. */
+    getExamList: builder.infiniteQuery<
+      Paginated<Exam>,
+      Omit<ExamListParams, "page">,
+      number
+    >({
+      infiniteQueryOptions: {
+        initialPageParam: 1,
+        getNextPageParam: (lastPage, _all, lastPageParam) =>
+          lastPage.next ? lastPageParam + 1 : undefined,
+      },
+      query: ({ queryArg, pageParam }) => ({
+        url: "admin/exams/",
+        params: { ...queryArg, page: pageParam },
+      }),
+      providesTags: [{ type: "Exams", id: "LIST" }],
+    }),
     getExam: builder.query<Exam, number>({
       query: (id) => `admin/exams/${id}/`,
       providesTags: (_result, _error, id) => [{ type: "Exams", id }],
@@ -545,6 +562,7 @@ export const examsApi = baseApi.injectEndpoints({
 
 export const {
   useGetExamsQuery,
+  useGetExamListInfiniteQuery,
   useGetExamQuery,
   useCreateExamMutation,
   useUpdateExamMutation,

@@ -73,15 +73,28 @@ export type SmsTemplate = {
   updated_at: string;
 };
 
+/** Page numbers for DRF's PageNumberPagination; `next` is null on the last page. */
+const pageNumberPaging = {
+  initialPageParam: 1,
+  getNextPageParam: (lastPage: Paginated<unknown>, _all: unknown, lastPageParam: number) =>
+    lastPage.next ? lastPageParam + 1 : undefined,
+};
+
+export const RECIPIENTS_PAGE_SIZE = 50;
+
 export const guardianSmsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getSmsCampaigns: builder.query<
+    // Infinite (scroll-to-load) rather than a single page: the list only ever
+    // grows, and a plain query silently cut it off at the server's page size.
+    getSmsCampaigns: builder.infiniteQuery<
       Paginated<SmsCampaign>,
-      { exam?: number; kind?: SmsCampaignKind; status?: SmsCampaignStatus; page?: number } | void
+      { exam?: number; kind?: SmsCampaignKind; status?: SmsCampaignStatus } | void,
+      number
     >({
-      query: (params) => ({
+      infiniteQueryOptions: pageNumberPaging,
+      query: ({ queryArg, pageParam }) => ({
         url: "admin/sms-campaigns/",
-        params: params ?? undefined,
+        params: { ...(queryArg ?? {}), page: pageParam },
       }),
       providesTags: [{ type: "SmsCampaigns", id: "LIST" }],
     }),
@@ -89,13 +102,15 @@ export const guardianSmsApi = baseApi.injectEndpoints({
       query: (id) => `admin/sms-campaigns/${id}/`,
       providesTags: (_r, _e, id) => [{ type: "SmsCampaigns", id }],
     }),
-    getSmsCampaignRecipients: builder.query<
+    getSmsCampaignRecipients: builder.infiniteQuery<
       Paginated<SmsCampaignRecipient>,
-      { id: number; status?: string; page?: number; page_size?: number }
+      { id: number; status?: string },
+      number
     >({
-      query: ({ id, ...params }) => ({
+      infiniteQueryOptions: pageNumberPaging,
+      query: ({ queryArg: { id, ...params }, pageParam }) => ({
         url: `admin/sms-campaigns/${id}/recipients/`,
-        params,
+        params: { ...params, page: pageParam, page_size: RECIPIENTS_PAGE_SIZE },
       }),
       providesTags: (_r, _e, { id }) => [{ type: "SmsRecipients", id }],
     }),
@@ -109,7 +124,17 @@ export const guardianSmsApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
-      invalidatesTags: [{ type: "SmsCampaigns", id: "LIST" }],
+      // A rebuild reuses the draft's id but rewrites its rows, so any cached
+      // recipient pages for it are stale.
+      invalidatesTags: (result) => [
+        { type: "SmsCampaigns", id: "LIST" },
+        ...(result
+          ? [
+              { type: "SmsCampaigns" as const, id: result.id },
+              { type: "SmsRecipients" as const, id: result.id },
+            ]
+          : []),
+      ],
     }),
     /** The only call that spends credits. `confirm` is required server-side. */
     sendCampaign: builder.mutation<SmsCampaign, number>({
@@ -129,6 +154,7 @@ export const guardianSmsApi = baseApi.injectEndpoints({
       invalidatesTags: (_r, _e, id) => [
         { type: "SmsCampaigns", id },
         { type: "SmsCampaigns", id: "LIST" },
+        { type: "SmsRecipients", id },
       ],
     }),
     retryFailedCampaign: builder.mutation<SmsCampaign, number>({
@@ -162,9 +188,9 @@ export const guardianSmsApi = baseApi.injectEndpoints({
 });
 
 export const {
-  useGetSmsCampaignsQuery,
+  useGetSmsCampaignsInfiniteQuery,
   useGetSmsCampaignQuery,
-  useGetSmsCampaignRecipientsQuery,
+  useGetSmsCampaignRecipientsInfiniteQuery,
   useBuildCampaignMutation,
   useSendCampaignMutation,
   useCancelCampaignMutation,

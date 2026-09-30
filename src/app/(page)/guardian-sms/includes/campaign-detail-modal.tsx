@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   X,
   Send,
@@ -10,10 +10,13 @@ import {
   Ban,
   CheckCircle2,
 } from "lucide-react";
+import { useScrollPagination } from "@/hooks/use-infinite-scroll";
+import { useAppDispatch } from "@/redux/hooks";
 import {
+  guardianSmsApi,
   useCancelCampaignMutation,
   useGetSmsCampaignQuery,
-  useGetSmsCampaignRecipientsQuery,
+  useGetSmsCampaignRecipientsInfiniteQuery,
   useRetryFailedCampaignMutation,
   useSendCampaignMutation,
 } from "@/redux/api/guardianSmsApi";
@@ -62,12 +65,54 @@ export default function CampaignDetailModal({
   const { data: campaign, isLoading } = useGetSmsCampaignQuery(campaignId, {
     pollingInterval: 5000,
   });
-  // Polled too, so the per-row statuses tick over while a run is in flight
-  // rather than the table sitting frozen under a moving progress count.
-  const { data: recipients } = useGetSmsCampaignRecipientsQuery(
-    { id: campaignId, status: rowFilter || undefined, page_size: 50 },
-    { pollingInterval: 5000 },
-  );
+  // Rows load a page at a time as the table is scrolled.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const recipientsQuery = useGetSmsCampaignRecipientsInfiniteQuery({
+    id: campaignId,
+    status: rowFilter || undefined,
+  });
+  const {
+    data: recipientPages,
+    isFetching: isFetchingRecipients,
+    hasNextPage,
+    isFetchingNextPage,
+  } = recipientsQuery;
+  const {
+    items: recipientRows,
+    totalCount: recipientCount,
+    sentinelRef,
+    loadMore,
+    loadMoreFailed,
+  } = useScrollPagination(recipientsQuery, { rootRef: scrollRef });
+
+  // Recipient pages are not polled themselves — that would re-download every
+  // page scrolled so far every few seconds. Instead the cheap campaign poll
+  // above acts as the change signal: when its counters move (a send ticking
+  // over, or an instant campaign gaining a row as a student submits), the
+  // recipient pages are refreshed. Invalidating the tag also drops the cached
+  // pages of the other filters, so switching filter never shows stale rows.
+  const dispatch = useAppDispatch();
+  const changeKey = campaign
+    ? [
+        campaign.status,
+        campaign.total_recipients,
+        campaign.sent_count,
+        campaign.failed_count,
+        campaign.skipped_count,
+        campaign.pending_count,
+        campaign.updated_at,
+      ].join("|")
+    : null;
+  const lastChangeKey = useRef<string | null>(null);
+  useEffect(() => {
+    if (changeKey === null) return;
+    if (lastChangeKey.current !== null && lastChangeKey.current !== changeKey) {
+      dispatch(
+        guardianSmsApi.util.invalidateTags([{ type: "SmsRecipients", id: campaignId }]),
+      );
+    }
+    lastChangeKey.current = changeKey;
+  }, [changeKey, campaignId, dispatch]);
 
   const [sendCampaign, { isLoading: isSending }] = useSendCampaignMutation();
   const [cancelCampaign] = useCancelCampaignMutation();
@@ -118,7 +163,7 @@ export default function CampaignDetailModal({
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-6">
+        <div ref={scrollRef} className="flex flex-1 flex-col gap-4 overflow-y-auto p-6">
           {isLoading && (
             <p className="text-center text-sm text-slate-400">তথ্য লোড হচ্ছে…</p>
           )}
@@ -211,7 +256,7 @@ export default function CampaignDetailModal({
                     </tr>
                   </thead>
                   <tbody>
-                    {(recipients?.results ?? []).map((row) => (
+                    {recipientRows.map((row) => (
                       <tr key={row.id} className="border-t border-white/5">
                         <td className="px-3 py-2 text-slate-200">
                           {row.student_name}
@@ -244,7 +289,17 @@ export default function CampaignDetailModal({
                         </td>
                       </tr>
                     ))}
-                    {recipients && recipients.results.length === 0 && (
+                    {!recipientPages && isFetchingRecipients && (
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="px-3 py-6 text-center text-slate-400"
+                        >
+                          লোড হচ্ছে…
+                        </td>
+                      </tr>
+                    )}
+                    {recipientPages && recipientRows.length === 0 && (
                       <tr>
                         <td
                           colSpan={5}
@@ -257,10 +312,27 @@ export default function CampaignDetailModal({
                   </tbody>
                 </table>
               </div>
-              {recipients && recipients.count > recipients.results.length && (
+              {hasNextPage && <div ref={sentinelRef} aria-hidden className="h-px shrink-0" />}
+              {isFetchingNextPage && (
+                <p className="flex items-center justify-center gap-2 text-xs text-slate-400">
+                  <Loader2 size={14} className="animate-spin" />
+                  আরও লোড হচ্ছে…
+                </p>
+              )}
+              {loadMoreFailed && (
+                <button
+                  type="button"
+                  onClick={loadMore}
+                  className="mx-auto cursor-pointer rounded-[10px] border border-red-400/30 bg-red-400/10 px-4 py-2 text-xs font-bold text-red-200"
+                >
+                  আরও লোড করা যায়নি — আবার চেষ্টা করুন
+                </button>
+              )}
+              {recipientRows.length > 0 && (
                 <p className="text-center text-xs text-slate-500">
-                  মোট {recipients.count} জনের মধ্যে প্রথম {recipients.results.length}{" "}
-                  জন দেখানো হচ্ছে।
+                  {hasNextPage
+                    ? `মোট ${recipientCount} জনের মধ্যে ${recipientRows.length} জন দেখানো হচ্ছে — আরও দেখতে নিচে স্ক্রল করুন।`
+                    : `মোট ${recipientCount} জন — সব দেখানো হয়েছে।`}
                 </p>
               )}
             </>

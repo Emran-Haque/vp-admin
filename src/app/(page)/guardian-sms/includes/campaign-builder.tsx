@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { FileText, Loader2, AlertTriangle } from "lucide-react";
-import { useGetExamsQuery } from "@/redux/api/examsApi";
 import {
   useBuildCampaignMutation,
   type SmsCampaignKind,
 } from "@/redux/api/guardianSmsApi";
+import ExamPicker, { type PickedExam } from "./exam-picker";
 
 /**
  * "Prepare the guardian SMS for this exam."
@@ -34,25 +34,20 @@ export default function CampaignBuilder({
 }: {
   onBuilt: (campaignId: number) => void;
 }) {
-  const [examId, setExamId] = useState<number | "">("");
+  const [exam, setExam] = useState<PickedExam | null>(null);
   const [kind, setKind] = useState<SmsCampaignKind>("result");
   const [error, setError] = useState("");
 
-  const { data: examsData, isLoading: examsLoading } = useGetExamsQuery({
-    page_size: 100,
-  });
   const [buildCampaign, { isLoading: isBuilding }] = useBuildCampaignMutation();
-
-  const exams = examsData?.results ?? [];
 
   const handleBuild = async () => {
     setError("");
-    if (examId === "") {
+    if (!exam) {
       setError("আগে একটি পরীক্ষা নির্বাচন করুন।");
       return;
     }
     try {
-      const campaign = await buildCampaign({ exam: examId, kind }).unwrap();
+      const campaign = await buildCampaign({ exam: exam.id, kind }).unwrap();
       onBuilt(campaign.id);
     } catch (buildError) {
       const detail = (buildError as { data?: { detail?: string } })?.data?.detail;
@@ -72,21 +67,7 @@ export default function CampaignBuilder({
           <label className="block pb-1.5 text-xs font-semibold text-slate-400">
             পরীক্ষা
           </label>
-          <select
-            value={examId}
-            onChange={(e) => setExamId(e.target.value ? Number(e.target.value) : "")}
-            disabled={examsLoading}
-            className="w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none disabled:opacity-60"
-          >
-            <option value="">
-              {examsLoading ? "লোড হচ্ছে…" : "পরীক্ষা নির্বাচন করুন"}
-            </option>
-            {exams.map((exam) => (
-              <option key={exam.id} value={exam.id}>
-                {exam.title}
-              </option>
-            ))}
-          </select>
+          <ExamPicker value={exam} onChange={setExam} />
         </div>
 
         <div>

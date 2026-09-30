@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { MessageSquare, Eye, AlertTriangle } from "lucide-react";
+import { MessageSquare, Eye, AlertTriangle, Loader2 } from "lucide-react";
+import { useScrollPagination } from "@/hooks/use-infinite-scroll";
 import { usePermissions } from "@/hooks/use-permissions";
-import { useGetSmsCampaignsQuery } from "@/redux/api/guardianSmsApi";
+import { useGetSmsCampaignsInfiniteQuery } from "@/redux/api/guardianSmsApi";
 import CampaignBuilder from "./includes/campaign-builder";
 import CampaignDetailModal from "./includes/campaign-detail-modal";
 import TemplateEditor from "./includes/template-editor";
@@ -29,10 +30,20 @@ export default function Page() {
   const [tab, setTab] = useState<"campaigns" | "templates">("campaigns");
   const [openCampaignId, setOpenCampaignId] = useState<number | null>(null);
 
-  // A run in progress updates in the background, so the list refreshes itself.
-  const { data, isLoading, isError } = useGetSmsCampaignsQuery(undefined, {
+  // A run in progress updates in the background, so the list refreshes itself —
+  // every page loaded so far, not just the first.
+  const campaignsQuery = useGetSmsCampaignsInfiniteQuery(undefined, {
     pollingInterval: 10000,
   });
+  const { isLoading, isError, hasNextPage, isFetchingNextPage } = campaignsQuery;
+  const {
+    items: campaigns,
+    totalCount,
+    pageCount,
+    sentinelRef,
+    loadMore,
+    loadMoreFailed,
+  } = useScrollPagination(campaignsQuery);
 
   if (!hasPermission("can_send_guardian_sms")) {
     return (
@@ -44,8 +55,6 @@ export default function Page() {
       </div>
     );
   }
-
-  const campaigns = data?.results ?? [];
 
   return (
     <div className="flex flex-col gap-5">
@@ -89,7 +98,7 @@ export default function Page() {
         <>
           <CampaignBuilder onBuilt={(id) => setOpenCampaignId(id)} />
 
-          {isError && (
+          {isError && !loadMoreFailed && (
             <div className="flex items-start gap-2 rounded-[10px] border border-red-500/30 bg-red-500/5 p-3">
               <AlertTriangle size={16} className="mt-0.5 shrink-0 text-red-500" />
               <p className="text-xs text-red-400">
@@ -171,6 +180,28 @@ export default function Page() {
               </tbody>
             </table>
           </section>
+
+          {hasNextPage && <div ref={sentinelRef} aria-hidden className="h-px" />}
+          {isFetchingNextPage && (
+            <p className="flex items-center justify-center gap-2 text-xs text-slate-400">
+              <Loader2 size={14} className="animate-spin" />
+              আরও ক্যাম্পেইন লোড হচ্ছে…
+            </p>
+          )}
+          {loadMoreFailed && (
+            <button
+              type="button"
+              onClick={loadMore}
+              className="mx-auto cursor-pointer rounded-[10px] border border-red-400/30 bg-red-400/10 px-4 py-2 text-xs font-bold text-red-200"
+            >
+              আরও লোড করা যায়নি — আবার চেষ্টা করুন
+            </button>
+          )}
+          {!hasNextPage && pageCount > 1 && (
+            <p className="text-center text-xs text-slate-500">
+              মোট {totalCount}টি ক্যাম্পেইন — সব দেখানো হয়েছে।
+            </p>
+          )}
         </>
       )}
 
