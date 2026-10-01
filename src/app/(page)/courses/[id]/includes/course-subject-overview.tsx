@@ -127,6 +127,7 @@ export default function CourseSubjectOverview({
     useGetAssignmentsQuery({ course: courseId });
   const { data: examsData, isLoading: examsLoading } = useGetExamsQuery({
     course: courseId,
+    mode: "online",
   });
   const { data: materialsData, isLoading: materialsLoading } =
     useGetCourseMaterialsQuery({ course: courseId });

@@ -40,7 +40,13 @@ export type Course = {
   teachers: number[];
   includes_title: string;
   includes: IncludeItem[];
+  /** "offline" = classroom batch (routine + marks only). Missing on an older API. */
+  delivery_mode?: CourseDeliveryMode;
+  venue?: string;
+  schedule_text?: string;
 };
+
+export type CourseDeliveryMode = "online" | "offline";
 
 export type CourseStudentPreview = {
   read_only: true;
@@ -135,8 +141,10 @@ export type CourseListParams = {
   category?: number;
   is_published?: boolean;
   is_free?: boolean;
+  delivery_mode?: CourseDeliveryMode;
   search?: string;
   page?: number;
+  page_size?: number;
 };
 
 export type CreateCourseInput = Partial<

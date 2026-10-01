@@ -86,10 +86,12 @@ export default function CourseList() {
       {courses.map((course) => {
         const status = statusStyles[course.is_published ? "published" : "draft"];
         const imageUrl = resolveMediaUrl(course.thumbnail || course.cover_image);
+        const isOffline = course.delivery_mode === "offline";
         return (
           <Link
             key={course.id}
-            href={`/courses/${course.id}`}
+            // An offline batch is run from its own screen (classes, exams, marks).
+            href={isOffline ? `/offline-batches/${course.id}` : `/courses/${course.id}`}
             className="group overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 shadow-[0px_18px_44px_-16px_rgba(0,0,0,0.58)] transition duration-200 hover:-translate-y-1 hover:border-blue-500/40 hover:shadow-[0px_26px_70px_-22px_rgba(59,130,246,0.55)]"
           >
             <div className="relative min-h-[220px] overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.34),transparent_34%),linear-gradient(135deg,#0f172a,#111827_55%,#172554)]">
@@ -116,6 +118,11 @@ export default function CourseList() {
                   >
                     {status.label}
                   </span>
+                  {isOffline && (
+                    <span className="rounded-full bg-emerald-500/90 px-3 py-1.5 text-xs font-black text-white backdrop-blur">
+                      অফলাইন
+                    </span>
+                  )}
                   {hasPermission("can_edit_course") && (
                     <label
                       className={`flex h-8 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-xs font-bold backdrop-blur transition-colors duration-200 ${

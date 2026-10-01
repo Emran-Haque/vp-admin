@@ -16,6 +16,7 @@ import {
   HelpCircle,
   Share2,
   PanelsTopLeft,
+  School,
   type LucideIcon,
 } from "lucide-react";
 import type { ModeratorPermissions } from "@/redux/api/moderatorsApi";
@@ -39,6 +40,7 @@ export const navItems: NavItem[] = [
   { label: "ড্যাশবোর্ড", href: "/home", icon: LayoutGrid, permission: "can_view_dashboard" },
   { label: "শিক্ষার্থী", href: "/students", icon: Users, permission: "can_view_students" },
   { label: "কোর্স", href: "/courses", icon: BookOpen, permission: "can_view_courses" },
+  { label: "অফলাইন ব্যাচ", href: "/offline-batches", icon: School, permission: "can_view_courses" },
   { label: "MCQ পরীক্ষা", href: "/mcq", icon: ClipboardList, permission: "can_view_exams" },
   { label: "পরীক্ষা ব্যাচ", href: "/exam-batches", icon: ClipboardCheck, permission: "can_view_exams" },
   { label: "নোটিশ", href: "/notice", icon: Bell, permission: "can_manage_notices" },

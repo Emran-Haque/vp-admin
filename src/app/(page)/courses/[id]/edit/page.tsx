@@ -90,6 +90,9 @@ function toBasicInfo(course: Course): BasicInfo {
     promoVideoUrl: course.promo_video_url,
     syllabusDriveLink: course.syllabus_drive_link,
     teacherIds: course.teachers.map(String),
+    deliveryMode: course.delivery_mode === "offline" ? "offline" : "online",
+    venue: course.venue ?? "",
+    scheduleText: course.schedule_text ?? "",
   };
 }
 
@@ -280,6 +283,12 @@ export default function Page() {
     formData.append("total_quizzes", basicInfo.totalQuizzes || "0");
     formData.append("total_assignments", basicInfo.totalAssignments || "0");
     formData.append("inactivity_reminder_days", basicInfo.inactivityReminderDays || "0");
+    formData.append("delivery_mode", basicInfo.deliveryMode);
+    formData.append("venue", basicInfo.deliveryMode === "offline" ? basicInfo.venue : "");
+    formData.append(
+      "schedule_text",
+      basicInfo.deliveryMode === "offline" ? basicInfo.scheduleText : "",
+    );
     formData.append("telegram_group_link", basicInfo.telegramGroupLink || "");
     if (basicInfo.promoVideoUrl) formData.append("promo_video_url", basicInfo.promoVideoUrl);
     if (basicInfo.syllabusDriveLink) formData.append("syllabus_drive_link", basicInfo.syllabusDriveLink);

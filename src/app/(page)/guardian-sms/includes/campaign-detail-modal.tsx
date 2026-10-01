@@ -200,9 +200,9 @@ export default function CampaignDetailModal({
                 <div className="flex items-start gap-2 rounded-[10px] border border-amber-500/30 bg-amber-500/5 p-3">
                   <AlertTriangle size={16} className="mt-0.5 shrink-0 text-amber-400" />
                   <p className="text-xs text-amber-200">
-                    {campaign.skipped_count} জন শিক্ষার্থীর অভিভাবকের ফোন নম্বর নেই — তাদের
-                    অভিভাবক কোনো SMS পাবেন না। প্রোফাইল ঠিক করে আবার “প্রস্তুত করুন”
-                    চাপলে তারা তালিকায় যুক্ত হবে।
+                    {campaign.kind === "stu_result"
+                      ? `${campaign.skipped_count} জনকে বাদ রাখা হয়েছে — শিক্ষার্থীর নম্বর নেই, বা নম্বরটি অভিভাবকেরই (অভিভাবকের SMS সেখানে যাবে)। কারণ নিচের তালিকায় দেখুন।`
+                      : `${campaign.skipped_count} জন শিক্ষার্থীর অভিভাবকের ফোন নম্বর নেই — তাদের অভিভাবক কোনো SMS পাবেন না। প্রোফাইল ঠিক করে আবার “প্রস্তুত করুন” চাপলে তারা তালিকায় যুক্ত হবে।`}
                   </p>
                 </div>
               )}
@@ -249,7 +249,9 @@ export default function CampaignDetailModal({
                   <thead className="bg-white/5 text-slate-400">
                     <tr>
                       <th className="px-3 py-2 font-semibold">শিক্ষার্থী</th>
-                      <th className="px-3 py-2 font-semibold">অভিভাবকের নম্বর</th>
+                      <th className="px-3 py-2 font-semibold">
+                        {campaign.kind === "stu_result" ? "শিক্ষার্থীর নম্বর" : "অভিভাবকের নম্বর"}
+                      </th>
                       <th className="px-3 py-2 font-semibold">মেসেজ</th>
                       <th className="px-3 py-2 font-semibold">SMS</th>
                       <th className="px-3 py-2 font-semibold">অবস্থা</th>

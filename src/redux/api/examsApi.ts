@@ -51,10 +51,16 @@ export type Exam = {
   allow_late_enrolled_students: boolean;
   created_by: number;
   published_by: number | null;
+  /** "offline" = paper exam: no questions, marks entered by an admin. */
+  mode?: ExamMode;
 };
+
+export type ExamMode = "online" | "offline";
 
 export type ExamListParams = {
   course?: number;
+  course_class?: number;
+  mode?: ExamMode;
   status?: string;
   result_status?: string;
   search?: string;
@@ -82,6 +88,83 @@ export type CreateExamInput = Partial<
 };
 
 export type UpdateExamInput = Partial<CreateExamInput>;
+
+/** A paper exam: total marks are typed in, since there are no questions. */
+export type OfflineExamInput = {
+  course: number;
+  course_class: number | null;
+  subject: number | null;
+  title: string;
+  exam_date: string | null;
+  total_marks: string;
+  negative_mark_per_wrong: string;
+  pass_mark_percentage: string;
+  mode: "offline";
+};
+
+export type OfflineMarkRow = {
+  student: number;
+  /** The 8-digit roll shown to students. */
+  student_code: string;
+  name: string;
+  /** False when the student has left the batch since their row was entered. */
+  is_enrolled: boolean;
+  entered: boolean;
+  is_present: boolean | null;
+  obtained_marks: string | null;
+  wrong_count: number | null;
+  negative_marks: string | null;
+  final_marks: string | null;
+  rank: number | null;
+};
+
+export type OfflineMarksSheet = {
+  exam: {
+    id: number;
+    title: string;
+    course: number;
+    course_class: number | null;
+    exam_date: string | null;
+    total_marks: string;
+    pass_mark_percentage: string;
+    /** Marks lost per wrong answer, already worked out by the server. */
+    negative_per_wrong: string;
+    result_published: boolean;
+  };
+  summary: {
+    students: number;
+    entered: number;
+    present: number;
+    absent: number;
+    missing: number;
+    ready_to_publish: boolean;
+  };
+  rows: OfflineMarkRow[];
+};
+
+export type OfflineMarkInput =
+  | {
+      student: number;
+      is_present: boolean;
+      obtained_marks?: string | null;
+      wrong_count?: number;
+    }
+  | { student: number; clear: true };
+
+export type OfflinePublishOutput = {
+  result_published: boolean;
+  published_now: boolean;
+  results: number;
+  /** SMS drafts prepared on first publish, by kind. Never sent automatically. */
+  sms_campaigns: Record<string, number>;
+  sheet: OfflineMarksSheet;
+};
+
+/** 400 body from offline-marks / offline-publish: `errors` maps student id → reason. */
+export type OfflineMarksErrorBody = {
+  detail?: string;
+  errors?: Record<string, string>;
+};
 
 export type ExamQuestion = {
   id: number;
@@ -112,6 +195,13 @@ export type ClassQuiz = {
   total_marks: string;
   status: string;
   questions: ExamQuestion[];
+  // Present once the API carries them (offline-batch release onwards).
+  mode?: ExamMode;
+  subject?: number | null;
+  exam_date?: string | null;
+  result_status?: string;
+  negative_mark_per_wrong?: string;
+  pass_mark_percentage?: string;
 };
 
 export type PublishResultInput = {
@@ -452,6 +542,63 @@ export const examsApi = baseApi.injectEndpoints({
         "ExamAttempts",
       ],
     }),
+    createOfflineExam: builder.mutation<Exam, OfflineExamInput>({
+      query: (body) => ({ url: "admin/exams/", method: "POST", body }),
+      invalidatesTags: [{ type: "Exams", id: "LIST" }],
+    }),
+    updateOfflineExam: builder.mutation<
+      Exam,
+      { id: number; data: Partial<Omit<OfflineExamInput, "mode" | "course">> }
+    >({
+      query: ({ id, data }) => ({ url: `admin/exams/${id}/`, method: "PATCH", body: data }),
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: "Exams", id },
+        { type: "Exams", id: "LIST" },
+        { type: "OfflineMarks", id },
+      ],
+    }),
+    getOfflineMarks: builder.query<OfflineMarksSheet, number>({
+      query: (examId) => `admin/exams/${examId}/offline-marks/`,
+      providesTags: (_result, _error, examId) => [{ type: "OfflineMarks", id: examId }],
+    }),
+    /** Saves rows and returns the whole updated sheet, which replaces the cache. */
+    saveOfflineMarks: builder.mutation<
+      OfflineMarksSheet,
+      { examId: number; rows: OfflineMarkInput[] }
+    >({
+      query: ({ examId, rows }) => ({
+        url: `admin/exams/${examId}/offline-marks/`,
+        method: "POST",
+        body: { rows },
+      }),
+      async onQueryStarted({ examId }, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(examsApi.util.upsertQueryData("getOfflineMarks", examId, data));
+        } catch {
+          // The caller shows the error; the cached sheet stays as it was.
+        }
+      },
+      // Once published, an edit changes live results.
+      invalidatesTags: ["ExamAttempts"],
+    }),
+    publishOfflineResult: builder.mutation<OfflinePublishOutput, number>({
+      query: (examId) => ({ url: `admin/exams/${examId}/offline-publish/`, method: "POST" }),
+      async onQueryStarted(examId, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(examsApi.util.upsertQueryData("getOfflineMarks", examId, data.sheet));
+        } catch {
+          // Refused (e.g. marks missing): the caller shows why.
+        }
+      },
+      invalidatesTags: (_result, _error, examId) => [
+        { type: "Exams", id: examId },
+        { type: "Exams", id: "LIST" },
+        "ExamAttempts",
+        { type: "SmsCampaigns", id: "LIST" },
+      ],
+    }),
     recalculateLeaderboard: builder.mutation<RecalculateResultsOutput, number>({
       query: (id) => ({ url: `admin/exams/${id}/recalculate-leaderboard/`, method: "POST" }),
       invalidatesTags: (_result, _error, id) => [
@@ -577,6 +724,11 @@ export const {
   usePublishExamMutation,
   usePublishExamResultMutation,
   useRecalculateLeaderboardMutation,
+  useCreateOfflineExamMutation,
+  useUpdateOfflineExamMutation,
+  useGetOfflineMarksQuery,
+  useSaveOfflineMarksMutation,
+  usePublishOfflineResultMutation,
   useGetExamLeaderboardQuery,
   useGetExamAnalyticsQuery,
   useGetExamAttemptsQuery,

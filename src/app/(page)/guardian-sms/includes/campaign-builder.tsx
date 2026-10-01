@@ -27,6 +27,11 @@ const KINDS: { value: SmsCampaignKind; label: string; hint: string }[] = [
     label: "অনুপস্থিত",
     hint: "যারা পরীক্ষা দেয়নি, তাদের অভিভাবককে জানানো হবে",
   },
+  {
+    value: "stu_result",
+    label: "শিক্ষার্থীকে রেজাল্ট",
+    hint: "যারা পরীক্ষা দিয়েছে, তাদের নিজের নম্বরে ফলাফল যাবে (অভিভাবকের নম্বর একই হলে বাদ)",
+  },
 ];
 
 export default function CampaignBuilder({

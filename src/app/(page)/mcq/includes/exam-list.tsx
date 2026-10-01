@@ -41,7 +41,8 @@ function resultStatusOf(exam: Exam) {
 }
 
 export default function ExamList() {
-  const { data, isLoading, isError, error } = useGetExamsQuery();
+  // Paper (offline) exams live under অফলাইন ব্যাচ, not here.
+  const { data, isLoading, isError, error } = useGetExamsQuery({ mode: "online" });
   const [deleteExam] = useDeleteExamMutation();
   const [publishResult] = usePublishExamResultMutation();
   const { hasPermission } = usePermissions();

@@ -23,7 +23,7 @@ const statusLabels: Record<string, string> = {
 
 export default function McqTab({ courseId }: { courseId: number }) {
   const [showAddModal, setShowAddModal] = useState(false);
-  const { data, isLoading } = useGetExamsQuery({ course: courseId });
+  const { data, isLoading } = useGetExamsQuery({ course: courseId, mode: "online" });
   const [deleteExam] = useDeleteExamMutation();
   const { hasPermission } = usePermissions();
 

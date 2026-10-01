@@ -10,7 +10,8 @@ import type { Paginated } from "./types";
  * server refuses it without `confirm: true`.
  */
 
-export type SmsCampaignKind = "result" | "absent";
+/** "stu_result" = the result sent to the student's own number (offline exams). */
+export type SmsCampaignKind = "result" | "absent" | "instant" | "stu_result";
 
 export type SmsCampaignStatus =
   | "draft"
@@ -63,7 +64,7 @@ export type SmsCampaignRecipient = {
 
 export type SmsTemplate = {
   id: number;
-  key: "result_published" | "exam_absent";
+  key: "result_published" | "exam_absent" | "exam_submitted" | "student_result";
   key_display: string;
   body: string;
   is_active: boolean;

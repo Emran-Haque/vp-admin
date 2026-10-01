@@ -38,7 +38,7 @@ export default function MaterialItemCard({ item, courseId, onUpdate, onRemove, o
   const ytId = item.kind === "video" ? youtubeId(item.videoUrl ?? "") : null;
 
   const { data: examsData, isLoading: isLoadingExams } = useGetExamsQuery(
-    item.kind === "mcq" ? (courseId ? { course: courseId } : undefined) : undefined,
+    item.kind === "mcq" ? (courseId ? { course: courseId, mode: "online" } : undefined) : undefined,
     { skip: item.kind !== "mcq" }
   );
   const exams = examsData?.results ?? [];

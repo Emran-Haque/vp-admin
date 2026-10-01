@@ -24,6 +24,7 @@ const PLACEHOLDERS = [
   { token: "{total_marks}", label: "মোট নম্বর" },
   { token: "{percentage}", label: "শতকরা" },
   { token: "{rank}", label: "মেধাক্রম" },
+  { token: "{wrong}", label: "ভুল উত্তর" },
   { token: "{student_id}", label: "শিক্ষার্থী আইডি" },
   { token: "{exam_date}", label: "পরীক্ষার তারিখ" },
   { token: "{brand}", label: "প্রতিষ্ঠানের নাম" },

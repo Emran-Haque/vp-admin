@@ -86,6 +86,7 @@ export type ClassListParams = {
   is_live?: boolean;
   status?: string;
   page?: number;
+  page_size?: number;
 };
 
 export type CreateClassInput =
@@ -108,6 +109,24 @@ export const classesApi = baseApi.injectEndpoints({
               { type: "Classes" as const, id: "LIST" },
             ]
           : [{ type: "Classes" as const, id: "LIST" }],
+    }),
+    /** Scroll-to-load classes of one course (newest class date first). */
+    getClassList: builder.infiniteQuery<
+      Paginated<CourseClass>,
+      { course: number },
+      number
+    >({
+      infiniteQueryOptions: {
+        initialPageParam: 1,
+        getNextPageParam: (lastPage, _all, lastPageParam) =>
+          lastPage.next ? lastPageParam + 1 : undefined,
+      },
+      query: ({ queryArg, pageParam }) => ({
+        url: "admin/classes/",
+        params: { ...queryArg, page: pageParam },
+      }),
+      // Exams hang off classes, so a new/edited exam must refresh these too.
+      providesTags: [{ type: "Classes", id: "LIST" }, { type: "Exams", id: "LIST" }],
     }),
     getClass: builder.query<CourseClass, number>({
       query: (id) => `admin/classes/${id}/`,
@@ -183,6 +202,7 @@ export const classesApi = baseApi.injectEndpoints({
 
 export const {
   useGetClassesQuery,
+  useGetClassListInfiniteQuery,
   useGetClassQuery,
   useCreateClassMutation,
   useUpdateClassMutation,

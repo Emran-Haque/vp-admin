@@ -84,6 +84,7 @@ export const baseApi = createApi({
     "DeviceRequests",
     "StudentDevices",
     "DeviceLock",
+    "OfflineMarks",
   ],
   endpoints: () => ({}),
 });

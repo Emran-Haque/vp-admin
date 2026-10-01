@@ -317,6 +317,63 @@ export default function StepBasicInfo({ value, onChange, files, onFilesChange, e
       </section>
 
       <section className="rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
+        <h2 className="text-xl font-bold leading-8 text-blue-50">কোর্সের ধরন</h2>
+        <p className="mt-1 text-sm text-slate-400">
+          অফলাইন কোর্সে শিক্ষার্থীরা ক্লাস রুটিন আর পরীক্ষার নম্বর দেখবে — ভিডিও বা অনলাইন পরীক্ষা নয়।
+        </p>
+
+        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {(
+            [
+              ["online", "অনলাইন কোর্স", "ভিডিও, লাইভ ক্লাস, MCQ পরীক্ষা"],
+              ["offline", "অফলাইন ব্যাচ", "ক্লাসরুমে পড়ানো · রুটিন ও নম্বর"],
+            ] as const
+          ).map(([mode, label, hint]) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => set("deliveryMode", mode)}
+              className={`rounded-2xl border p-4 text-left transition-colors ${
+                value.deliveryMode === mode
+                  ? "border-blue-500 bg-blue-500/10"
+                  : "border-slate-800 bg-gray-900/50 hover:border-slate-700"
+              }`}
+            >
+              <span className="block text-base font-semibold text-blue-50">{label}</span>
+              <span className="mt-1 block text-sm text-slate-400">{hint}</span>
+            </button>
+          ))}
+        </div>
+
+        {value.deliveryMode === "offline" && (
+          <div className="grid grid-cols-1 gap-6 pt-5 sm:grid-cols-2">
+            <div>
+              <label className="block pb-1.5 text-base font-medium text-blue-50">ক্লাসের স্থান</label>
+              <input
+                type="text"
+                value={value.venue}
+                maxLength={255}
+                onChange={(e) => set("venue", e.target.value)}
+                placeholder="যেমন: মিরপুর-১০, ঢাকা"
+                className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 placeholder:text-slate-400 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block pb-1.5 text-base font-medium text-blue-50">ক্লাসের সময়সূচি</label>
+              <input
+                type="text"
+                value={value.scheduleText}
+                maxLength={255}
+                onChange={(e) => set("scheduleText", e.target.value)}
+                placeholder="যেমন: শনি/সোম/বুধ, বিকাল ৪টা"
+                className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 placeholder:text-slate-400 focus:outline-none"
+              />
+            </div>
+          </div>
+        )}
+      </section>
+
+      <section className="rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
         <h2 className="text-xl font-bold leading-8 text-blue-50">মূল্য নির্ধারণ</h2>
 
         <label className="mt-5 flex cursor-pointer items-center gap-2.5">

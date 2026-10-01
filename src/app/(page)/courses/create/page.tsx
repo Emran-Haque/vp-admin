@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import WizardHeader from "./includes/wizard-header";
 import StepBasicInfo from "./includes/step-basic-info";
@@ -51,6 +52,9 @@ const emptyBasicInfo: BasicInfo = {
   promoVideoUrl: "",
   syllabusDriveLink: "",
   teacherIds: [],
+  deliveryMode: "online",
+  venue: "",
+  scheduleText: "",
 };
 
 const emptyFiles: CourseFiles = {
@@ -61,8 +65,25 @@ const emptyFiles: CourseFiles = {
 };
 
 export default function Page() {
+  return (
+    <Suspense fallback={null}>
+      <CourseCreateFromUrl />
+    </Suspense>
+  );
+}
+
+/** "অফলাইন ব্যাচ" → নতুন ব্যাচ links here with ?mode=offline preselected. */
+function CourseCreateFromUrl() {
+  const offline = useSearchParams().get("mode") === "offline";
+  return <CourseCreateWizard initialMode={offline ? "offline" : "online"} />;
+}
+
+function CourseCreateWizard({ initialMode }: { initialMode: BasicInfo["deliveryMode"] }) {
   const [step, setStep] = useState<CourseWizardStep>(1);
-  const [basicInfo, setBasicInfo] = useState<BasicInfo>(emptyBasicInfo);
+  const [basicInfo, setBasicInfo] = useState<BasicInfo>({
+    ...emptyBasicInfo,
+    deliveryMode: initialMode,
+  });
   const [files, setFiles] = useState<CourseFiles>(emptyFiles);
   const [materials, setMaterials] = useState<MaterialDraft[]>([]);
   const [subjects, setSubjects] = useState<SubjectDraft[]>([]);
@@ -130,6 +151,12 @@ export default function Page() {
     if (basicInfo.classStartDate) formData.append("class_start_date", basicInfo.classStartDate);
     formData.append("total_classes", basicInfo.totalClasses || "0");
     formData.append("inactivity_reminder_days", basicInfo.inactivityReminderDays || "0");
+    formData.append("delivery_mode", basicInfo.deliveryMode);
+    formData.append("venue", basicInfo.deliveryMode === "offline" ? basicInfo.venue : "");
+    formData.append(
+      "schedule_text",
+      basicInfo.deliveryMode === "offline" ? basicInfo.scheduleText : "",
+    );
     formData.append("total_quizzes", basicInfo.totalQuizzes || "0");
     formData.append("total_assignments", basicInfo.totalAssignments || "0");
     formData.append("telegram_group_link", basicInfo.telegramGroupLink || "");

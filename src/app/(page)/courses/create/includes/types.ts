@@ -45,6 +45,10 @@ export type BasicInfo = {
   promoVideoUrl: string;
   syllabusDriveLink: string;
   teacherIds: string[];
+  /** "offline" = classroom batch: students see the routine and marks only. */
+  deliveryMode: "online" | "offline";
+  venue: string;
+  scheduleText: string;
 };
 
 export type CourseFiles = {
