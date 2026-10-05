@@ -31,6 +31,16 @@ const levels = [
   { value: "advanced", label: "উচ্চ স্তর" },
 ];
 
+const offlineClassDays = [
+  { value: "sat", label: "শনি" },
+  { value: "sun", label: "রবি" },
+  { value: "mon", label: "সোম" },
+  { value: "tue", label: "মঙ্গল" },
+  { value: "wed", label: "বুধ" },
+  { value: "thu", label: "বৃহস্পতি" },
+  { value: "fri", label: "শুক্র" },
+];
+
 function ImageUploadField({
   label,
   hint,
@@ -319,7 +329,7 @@ export default function StepBasicInfo({ value, onChange, files, onFilesChange, e
       <section className="rounded-3xl border border-slate-800 bg-slate-900 p-7 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
         <h2 className="text-xl font-bold leading-8 text-blue-50">কোর্সের ধরন</h2>
         <p className="mt-1 text-sm text-slate-400">
-          অফলাইন কোর্সে শিক্ষার্থীরা ক্লাস রুটিন আর পরীক্ষার নম্বর দেখবে — ভিডিও বা অনলাইন পরীক্ষা নয়।
+          অফলাইন ব্যাচে শিক্ষার্থীরা ক্লাস রুটিন, উপস্থিতি ও পরীক্ষার ফলাফল দেখবে।
         </p>
 
         <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -346,28 +356,82 @@ export default function StepBasicInfo({ value, onChange, files, onFilesChange, e
         </div>
 
         {value.deliveryMode === "offline" && (
-          <div className="grid grid-cols-1 gap-6 pt-5 sm:grid-cols-2">
+          <div className="mt-5 flex flex-col gap-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.04] p-5 max-sm:p-4">
             <div>
-              <label className="block pb-1.5 text-base font-medium text-blue-50">ক্লাসের স্থান</label>
-              <input
-                type="text"
-                value={value.venue}
-                maxLength={255}
-                onChange={(e) => set("venue", e.target.value)}
-                placeholder="যেমন: মিরপুর-১০, ঢাকা"
-                className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 placeholder:text-slate-400 focus:outline-none"
-              />
+              <h3 className="text-base font-bold text-blue-50">ক্লাসরুম ও যোগাযোগ</h3>
+              <p className="mt-1 text-xs leading-5 text-slate-400">
+                শিক্ষার্থী যেন স্থানটি সহজে খুঁজে পায়, তাই শাখা, ঠিকানা ও ম্যাপ লিংক আলাদা করে দিন।
+              </p>
             </div>
-            <div>
-              <label className="block pb-1.5 text-base font-medium text-blue-50">ক্লাসের সময়সূচি</label>
-              <input
-                type="text"
-                value={value.scheduleText}
-                maxLength={255}
-                onChange={(e) => set("scheduleText", e.target.value)}
-                placeholder="যেমন: শনি/সোম/বুধ, বিকাল ৪টা"
-                className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 placeholder:text-slate-400 focus:outline-none"
-              />
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className="block pb-1.5 text-sm font-medium text-blue-50">শাখা / ক্যাম্পাস</label>
+                <input type="text" value={value.branchName} maxLength={120} onChange={(e) => set("branchName", e.target.value)} placeholder="যেমন: মিরপুর শাখা" className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-sm text-blue-50 placeholder:text-slate-400 focus:outline-none" />
+              </div>
+              <div>
+                <label className="block pb-1.5 text-sm font-medium text-blue-50">রুম / ফ্লোর</label>
+                <input type="text" value={value.roomNumber} maxLength={80} onChange={(e) => set("roomNumber", e.target.value)} placeholder="যেমন: ৩য় তলা, রুম ৩০২" className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-sm text-blue-50 placeholder:text-slate-400 focus:outline-none" />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block pb-1.5 text-sm font-medium text-blue-50">পূর্ণ ঠিকানা <span className="text-red-400">*</span></label>
+                <input type="text" value={value.venue} maxLength={255} onChange={(e) => set("venue", e.target.value)} placeholder="বাড়ি/রোড, এলাকা, শহর" className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-sm text-blue-50 placeholder:text-slate-400 focus:outline-none" />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block pb-1.5 text-sm font-medium text-blue-50">Google Maps লিংক</label>
+                <input type="url" value={value.mapUrl} onChange={(e) => set("mapUrl", e.target.value)} placeholder="https://maps.google.com/..." className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-sm text-blue-50 placeholder:text-slate-400 focus:outline-none" />
+              </div>
+              <div>
+                <label className="block pb-1.5 text-sm font-medium text-blue-50">যোগাযোগের ব্যক্তি</label>
+                <input type="text" value={value.contactName} maxLength={120} onChange={(e) => set("contactName", e.target.value)} placeholder="নাম" className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-sm text-blue-50 placeholder:text-slate-400 focus:outline-none" />
+              </div>
+              <div>
+                <label className="block pb-1.5 text-sm font-medium text-blue-50">যোগাযোগ নম্বর</label>
+                <input type="tel" inputMode="tel" value={value.contactPhone} maxLength={20} onChange={(e) => set("contactPhone", e.target.value)} placeholder="01XXXXXXXXX" className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-sm text-blue-50 placeholder:text-slate-400 focus:outline-none" />
+              </div>
+            </div>
+
+            <div className="border-t border-slate-800 pt-5">
+              <h3 className="text-base font-bold text-blue-50">সাপ্তাহিক সময়সূচি</h3>
+              <div className="mt-3 grid grid-cols-4 gap-2 max-sm:grid-cols-3">
+                {offlineClassDays.map((day) => {
+                  const selected = value.classDays.includes(day.value);
+                  return (
+                    <button key={day.value} type="button" onClick={() => set("classDays", selected ? value.classDays.filter((item) => item !== day.value) : [...value.classDays, day.value])} className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${selected ? "border-emerald-500 bg-emerald-500/15 text-emerald-200" : "border-slate-800 bg-gray-900/40 text-slate-400 hover:text-blue-50"}`}>
+                      {day.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block pb-1.5 text-sm font-medium text-blue-50">শুরুর সময়</label>
+                  <input type="time" value={value.classStartTime} onChange={(e) => set("classStartTime", e.target.value)} className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-sm text-blue-50 focus:outline-none [color-scheme:dark]" />
+                </div>
+                <div>
+                  <label className="block pb-1.5 text-sm font-medium text-blue-50">শেষের সময়</label>
+                  <input type="time" value={value.classEndTime} onChange={(e) => set("classEndTime", e.target.value)} className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-sm text-blue-50 focus:outline-none [color-scheme:dark]" />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block pb-1.5 text-sm font-medium text-blue-50">সময়সূচির অতিরিক্ত নির্দেশনা</label>
+                  <input type="text" value={value.scheduleText} maxLength={255} onChange={(e) => set("scheduleText", e.target.value)} placeholder="যেমন: সরকারি ছুটিতে ক্লাস বন্ধ" className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-sm text-blue-50 placeholder:text-slate-400 focus:outline-none" />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 border-t border-slate-800 pt-5 sm:grid-cols-2 lg:grid-cols-3">
+              <div>
+                <label className="block pb-1.5 text-sm font-medium text-blue-50">ভর্তির শেষ তারিখ</label>
+                <input type="date" value={value.enrollmentDeadline} onChange={(e) => set("enrollmentDeadline", e.target.value)} className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-sm text-blue-50 focus:outline-none [color-scheme:dark]" />
+              </div>
+              <div>
+                <label className="block pb-1.5 text-sm font-medium text-blue-50">ব্যাচ শেষের তারিখ</label>
+                <input type="date" value={value.batchEndDate} onChange={(e) => set("batchEndDate", e.target.value)} className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-sm text-blue-50 focus:outline-none [color-scheme:dark]" />
+              </div>
+              <div>
+                <label className="block pb-1.5 text-sm font-medium text-blue-50">মোট আসন</label>
+                <input type="number" min={1} value={value.seatCapacity} onChange={(e) => set("seatCapacity", e.target.value)} placeholder="যেমন: ৫০" className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-sm text-blue-50 placeholder:text-slate-400 focus:outline-none" />
+              </div>
             </div>
           </div>
         )}

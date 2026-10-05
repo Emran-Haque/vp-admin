@@ -44,6 +44,24 @@ export type CourseClass = {
   quizzes: ClassQuiz[];
 };
 
+export type AttendanceStatus = "" | "present" | "absent" | "late" | "excused";
+
+export type AttendanceRow = {
+  student: number;
+  student_name: string;
+  student_code: string;
+  student_phone: string;
+  status: AttendanceStatus;
+  note: string;
+};
+
+export type AttendanceSheet = {
+  class_id: number;
+  class_title: string;
+  class_date: string | null;
+  rows: AttendanceRow[];
+};
+
 export type CreateClassVideoInput = {
   course_class: number;
   title: string;
@@ -147,6 +165,23 @@ export const classesApi = baseApi.injectEndpoints({
       query: (id) => ({ url: `admin/classes/${id}/`, method: "DELETE" }),
       invalidatesTags: [{ type: "Classes", id: "LIST" }],
     }),
+    getClassAttendance: builder.query<AttendanceSheet, number>({
+      query: (classId) => `admin/classes/${classId}/attendance/`,
+      providesTags: (_result, _error, classId) => [{ type: "Classes", id: `attendance-${classId}` }],
+    }),
+    saveClassAttendance: builder.mutation<
+      AttendanceSheet,
+      { classId: number; rows: Pick<AttendanceRow, "student" | "status" | "note">[] }
+    >({
+      query: ({ classId, rows }) => ({
+        url: `admin/classes/${classId}/attendance/`,
+        method: "POST",
+        body: { rows },
+      }),
+      invalidatesTags: (_result, _error, { classId }) => [
+        { type: "Classes", id: `attendance-${classId}` },
+      ],
+    }),
     createClassVideo: builder.mutation<ClassVideo, CreateClassVideoInput | FormData>({
       query: (body) => ({ url: "admin/class-videos/", method: "POST", body }),
       // FormData carries course_class as a string field rather than a property,
@@ -207,6 +242,8 @@ export const {
   useCreateClassMutation,
   useUpdateClassMutation,
   useDeleteClassMutation,
+  useGetClassAttendanceQuery,
+  useSaveClassAttendanceMutation,
   useCreateClassVideoMutation,
   useUpdateClassVideoMutation,
   useDeleteClassVideoMutation,

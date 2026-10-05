@@ -23,6 +23,7 @@ import { extractErrorMessage } from "@/lib/api-error";
 import { offerPreview } from "@/lib/offer-pricing";
 import { serializeIncludes, type IncludeDraft } from "@/lib/rich-text";
 import type { BasicInfo, CourseFiles, MaterialDraft, QuizQuestion, SubjectDraft, FaqDraft } from "./includes/types";
+import { validateOfflineBatchInfo } from "./includes/offline-batch-validation";
 
 const optionLetters = ["A", "B", "C", "D"] as const;
 
@@ -55,6 +56,17 @@ const emptyBasicInfo: BasicInfo = {
   deliveryMode: "online",
   venue: "",
   scheduleText: "",
+  branchName: "",
+  roomNumber: "",
+  mapUrl: "",
+  classDays: [],
+  classStartTime: "",
+  classEndTime: "",
+  enrollmentDeadline: "",
+  batchEndDate: "",
+  seatCapacity: "",
+  contactName: "",
+  contactPhone: "",
 };
 
 const emptyFiles: CourseFiles = {
@@ -128,6 +140,12 @@ function CourseCreateWizard({ initialMode }: { initialMode: BasicInfo["deliveryM
       setIsSubmitting(false);
       return false;
     }
+    const offlineError = validateOfflineBatchInfo(basicInfo, { requirePublishReady: isPublished });
+    if (offlineError) {
+      setSubmitError(offlineError);
+      setIsSubmitting(false);
+      return false;
+    }
 
     const formData = new FormData();
     formData.append("title", basicInfo.name);
@@ -157,6 +175,17 @@ function CourseCreateWizard({ initialMode }: { initialMode: BasicInfo["deliveryM
       "schedule_text",
       basicInfo.deliveryMode === "offline" ? basicInfo.scheduleText : "",
     );
+    formData.append("branch_name", basicInfo.deliveryMode === "offline" ? basicInfo.branchName : "");
+    formData.append("room_number", basicInfo.deliveryMode === "offline" ? basicInfo.roomNumber : "");
+    formData.append("map_url", basicInfo.deliveryMode === "offline" ? basicInfo.mapUrl : "");
+    formData.append("class_days", JSON.stringify(basicInfo.deliveryMode === "offline" ? basicInfo.classDays : []));
+    formData.append("class_start_time", basicInfo.deliveryMode === "offline" ? basicInfo.classStartTime : "");
+    formData.append("class_end_time", basicInfo.deliveryMode === "offline" ? basicInfo.classEndTime : "");
+    formData.append("enrollment_deadline", basicInfo.deliveryMode === "offline" ? basicInfo.enrollmentDeadline : "");
+    formData.append("batch_end_date", basicInfo.deliveryMode === "offline" ? basicInfo.batchEndDate : "");
+    formData.append("seat_capacity", basicInfo.deliveryMode === "offline" ? basicInfo.seatCapacity : "");
+    formData.append("contact_name", basicInfo.deliveryMode === "offline" ? basicInfo.contactName : "");
+    formData.append("contact_phone", basicInfo.deliveryMode === "offline" ? basicInfo.contactPhone : "");
     formData.append("total_quizzes", basicInfo.totalQuizzes || "0");
     formData.append("total_assignments", basicInfo.totalAssignments || "0");
     formData.append("telegram_group_link", basicInfo.telegramGroupLink || "");

@@ -44,6 +44,19 @@ export type Course = {
   delivery_mode?: CourseDeliveryMode;
   venue?: string;
   schedule_text?: string;
+  branch_name?: string;
+  room_number?: string;
+  map_url?: string;
+  class_days?: string[];
+  class_start_time?: string | null;
+  class_end_time?: string | null;
+  enrollment_deadline?: string | null;
+  batch_end_date?: string | null;
+  seat_capacity?: number | null;
+  remaining_seats?: number | null;
+  enrollment_open?: boolean;
+  contact_name?: string;
+  contact_phone?: string;
 };
 
 export type CourseDeliveryMode = "online" | "offline";

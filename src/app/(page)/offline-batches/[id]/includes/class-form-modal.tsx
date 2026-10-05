@@ -28,6 +28,7 @@ export default function ClassFormModal({
   const [subjectId, setSubjectId] = useState(editItem?.subject ? String(editItem.subject) : "");
   const [classDate, setClassDate] = useState(editItem?.class_date ?? "");
   const [startTime, setStartTime] = useState(editItem?.start_time?.slice(0, 5) ?? "");
+  const [endTime, setEndTime] = useState(editItem?.end_time?.slice(0, 5) ?? "");
   const [error, setError] = useState<string | null>(null);
 
   const { data: subjectsData } = useGetCourseSubjectsQuery({ course: courseId });
@@ -45,6 +46,7 @@ export default function ClassFormModal({
       subject: subjectId,
       class_date: classDate || undefined,
       start_time: startTime || undefined,
+      end_time: endTime || undefined,
     };
     try {
       if (editItem) {
@@ -110,7 +112,7 @@ export default function ClassFormModal({
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3.5">
+          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
             <div>
               <label className="block pb-1.5 text-xs font-semibold text-slate-400">তারিখ</label>
               <input
@@ -121,7 +123,7 @@ export default function ClassFormModal({
               />
             </div>
             <div>
-              <label className="block pb-1.5 text-xs font-semibold text-slate-400">সময় (ঐচ্ছিক)</label>
+              <label className="block pb-1.5 text-xs font-semibold text-slate-400">শুরু (ঐচ্ছিক)</label>
               <input
                 type="time"
                 value={startTime}
@@ -129,7 +131,21 @@ export default function ClassFormModal({
                 className={dateInputClass}
               />
             </div>
+            <div>
+              <label className="block pb-1.5 text-xs font-semibold text-slate-400">শেষ (ঐচ্ছিক)</label>
+              <input
+                type="time"
+                value={endTime}
+                min={startTime || undefined}
+                onChange={(e) => setEndTime(e.target.value)}
+                className={dateInputClass}
+              />
+            </div>
           </div>
+
+          {startTime && endTime && endTime <= startTime ? (
+            <p className="text-xs text-red-400">শেষের সময় শুরুর সময়ের পরে হতে হবে।</p>
+          ) : null}
 
           <div className="flex justify-end gap-2.5 pt-2">
             <button
@@ -142,7 +158,7 @@ export default function ClassFormModal({
             <button
               type="button"
               onClick={handleSave}
-              disabled={isSaving || !title.trim()}
+              disabled={isSaving || !title.trim() || Boolean(startTime && endTime && endTime <= startTime)}
               className="flex cursor-pointer items-center gap-1.5 rounded-[10px] bg-gradient-to-br from-blue-500 to-blue-600 px-4 py-2 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Save size={14} />

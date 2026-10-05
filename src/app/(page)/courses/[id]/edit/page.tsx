@@ -47,6 +47,7 @@ import { discountAmountFromLegacy, offerPreview, originalPriceFromOffer } from "
 import { draftsFromIncludes, serializeIncludes, type IncludeDraft } from "@/lib/rich-text";
 import ErrorState from "@/components/error-state";
 import type { BasicInfo, CourseFiles, MaterialDraft, QuizQuestion, SubjectDraft, FaqDraft } from "../../create/includes/types";
+import { validateOfflineBatchInfo } from "../../create/includes/offline-batch-validation";
 
 const optionLetters = ["A", "B", "C", "D"] as const;
 const isPersisted = (id: string) => /^\d+$/.test(id);
@@ -93,6 +94,17 @@ function toBasicInfo(course: Course): BasicInfo {
     deliveryMode: course.delivery_mode === "offline" ? "offline" : "online",
     venue: course.venue ?? "",
     scheduleText: course.schedule_text ?? "",
+    branchName: course.branch_name ?? "",
+    roomNumber: course.room_number ?? "",
+    mapUrl: course.map_url ?? "",
+    classDays: course.class_days ?? [],
+    classStartTime: course.class_start_time?.slice(0, 5) ?? "",
+    classEndTime: course.class_end_time?.slice(0, 5) ?? "",
+    enrollmentDeadline: course.enrollment_deadline ?? "",
+    batchEndDate: course.batch_end_date ?? "",
+    seatCapacity: course.seat_capacity == null ? "" : String(course.seat_capacity),
+    contactName: course.contact_name ?? "",
+    contactPhone: course.contact_phone ?? "",
   };
 }
 
@@ -259,6 +271,12 @@ export default function Page() {
       setIsSaving(false);
       return;
     }
+    const offlineError = validateOfflineBatchInfo(basicInfo);
+    if (offlineError) {
+      setSaveError(offlineError);
+      setIsSaving(false);
+      return;
+    }
 
     const formData = new FormData();
     formData.append("title", basicInfo.name);
@@ -289,6 +307,17 @@ export default function Page() {
       "schedule_text",
       basicInfo.deliveryMode === "offline" ? basicInfo.scheduleText : "",
     );
+    formData.append("branch_name", basicInfo.deliveryMode === "offline" ? basicInfo.branchName : "");
+    formData.append("room_number", basicInfo.deliveryMode === "offline" ? basicInfo.roomNumber : "");
+    formData.append("map_url", basicInfo.deliveryMode === "offline" ? basicInfo.mapUrl : "");
+    formData.append("class_days", JSON.stringify(basicInfo.deliveryMode === "offline" ? basicInfo.classDays : []));
+    formData.append("class_start_time", basicInfo.deliveryMode === "offline" ? basicInfo.classStartTime : "");
+    formData.append("class_end_time", basicInfo.deliveryMode === "offline" ? basicInfo.classEndTime : "");
+    formData.append("enrollment_deadline", basicInfo.deliveryMode === "offline" ? basicInfo.enrollmentDeadline : "");
+    formData.append("batch_end_date", basicInfo.deliveryMode === "offline" ? basicInfo.batchEndDate : "");
+    formData.append("seat_capacity", basicInfo.deliveryMode === "offline" ? basicInfo.seatCapacity : "");
+    formData.append("contact_name", basicInfo.deliveryMode === "offline" ? basicInfo.contactName : "");
+    formData.append("contact_phone", basicInfo.deliveryMode === "offline" ? basicInfo.contactPhone : "");
     formData.append("telegram_group_link", basicInfo.telegramGroupLink || "");
     if (basicInfo.promoVideoUrl) formData.append("promo_video_url", basicInfo.promoVideoUrl);
     if (basicInfo.syllabusDriveLink) formData.append("syllabus_drive_link", basicInfo.syllabusDriveLink);

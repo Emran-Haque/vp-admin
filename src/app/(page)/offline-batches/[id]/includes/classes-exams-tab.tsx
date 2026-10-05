@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   CalendarDays,
   CheckCircle2,
+  ClipboardCheck,
   ClipboardPen,
   Loader2,
   Pencil,
@@ -31,6 +32,7 @@ import ConfirmActionDialog from "@/components/confirm-action-dialog";
 import { extractErrorMessage } from "@/lib/api-error";
 import ClassFormModal from "./class-form-modal";
 import OfflineExamFormModal from "./offline-exam-form-modal";
+import AttendanceModal from "./attendance-modal";
 
 function formatDate(value: string | null | undefined) {
   if (!value) return "";
@@ -70,6 +72,7 @@ export default function ClassesExamsTab({
   const [examForm, setExamForm] = useState<{ courseClass: CourseClass; edit?: ClassQuiz } | null>(
     null,
   );
+  const [attendanceClass, setAttendanceClass] = useState<CourseClass | null>(null);
   const [pending, setPending] = useState<Pending | null>(null);
   const [notice, setNotice] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
 
@@ -217,12 +220,23 @@ export default function ClassesExamsTab({
                         <CalendarDays size={12} />
                         {formatDate(courseClass.class_date)}
                         {courseClass.start_time ? ` · ${courseClass.start_time.slice(0, 5)}` : ""}
+                        {courseClass.end_time ? `–${courseClass.end_time.slice(0, 5)}` : ""}
                       </span>
                     )}
                     {subject && <span>বিষয়: {subject}</span>}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  {canEditClass && (
+                    <button
+                      type="button"
+                      onClick={() => setAttendanceClass(courseClass)}
+                      className="flex items-center gap-1 rounded-[10px] border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-100"
+                    >
+                      <ClipboardCheck size={13} />
+                      উপস্থিতি
+                    </button>
+                  )}
                   {canCreateExam && (
                     <button
                       type="button"
@@ -375,6 +389,12 @@ export default function ClassesExamsTab({
           courseClass={examForm.courseClass}
           editItem={examForm.edit}
           onClose={() => setExamForm(null)}
+        />
+      )}
+      {attendanceClass && (
+        <AttendanceModal
+          courseClass={attendanceClass}
+          onClose={() => setAttendanceClass(null)}
         />
       )}
       <ConfirmActionDialog

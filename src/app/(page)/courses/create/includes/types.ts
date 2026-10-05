@@ -49,6 +49,17 @@ export type BasicInfo = {
   deliveryMode: "online" | "offline";
   venue: string;
   scheduleText: string;
+  branchName: string;
+  roomNumber: string;
+  mapUrl: string;
+  classDays: string[];
+  classStartTime: string;
+  classEndTime: string;
+  enrollmentDeadline: string;
+  batchEndDate: string;
+  seatCapacity: string;
+  contactName: string;
+  contactPhone: string;
 };
 
 export type CourseFiles = {

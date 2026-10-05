@@ -5,10 +5,12 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   ArrowLeft,
+  Building2,
   CalendarClock,
   ClipboardList,
   MapPin,
   Pencil,
+  Phone,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -24,6 +26,15 @@ const tabs: { key: Tab; label: string; icon: LucideIcon }[] = [
   { key: "classes", label: "ক্লাস ও পরীক্ষা", icon: ClipboardList },
   { key: "students", label: "শিক্ষার্থী", icon: Users },
 ];
+
+const dayLabels: Record<string, string> = {
+  sat: "শনি", sun: "রবি", mon: "সোম", tue: "মঙ্গল", wed: "বুধ", thu: "বৃহস্পতি", fri: "শুক্র",
+};
+
+function formatDate(value?: string | null) {
+  if (!value) return "—";
+  return new Intl.DateTimeFormat("bn-BD", { day: "numeric", month: "short", year: "numeric" }).format(new Date(value));
+}
 
 export default function Page() {
   const params = useParams<{ id: string }>();
@@ -53,8 +64,9 @@ export default function Page() {
         সব অফলাইন ব্যাচ
       </Link>
 
-      <section className="flex flex-wrap items-start justify-between gap-4 rounded-3xl border border-slate-800 bg-slate-900 p-6">
-        <div>
+      <section className="rounded-3xl border border-slate-800 bg-slate-900 p-4 sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
           <h1 className="text-xl font-bold leading-8 text-blue-50">{course.title}</h1>
           <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-400">
             <span className="flex items-center gap-1.5">
@@ -74,8 +86,8 @@ export default function Page() {
               </span>
             ) : null}
           </div>
-        </div>
-        {hasPermission("can_edit_course") && (
+          </div>
+          {hasPermission("can_edit_course") && (
           <Link
             href={`/courses/${course.id}/edit`}
             className="flex items-center gap-1.5 rounded-[10px] border border-slate-700 px-3.5 py-2 text-xs font-bold text-slate-200 hover:bg-white/5"
@@ -83,7 +95,32 @@ export default function Page() {
             <Pencil size={13} />
             ব্যাচের তথ্য এডিট
           </Link>
-        )}
+          )}
+        </div>
+
+        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-2xl border border-white/5 bg-white/[0.025] p-4">
+            <span className="flex items-center gap-2 text-xs text-slate-500"><Building2 size={14} /> লোকেশন</span>
+            <strong className="mt-2 block text-sm text-slate-100">{course.branch_name || "শাখা দেওয়া নেই"}</strong>
+            <span className="mt-1 block text-xs leading-5 text-slate-400">{[course.room_number, course.venue].filter(Boolean).join(" · ") || "ঠিকানা দেওয়া নেই"}</span>
+            {course.map_url ? <a href={course.map_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex text-xs font-bold text-blue-300">ম্যাপে দেখুন ↗</a> : null}
+          </div>
+          <div className="rounded-2xl border border-white/5 bg-white/[0.025] p-4">
+            <span className="flex items-center gap-2 text-xs text-slate-500"><CalendarClock size={14} /> সময়সূচি</span>
+            <strong className="mt-2 block text-sm text-slate-100">{(course.class_days ?? []).map((day) => dayLabels[day] ?? day).join(" · ") || "দিন নির্ধারিত নয়"}</strong>
+            <span className="mt-1 block text-xs text-slate-400">{course.class_start_time ? `${course.class_start_time.slice(0, 5)}${course.class_end_time ? `–${course.class_end_time.slice(0, 5)}` : ""}` : course.schedule_text || "সময় দেওয়া নেই"}</span>
+          </div>
+          <div className="rounded-2xl border border-white/5 bg-white/[0.025] p-4">
+            <span className="flex items-center gap-2 text-xs text-slate-500"><Users size={14} /> আসন ও ভর্তি</span>
+            <strong className="mt-2 block text-sm text-slate-100">{course.seat_capacity == null ? "আসন সীমাহীন" : `${course.remaining_seats ?? Math.max(course.seat_capacity - course.enrollment_count, 0)}টি আসন বাকি`}</strong>
+            <span className="mt-1 block text-xs text-slate-400">ভর্তি শেষ: {formatDate(course.enrollment_deadline)}</span>
+          </div>
+          <div className="rounded-2xl border border-white/5 bg-white/[0.025] p-4">
+            <span className="flex items-center gap-2 text-xs text-slate-500"><Phone size={14} /> যোগাযোগ</span>
+            <strong className="mt-2 block text-sm text-slate-100">{course.contact_name || "যোগাযোগের ব্যক্তি নেই"}</strong>
+            {course.contact_phone ? <a href={`tel:${course.contact_phone}`} className="mt-1 block text-xs font-bold text-blue-300">{course.contact_phone}</a> : <span className="mt-1 block text-xs text-slate-400">নম্বর দেওয়া নেই</span>}
+          </div>
+        </div>
       </section>
 
       {!isOffline && (
