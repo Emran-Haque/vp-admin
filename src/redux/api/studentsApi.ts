@@ -25,6 +25,10 @@ export type ProfileCompletion = {
 
 export type Student = {
   id: number;
+  /** "YY + 6 digits" (e.g. 26000001); null only for very old staff-made rows. */
+  student_id: string | null;
+  /** The pre-2026 random ID, kept so a student can still be found by it. */
+  legacy_student_id?: string | null;
   email: string | null;
   full_name: string;
   phone: string;

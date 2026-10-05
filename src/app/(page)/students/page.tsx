@@ -2,7 +2,6 @@
 
 import { useRef, useState } from "react";
 import OverviewBanner from "./includes/overview-banner";
-import Stats from "./includes/stats";
 import Toolbar, { type StatusFilter, NOT_ENROLLED_VALUE } from "./includes/toolbar";
 import StudentList from "./includes/student-list";
 import Pagination from "./includes/pagination";
@@ -129,10 +128,11 @@ export default function Page() {
   };
 
   return (
-    <div className="flex flex-col gap-4 sm:gap-7">
+    // Phones: pull out of the layout's 28px padding (leaving 12px) so the
+    // cards get the width; tablets and desktop keep the normal padding.
+    <div className="flex flex-col gap-3 max-sm:-mx-4 sm:gap-6">
       <StudentsTabs />
       <OverviewBanner onAddClick={() => setModalOpen(true)} />
-      <Stats />
       <Toolbar
         search={search}
         onSearchChange={(value) => {

@@ -9,11 +9,11 @@ type Stat = {
   value: number | string;
   icon: LucideIcon;
   card: string;
-  iconBg: string;
   iconColor: string;
   valueColor: string;
 };
 
+/** The two student counts as compact chips, shown inside the page's header card. */
 export default function Stats() {
   const { data: dashboardData, isLoading: isLoadingDashboard } = useGetAdminDashboardQuery();
   const { data: allStudentsData, isLoading: isLoadingAll } = useGetStudentsQuery();
@@ -32,40 +32,32 @@ export default function Stats() {
       label: "মোট শিক্ষার্থী",
       value: totalStudents,
       icon: Users,
-      card: "border-cyan-500/30 bg-cyan-500/10 hover:border-cyan-500/50",
-      iconBg: "bg-cyan-500/20",
+      card: "border-cyan-500/30 bg-cyan-500/10",
       iconColor: "text-cyan-400",
-      valueColor: "text-cyan-400",
+      valueColor: "text-cyan-300",
     },
     {
       label: "সক্রিয়",
       value: activeStudents,
       icon: Award,
-      card: "border-emerald-500/30 bg-emerald-500/10 hover:border-emerald-500/50",
-      iconBg: "bg-emerald-500/20",
+      card: "border-emerald-500/30 bg-emerald-500/10",
       iconColor: "text-emerald-400",
-      valueColor: "text-emerald-400",
+      valueColor: "text-emerald-300",
     },
   ];
 
   return (
-    <section className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:gap-6">
-      {stats.map(({ label, value, icon: Icon, card, iconBg, iconColor, valueColor }) => (
+    <div className="grid grid-cols-2 gap-2 lg:flex lg:gap-3">
+      {stats.map(({ label, value, icon: Icon, card, iconColor, valueColor }) => (
         <div
           key={label}
-          className={`flex min-w-0 flex-1 items-center justify-between rounded-2xl border p-3 transition-all sm:min-w-[200px] sm:p-4.5 ${card}`}
+          className={`flex min-w-0 items-center gap-2 rounded-xl border px-3 py-2 lg:min-w-[150px] ${card}`}
         >
-          <div className="flex min-w-0 items-center gap-2.5 sm:gap-3.5">
-            <span className={`flex size-9 shrink-0 items-center justify-center rounded-xl sm:size-11 ${iconBg}`}>
-              <Icon className={`size-[18px] sm:size-[22px] ${iconColor}`} />
-            </span>
-            <div>
-              <p className="text-xs font-medium text-slate-300">{label}</p>
-              <p className={`mt-0.5 text-xl font-bold sm:text-2xl ${valueColor}`}>{value}</p>
-            </div>
-          </div>
+          <Icon className={`size-4 shrink-0 ${iconColor}`} />
+          <span className="min-w-0 truncate text-xs font-medium text-slate-300">{label}</span>
+          <span className={`ml-auto text-lg font-bold leading-6 tabular-nums ${valueColor}`}>{value}</span>
         </div>
       ))}
-    </section>
+    </div>
   );
 }

@@ -9,7 +9,7 @@ import {
   Mail,
   Phone,
   Calendar,
-  GraduationCap,
+  IdCard,
   MapPin,
 } from "lucide-react";
 import {
@@ -20,6 +20,8 @@ import {
 import { usePermissions } from "@/hooks/use-permissions";
 import { statusOf, studentStatusStyles } from "@/lib/student-status";
 import StudentDevicePanel from "./student-device-panel";
+import StudentAvatar from "@/components/student-avatar";
+import { getMediaUrl } from "@/redux/api/baseApi";
 import {
   emptyProfileForm,
   examYearOptions,
@@ -139,9 +141,24 @@ export default function StudentDetailModal({
           {student && !isEditing && (
             <>
               <div className="flex items-center gap-4">
-                <span className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-sky-500">
-                  <GraduationCap size={28} className="text-white" strokeWidth={2} />
-                </span>
+                {student.profile_image ? (
+                  // The student's own upload — open it full size in a new tab.
+                  <a
+                    href={getMediaUrl(student.profile_image) ?? undefined}
+                    target="_blank"
+                    rel="noreferrer"
+                    title="ছবিটি বড় করে দেখুন"
+                    className="shrink-0 rounded-2xl transition hover:opacity-90"
+                  >
+                    <StudentAvatar
+                      name={student.full_name}
+                      image={student.profile_image}
+                      className="size-16 rounded-2xl"
+                    />
+                  </a>
+                ) : (
+                  <StudentAvatar name={student.full_name} className="size-16 rounded-2xl" />
+                )}
                 <div>
                   <div className="flex items-center gap-2.5">
                     <p className="text-lg font-semibold text-blue-50">{student.full_name}</p>
@@ -153,6 +170,19 @@ export default function StudentDetailModal({
                       {studentStatusStyles[statusOf(student)].label}
                     </span>
                   </div>
+                  {student.student_id ? (
+                    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-slate-400">
+                      <span className="flex items-center gap-1">
+                        <IdCard size={12} className="text-cyan-400" />
+                        <span className="font-mono text-sm font-semibold tracking-wide text-cyan-200">
+                          {student.student_id}
+                        </span>
+                      </span>
+                      {student.legacy_student_id ? (
+                        <span>(পুরনো আইডি: {student.legacy_student_id})</span>
+                      ) : null}
+                    </p>
+                  ) : null}
                   <p className="mt-1 flex items-center gap-1 text-xs text-slate-400">
                     <Calendar size={12} />
                     যোগদান: {new Date(student.created_at).toLocaleDateString("bn-BD")}

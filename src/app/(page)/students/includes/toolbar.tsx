@@ -122,7 +122,7 @@ export default function Toolbar({
           type="text"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="নাম, ইমেইল বা ফোন দিয়ে খুঁজুন..."
+          placeholder="নাম, আইডি, ফোন বা ইমেইল দিয়ে খুঁজুন..."
           className="w-full rounded-xl border border-slate-800 bg-gray-800 py-2.5 pl-11 pr-4 text-sm text-white placeholder:text-slate-400 focus:outline-none sm:py-3 sm:text-base"
         />
       </div>

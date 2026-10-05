@@ -1,6 +1,7 @@
 "use client";
 
-import { GraduationCap, Mail, Phone, BookMarked, Calendar, Trash2, UserCheck, UserX } from "lucide-react";
+import { IdCard, Phone, BookMarked, Calendar, Trash2, UserCheck, UserX } from "lucide-react";
+import StudentAvatar from "@/components/student-avatar";
 import {
   useDeleteStudentMutation,
   useDeactivateStudentMutation,
@@ -59,9 +60,11 @@ export default function StudentList({
               onClick={() => setSelectedStudentId(student.id)}
               className="relative flex cursor-pointer flex-wrap items-center gap-6 rounded-2xl border border-slate-800 bg-slate-900 p-3.5 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)] transition-colors hover:border-slate-700 sm:static sm:rounded-3xl sm:p-5"
             >
-              <span className="hidden size-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-sky-500 sm:flex">
-                <GraduationCap size={28} className="text-white" strokeWidth={2} />
-              </span>
+              <StudentAvatar
+                name={student.full_name}
+                image={student.profile_image}
+                className="hidden size-14 rounded-2xl sm:flex"
+              />
 
               <div className="w-full min-w-0 sm:w-auto sm:min-w-64 sm:flex-1">
                 {/* Phones: right padding leaves room for the action buttons pinned top-right. */}
@@ -71,23 +74,28 @@ export default function StudentList({
                     {status.label}
                   </span>
                 </div>
-                {/* Phones: email / phone + joined / institution, each on one line. */}
+                {/* Phones: ID + phone, then joined + institution — two short lines. */}
                 <div className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-slate-400 sm:flex sm:flex-wrap sm:items-center sm:gap-x-6 sm:text-sm">
-                  <span className="col-span-2 flex min-w-0 items-center gap-1">
-                    <Mail size={14} className="shrink-0" />
-                    <span className="truncate">{student.email || "—"}</span>
+                  <span
+                    className="flex min-w-0 items-center gap-1"
+                    title={student.legacy_student_id ? `পুরনো আইডি: ${student.legacy_student_id}` : undefined}
+                  >
+                    <IdCard size={14} className="shrink-0 text-cyan-400" />
+                    <span className="truncate font-mono font-semibold tracking-wide text-cyan-200">
+                      {student.student_id || "—"}
+                    </span>
                   </span>
                   <span className="flex min-w-0 items-center gap-1">
                     <Phone size={14} className="shrink-0" />
                     <span className="truncate">{student.phone || "—"}</span>
                   </span>
-                  <span className="order-last col-span-2 flex min-w-0 items-center gap-1 sm:order-none">
-                    <BookMarked size={14} className="shrink-0" />
-                    <span className="truncate">{student.student_profile?.institution || "—"}</span>
-                  </span>
                   <span className="flex min-w-0 items-center gap-1">
                     <Calendar size={14} className="shrink-0" />
                     <span className="truncate">যোগদান: {new Date(student.created_at).toLocaleDateString("bn-BD")}</span>
+                  </span>
+                  <span className="flex min-w-0 items-center gap-1">
+                    <BookMarked size={14} className="shrink-0" />
+                    <span className="truncate">{student.student_profile?.institution || "—"}</span>
                   </span>
                 </div>
               </div>
