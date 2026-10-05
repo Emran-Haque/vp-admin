@@ -1,5 +1,6 @@
 "use client";
 
+import StudentAvatar from "@/components/student-avatar";
 import { useState } from "react";
 import { AlertTriangle, Lock, Phone, ShieldOff } from "lucide-react";
 import { useGetOverdueQuery } from "@/redux/api/ledgersApi";
@@ -72,10 +73,20 @@ export default function Page() {
               {rows.map((row) => (
                 <tr key={row.plan} className="border-t border-slate-800 bg-rose-950/10">
                   <td className="px-4 py-3">
-                    <div className="font-medium text-slate-100">{row.student_name}</div>
-                    <div className="flex items-center gap-1 text-xs text-slate-500">
-                      <Phone className="size-3" />
-                      {row.student_phone || row.student_email}
+                    <div className="flex items-center gap-2.5">
+                      <StudentAvatar
+                        name={row.student_name}
+                        image={row.student_image}
+                        className="size-8 rounded-full"
+                        iconSize={14}
+                      />
+                      <div className="min-w-0">
+                        <div className="font-medium text-slate-100">{row.student_name}</div>
+                        <div className="flex items-center gap-1 text-xs text-slate-500">
+                          <Phone className="size-3" />
+                          {row.student_phone || row.student_email}
+                        </div>
+                      </div>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-slate-300">{row.course_title}</td>

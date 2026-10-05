@@ -8,7 +8,6 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
-  GraduationCap,
   Hash,
   Mail,
   Phone,
@@ -27,6 +26,7 @@ import {
   type EnrollmentTab,
 } from "@/redux/api/coursesApi";
 import { useGetStudentQuery } from "@/redux/api/studentsApi";
+import StudentAvatar from "@/components/student-avatar";
 import { usePermissions } from "@/hooks/use-permissions";
 import { statusOf, studentStatusStyles } from "@/lib/student-status";
 import ConfirmActionDialog from "@/components/confirm-action-dialog";
@@ -350,9 +350,12 @@ function EnrollmentStudentRow({
           : "border-slate-800 bg-gray-900/40"
       }`}
     >
-      <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-sky-500">
-        <GraduationCap size={24} className="text-white" />
-      </span>
+      <StudentAvatar
+        name={studentName}
+        image={student?.profile_image ?? enrollment.student_image}
+        className="size-12 rounded-2xl"
+        iconSize={24}
+      />
 
       <div className="min-w-[240px] flex-1">
         <div className="flex flex-wrap items-center gap-2">

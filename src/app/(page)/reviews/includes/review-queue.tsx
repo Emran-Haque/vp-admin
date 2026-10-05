@@ -1,5 +1,6 @@
 "use client";
 
+import StudentAvatar from "@/components/student-avatar";
 import { useRef, useState } from "react";
 import {
   Award, BookOpen, Check, ClipboardList, GraduationCap, Package,
@@ -266,6 +267,12 @@ export function ReviewCard({
           (it then shortens with "…"); otherwise the buttons wrap below. */}
       <footer className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-slate-700/60 pt-2.5 sm:mt-4 sm:pt-3">
         <div className="flex min-w-36 max-w-full flex-1 flex-wrap items-center gap-2">
+          <StudentAvatar
+            name={review.student_name || "—"}
+            image={review.student_image}
+            className="size-6 rounded-full"
+            iconSize={12}
+          />
           <span
             className="min-w-0 max-w-full truncate text-xs text-slate-400"
             title={`${review.student_name || "—"}${review.institution ? ` · ${review.institution}` : ""}`}

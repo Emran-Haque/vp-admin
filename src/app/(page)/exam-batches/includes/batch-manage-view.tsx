@@ -1,5 +1,6 @@
 "use client";
 
+import StudentAvatar from "@/components/student-avatar";
 import { useState } from "react";
 import { formatMarks } from "@/lib/marks";
 import {
@@ -283,7 +284,17 @@ function EnrollmentPanel({ batchId }: { batchId: number }) {
             <tbody>
               {data.map((item) => (
                 <tr key={item.id} className="border-b border-slate-800/60">
-                  <td className="px-4 py-3 font-bold text-slate-100">{item.student_name || item.student}</td>
+                  <td className="px-4 py-3 font-bold text-slate-100">
+                    <span className="flex items-center gap-2.5">
+                      <StudentAvatar
+                        name={item.student_name || String(item.student)}
+                        image={item.student_image}
+                        className="size-8 rounded-full"
+                        iconSize={14}
+                      />
+                      <span className="min-w-0 truncate">{item.student_name || item.student}</span>
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-slate-400">{item.student_email}</td>
                   <td className="px-4 py-3">
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-1 text-xs font-bold text-emerald-300">

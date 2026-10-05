@@ -19,6 +19,8 @@ export type StudentBrief = {
   student_id: string | null;
   email: string | null;
   is_active: boolean;
+  /** Profile photo URL; null when none. */
+  profile_image?: string | null;
 };
 
 export type LockedDevice = {

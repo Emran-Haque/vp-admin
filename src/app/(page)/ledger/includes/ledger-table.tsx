@@ -1,5 +1,6 @@
 "use client";
 
+import StudentAvatar from "@/components/student-avatar";
 import { Eye, Lock, ShieldOff } from "lucide-react";
 import type { Ledger } from "@/redux/api/ledgersApi";
 import ErrorState from "@/components/error-state";
@@ -69,9 +70,19 @@ export default function LedgerTable({ ledgers, isLoading, isError, error, onView
               }`}
             >
               <td className="px-4 py-3">
-                <div className="font-medium text-slate-100">{ledger.student_name || "—"}</div>
-                <div className="text-xs text-slate-500">
-                  {ledger.student_phone || ledger.student_email}
+                <div className="flex items-center gap-2.5">
+                  <StudentAvatar
+                    name={ledger.student_name || "—"}
+                    image={ledger.student_image}
+                    className="size-8 rounded-full"
+                    iconSize={14}
+                  />
+                  <div className="min-w-0">
+                    <div className="font-medium text-slate-100">{ledger.student_name || "—"}</div>
+                    <div className="text-xs text-slate-500">
+                      {ledger.student_phone || ledger.student_email}
+                    </div>
+                  </div>
                 </div>
               </td>
               <td className="px-4 py-3 text-slate-300">{ledger.course_title}</td>

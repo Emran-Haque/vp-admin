@@ -107,6 +107,8 @@ export type OfflineMarkRow = {
   /** The 8-digit roll shown to students. */
   student_code: string;
   name: string;
+  /** Profile photo URL (a /media path); null when none. */
+  student_image?: string | null;
   /** False when the student has left the batch since their row was entered. */
   is_enrolled: boolean;
   entered: boolean;
@@ -258,6 +260,8 @@ export type ExamAttempt = {
   exam: number;
   student: number;
   student_name: string;
+  /** Profile photo URL (absolute, or a /media path); null when none. */
+  student_image?: string | null;
   status: string;
   score: string;
   correct_count: number;
@@ -389,6 +393,8 @@ export type ExamBatchJoinRequest = {
   batch: number;
   student: number;
   student_name: string;
+  /** Profile photo URL (absolute, or a /media path); null when none. */
+  student_image?: string | null;
   student_email: string;
   /** The name the student uses on Facebook (to be added to the group). */
   name: string;
@@ -400,6 +406,8 @@ export type ExamBatchEnrollment = {
   id: number;
   student: number;
   student_name: string;
+  /** Profile photo URL (absolute, or a /media path); null when none. */
+  student_image?: string | null;
   student_email: string;
   batch: number;
   batch_title: string;

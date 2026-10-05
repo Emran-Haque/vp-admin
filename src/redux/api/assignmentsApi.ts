@@ -76,6 +76,8 @@ export type Submission = {
   course_class_title?: string;
   student: number;
   student_name?: string;
+  /** Profile photo URL (absolute, or a /media path); null when none. */
+  student_image?: string | null;
   student_email?: string;
   submission_type: string;
   file: string | null;

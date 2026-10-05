@@ -1,5 +1,6 @@
 "use client";
 
+import StudentAvatar from "@/components/student-avatar";
 import { useState } from "react";
 import { AlertTriangle, ArrowRight, Check, Eye, Search, X } from "lucide-react";
 import {
@@ -155,6 +156,12 @@ function RequestCard({
   return (
     <article className="min-w-0 rounded-2xl border border-slate-800 bg-gray-800 p-3.5 sm:p-4">
       <div className="flex flex-wrap items-center gap-2">
+        <StudentAvatar
+          name={request.student.full_name}
+          image={request.student.profile_image}
+          className="size-8 rounded-full"
+          iconSize={14}
+        />
         <span className="min-w-0 truncate text-sm font-bold text-blue-50">{request.student.full_name}</span>
         <span className="text-xs text-slate-400">
           {localPhone(request.student.phone)}

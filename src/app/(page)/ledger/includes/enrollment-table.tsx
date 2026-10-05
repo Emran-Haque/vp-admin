@@ -1,5 +1,6 @@
 "use client";
 
+import StudentAvatar from "@/components/student-avatar";
 import { AlertTriangle, CircleDashed, Eye, Lock, ShieldOff } from "lucide-react";
 import type { LedgerRow } from "@/redux/api/ledgersApi";
 import ErrorState from "@/components/error-state";
@@ -77,9 +78,19 @@ export default function EnrollmentTable({ rows, isLoading, isError, error, onOpe
                 className={`border-t border-slate-800 ${meta.rowClass ?? ""}`}
               >
                 <td className="px-4 py-3">
-                  <div className="font-medium text-slate-100">{row.student_name || "—"}</div>
-                  <div className="text-xs text-slate-500">
-                    #{row.student} · {row.student_phone || row.student_email}
+                  <div className="flex items-center gap-2.5">
+                    <StudentAvatar
+                      name={row.student_name || "—"}
+                      image={row.student_image}
+                      className="size-8 rounded-full"
+                      iconSize={14}
+                    />
+                    <div className="min-w-0">
+                      <div className="font-medium text-slate-100">{row.student_name || "—"}</div>
+                      <div className="text-xs text-slate-500">
+                        #{row.student} · {row.student_phone || row.student_email}
+                      </div>
+                    </div>
                   </div>
                 </td>
                 <td className="px-4 py-3 text-slate-300">{row.course_title}</td>

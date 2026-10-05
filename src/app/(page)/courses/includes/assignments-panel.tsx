@@ -1,5 +1,6 @@
 "use client";
 
+import StudentAvatar from "@/components/student-avatar";
 import { useEffect, useMemo, useState } from "react";
 import { formatMarks } from "@/lib/marks";
 import {
@@ -603,6 +604,12 @@ export function AssignmentSubmissionsModal({ assignment, onClose }: { assignment
                             s.status === "evaluated" ? "bg-emerald-400" : "bg-amber-400"
                           }`}
                         />
+                        <StudentAvatar
+                          name={s.student_name || s.student_email || ""}
+                          image={s.student_image}
+                          className="size-7 rounded-full"
+                          iconSize={13}
+                        />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-xs font-bold text-blue-50">
                             {s.student_name || s.student_email || `শিক্ষার্থী #${s.student}`}
@@ -662,14 +669,22 @@ function GradingPanel({ submission }: { submission: Submission }) {
   return (
     <div className="p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-bold text-blue-50">
-            {submission.student_name || submission.student_email || `শিক্ষার্থী #${submission.student}`}
-          </p>
-          <p className="mt-1 text-xs text-slate-400">
-            জমা: {formatDateTime(submission.submitted_at)}
-            {submission.student_email ? ` • ${submission.student_email}` : ""}
-          </p>
+        <div className="flex min-w-0 items-start gap-3">
+          <StudentAvatar
+            name={submission.student_name || submission.student_email || ""}
+            image={submission.student_image}
+            className="size-10 rounded-full"
+            iconSize={18}
+          />
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-blue-50">
+              {submission.student_name || submission.student_email || `শিক্ষার্থী #${submission.student}`}
+            </p>
+            <p className="mt-1 text-xs text-slate-400">
+              জমা: {formatDateTime(submission.submitted_at)}
+              {submission.student_email ? ` • ${submission.student_email}` : ""}
+            </p>
+          </div>
         </div>
         <span
           className={`rounded-full px-3 py-1 text-[11px] font-semibold outline outline-1 outline-offset-[-1px] ${getStatusClass(

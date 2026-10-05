@@ -51,6 +51,8 @@ export type SmsCampaignRecipient = {
   id: number;
   student: number;
   student_name: string;
+  /** Profile photo URL (absolute, or a /media path); null when none. */
+  student_image?: string | null;
   student_code: string | null;
   student_phone: string;
   phone: string;

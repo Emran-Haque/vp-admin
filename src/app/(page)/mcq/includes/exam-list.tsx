@@ -1,5 +1,6 @@
 "use client";
 
+import StudentAvatar from "@/components/student-avatar";
 import Link from "next/link";
 import { useState } from "react";
 import {
@@ -280,9 +281,12 @@ function ExamAttemptsTable({ attempts }: { attempts: ExamAttempt[] }) {
             <tr key={attempt.id} className="border-t border-slate-800">
               <td className="px-4 py-3">
                 <div className="flex items-center gap-2.5">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 text-sm font-black text-white">
-                    {(attempt.student_name || "S").charAt(0)}
-                  </span>
+                  <StudentAvatar
+                    name={attempt.student_name || `Student #${attempt.student}`}
+                    image={attempt.student_image}
+                    className="size-9 rounded-full"
+                    iconSize={16}
+                  />
                   <div>
                     <p className="text-sm font-semibold text-blue-50">
                       {attempt.student_name || `Student #${attempt.student}`}

@@ -1,5 +1,6 @@
 "use client";
 
+import StudentAvatar from "@/components/student-avatar";
 import { useEffect, useRef, useState } from "react";
 import {
   X,
@@ -261,12 +262,22 @@ export default function CampaignDetailModal({
                     {recipientRows.map((row) => (
                       <tr key={row.id} className="border-t border-white/5">
                         <td className="px-3 py-2 text-slate-200">
-                          {row.student_name}
-                          {row.student_code && (
-                            <span className="block text-[11px] text-slate-500">
-                              {row.student_code}
-                            </span>
-                          )}
+                          <div className="flex items-center gap-2">
+                            <StudentAvatar
+                              name={row.student_name}
+                              image={row.student_image}
+                              className="size-7 rounded-full"
+                              iconSize={13}
+                            />
+                            <div className="min-w-0">
+                              {row.student_name}
+                              {row.student_code && (
+                                <span className="block text-[11px] text-slate-500">
+                                  {row.student_code}
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </td>
                         <td className="px-3 py-2 text-slate-300">
                           {row.phone || "—"}

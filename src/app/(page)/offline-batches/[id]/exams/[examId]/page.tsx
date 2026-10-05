@@ -1,5 +1,6 @@
 "use client";
 
+import StudentAvatar from "@/components/student-avatar";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -429,10 +430,15 @@ export default function Page() {
                 <tr key={row.student} className="border-t border-white/5 align-top">
                   <td className="px-3 py-2.5 font-mono text-xs text-slate-300">{row.student_code}</td>
                   <td className="px-3 py-2.5 text-slate-100">
-                    {row.name}
-                    {!row.is_enrolled && (
-                      <span className="block text-[11px] text-amber-400">এখন আর ব্যাচে নেই</span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <StudentAvatar name={row.name} image={row.student_image} className="size-7 rounded-full" iconSize={13} />
+                      <div className="min-w-0">
+                        {row.name}
+                        {!row.is_enrolled && (
+                          <span className="block text-[11px] text-amber-400">এখন আর ব্যাচে নেই</span>
+                        )}
+                      </div>
+                    </div>
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex gap-1">

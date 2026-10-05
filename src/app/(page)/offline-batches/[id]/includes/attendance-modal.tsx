@@ -1,5 +1,6 @@
 "use client";
 
+import StudentAvatar from "@/components/student-avatar";
 import { useState } from "react";
 import { AlertTriangle, CheckCircle2, Loader2, Save, Search, X } from "lucide-react";
 import {
@@ -103,9 +104,12 @@ export default function AttendanceModal({
           <div className="flex flex-col gap-3">
             {filtered.map((row) => (
               <article key={row.student} className="grid gap-3 rounded-xl border border-white/8 bg-white/[0.025] p-3 sm:grid-cols-[minmax(180px,1fr)_170px_minmax(180px,1fr)] sm:items-center">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-slate-100">{row.student_name}</p>
-                  <p className="mt-0.5 truncate text-xs text-slate-500">{[row.student_code, row.student_phone].filter(Boolean).join(" · ") || `#${row.student}`}</p>
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <StudentAvatar name={row.student_name} image={row.student_image} className="size-9 rounded-full" iconSize={16} />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-100">{row.student_name}</p>
+                    <p className="mt-0.5 truncate text-xs text-slate-500">{[row.student_code, row.student_phone].filter(Boolean).join(" · ") || `#${row.student}`}</p>
+                  </div>
                 </div>
                 <select value={row.status} onChange={(event) => update(row.student, { status: event.target.value as AttendanceStatus })} className={`min-h-10 rounded-xl border border-slate-700 bg-slate-950/70 px-3 text-sm font-semibold outline-none ${statuses.find((item) => item.value === row.status)?.tone ?? "text-slate-300"}`}>
                   {statuses.map((status) => <option key={status.value || "none"} value={status.value}>{status.label}</option>)}

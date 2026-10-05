@@ -1,5 +1,6 @@
 "use client";
 
+import StudentAvatar from "@/components/student-avatar";
 import { Check, Copy, UserPlus } from "lucide-react";
 import {
   useGetBatchJoinRequestsQuery,
@@ -56,7 +57,13 @@ export default function JoinRequestsPanel({ batchId }: { batchId: number }) {
         <div className="grid gap-2">
           {data.map((req) => (
             <div key={req.id} className="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/50 p-3">
-              <div className="min-w-0">
+              <StudentAvatar
+                name={req.student_name || req.name}
+                image={req.student_image}
+                className="size-9 rounded-full"
+                iconSize={16}
+              />
+              <div className="min-w-0 flex-1">
                 <p className={`truncate text-sm font-bold ${req.is_added ? "text-emerald-400" : "text-slate-100"}`}>
                   {req.name}
                 </p>

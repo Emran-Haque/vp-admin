@@ -200,6 +200,8 @@ export type Enrollment = {
   verified_at: string | null;
   verified_by: number | null;
   student_name?: string;
+  /** Profile photo URL (absolute, or a /media path); null when none. */
+  student_image?: string | null;
   student_email?: string | null;
   student_phone?: string | null;
   /** The 8-digit roll shown to students. */

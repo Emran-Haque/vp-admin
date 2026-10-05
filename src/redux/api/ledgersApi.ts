@@ -33,6 +33,8 @@ export type Ledger = {
   id: number;
   student: number;
   student_name: string;
+  /** Profile photo URL (absolute, or a /media path); null when none. */
+  student_image?: string | null;
   student_email: string;
   student_phone: string;
   course: number;
@@ -143,6 +145,8 @@ export type LedgerRow = {
   enrollment: number;
   student: number;
   student_name: string;
+  /** Profile photo URL (absolute, or a /media path); null when none. */
+  student_image?: string | null;
   student_email: string;
   student_phone: string;
   course: number;
@@ -185,6 +189,8 @@ export type OverdueRow = {
   plan: number;
   student: number;
   student_name: string;
+  /** Profile photo URL (absolute, or a /media path); null when none. */
+  student_image?: string | null;
   student_phone: string;
   student_email: string;
   course: number;

@@ -50,6 +50,8 @@ export type AttendanceRow = {
   student: number;
   student_name: string;
   student_code: string;
+  /** Profile photo URL (absolute, or a /media path); null when none. */
+  student_image?: string | null;
   student_phone: string;
   status: AttendanceStatus;
   note: string;
