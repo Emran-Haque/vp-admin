@@ -1029,7 +1029,7 @@ function AdminLectureCard({
                   id: exam.id,
                   title: exam.title,
                   meta: `${exam.total_questions} প্রশ্ন · ${EXAM_STATUS_LABELS[exam.status] ?? exam.status}`,
-                  copyLink: { examId: exam.id, isDraft: exam.status !== "published" },
+                  copyLink: { examId: exam.id, courseId: lecture.course, isDraft: exam.status !== "published" },
                   onEdit: () => router.push(`/mcq/${exam.id}/edit`),
                   onDelete: () => onDeleteExam(exam),
                 }))}
@@ -1373,7 +1373,7 @@ type ListItem = {
   onDelete?: () => void;
   telegramAssignmentId?: number;
   /** Model tests: a button that copies the student link to this test. */
-  copyLink?: { examId: number; isDraft: boolean };
+  copyLink?: { examId: number; courseId: number; isDraft: boolean };
 };
 
 const EXAM_STATUS_LABELS: Record<string, string> = {
@@ -1418,6 +1418,7 @@ function ItemList({
               {item.copyLink ? (
                 <CopyExamLinkButton
                   examId={item.copyLink.examId}
+                  courseId={item.copyLink.courseId}
                   isDraft={item.copyLink.isDraft}
                 />
               ) : null}

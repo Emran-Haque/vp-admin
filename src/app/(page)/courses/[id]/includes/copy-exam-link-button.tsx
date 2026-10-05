@@ -11,11 +11,12 @@ const STUDENT_SITE_ORIGIN = (
  * The link an admin shares for one model test. It goes through the student
  * login page (same pattern as the course list's copy button): a logged-in
  * student is forwarded straight to the test, anyone else logs in first and
- * then lands on it.
+ * then lands on it. `course` is only read by the login page's link preview,
+ * which shows that course's image in WhatsApp/Messenger.
  */
-export function modelTestShareUrl(examId: number) {
+export function modelTestShareUrl(examId: number, courseId: number) {
   const next = encodeURIComponent(`/mcq-exams?exam=${examId}`);
-  return `${STUDENT_SITE_ORIGIN}/auth/login?next=${next}`;
+  return `${STUDENT_SITE_ORIGIN}/auth/login?next=${next}&course=${courseId}`;
 }
 
 async function copyText(text: string) {
@@ -38,9 +39,11 @@ async function copyText(text: string) {
 
 export default function CopyExamLinkButton({
   examId,
+  courseId,
   isDraft,
 }: {
   examId: number;
+  courseId: number;
   isDraft: boolean;
 }) {
   const [copied, setCopied] = useState(false);
@@ -52,7 +55,7 @@ export default function CopyExamLinkButton({
     : "শিক্ষার্থীদের জন্য মডেল টেস্টের লিংক কপি করুন";
 
   const handleCopy = async () => {
-    if (!(await copyText(modelTestShareUrl(examId)))) return;
+    if (!(await copyText(modelTestShareUrl(examId, courseId)))) return;
     setCopied(true);
     window.setTimeout(() => setCopied(false), 2500);
   };
