@@ -156,6 +156,34 @@ export const VIEW_SECTIONS: ViewSection[] = [
     ],
   },
   {
+    id: "offline-course",
+    label: "অফলাইন ব্যাচ পেজ",
+    icon: GraduationCap,
+    blurb: "অফলাইন ক্লাসরুম ব্যাচ তালিকার পেজ",
+    items: [
+      {
+        id: "offline-course-banner",
+        label: "পেজ ব্যানার",
+        description: "অফলাইন ব্যাচ পেজের ছবির স্লাইড শো",
+        icon: Layers,
+        target: {
+          kind: "banner",
+          pageKey: "offline_course",
+          pageLabel: "অফলাইন ব্যাচ পেজ",
+        },
+        path: "/offline-course",
+      },
+      {
+        id: "offline-course-hero",
+        label: "পেজ হেডিং",
+        description: "উপরের শিরোনাম, বিবরণ ও বাটন",
+        icon: FileText,
+        target: { kind: "landingHero", pageKey: "offline_course" },
+        path: "/offline-course",
+      },
+    ],
+  },
+  {
     id: "exam-batch",
     label: "পরীক্ষা ব্যাচ পেজ",
     icon: GraduationCap,

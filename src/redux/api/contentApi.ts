@@ -157,6 +157,7 @@ export type HomeStatInput = {
 /** Page keys that can carry an editable heading block. */
 export type LandingHeroKey =
   | "course"
+  | "offline_course"
   | "exam_batch"
   | "book_store"
   | "free_class"
