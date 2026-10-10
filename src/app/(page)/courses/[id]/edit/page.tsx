@@ -46,6 +46,7 @@ import { extractErrorMessage } from "@/lib/api-error";
 import { discountAmountFromLegacy, offerPreview, originalPriceFromOffer } from "@/lib/offer-pricing";
 import { draftsFromIncludes, serializeIncludes, type IncludeDraft } from "@/lib/rich-text";
 import ErrorState from "@/components/error-state";
+import CourseMcqAttemptSettings from "../includes/course-mcq-attempt-settings";
 import type { BasicInfo, CourseFiles, MaterialDraft, QuizQuestion, SubjectDraft, FaqDraft } from "../../create/includes/types";
 import { validateOfflineBatchInfo } from "../../create/includes/offline-batch-validation";
 
@@ -620,18 +621,25 @@ export default function Page() {
       )}
 
       {step === 1 && (
-        <StepBasicInfo
-          value={basicInfo}
-          onChange={setBasicInfo}
-          files={files}
-          onFilesChange={setFiles}
-          existingFiles={{
-            thumbnail: course.thumbnail,
-            coverImage: course.cover_image,
-            promoVideoThumbnail: course.promo_video_thumbnail,
-            syllabusPdf: course.syllabus_pdf,
-          }}
-        />
+        <>
+          <CourseMcqAttemptSettings
+            courseId={course.id}
+            defaultAttempts={course.default_mcq_attempts}
+            key={course.id}
+          />
+          <StepBasicInfo
+            value={basicInfo}
+            onChange={setBasicInfo}
+            files={files}
+            onFilesChange={setFiles}
+            existingFiles={{
+              thumbnail: course.thumbnail,
+              coverImage: course.cover_image,
+              promoVideoThumbnail: course.promo_video_thumbnail,
+              syllabusPdf: course.syllabus_pdf,
+            }}
+          />
+        </>
       )}
       {step === 2 && <StepMaterials materials={materials} onChange={setMaterials} courseId={courseId} />}
       {step === 3 && (

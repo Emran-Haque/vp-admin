@@ -8,6 +8,7 @@ import { useGetCourseSubjectsQuery } from "@/redux/api/courseSubjectsApi";
 import CourseDetailsHeader from "./includes/course-details-header";
 import CourseSubjectOverview from "./includes/course-subject-overview";
 import CourseEnrolledStudents from "./includes/course-enrolled-students";
+import CourseMcqAttemptSettings from "./includes/course-mcq-attempt-settings";
 import ErrorState from "@/components/error-state";
 
 type CourseManagementTab = "subjects" | "students";
@@ -52,6 +53,12 @@ export default function Page() {
   return (
     <div className="flex flex-col gap-4">
       <CourseDetailsHeader course={course} subjectCount={subjectsData?.results.length ?? 0} />
+
+      <CourseMcqAttemptSettings
+        courseId={course.id}
+        defaultAttempts={course.default_mcq_attempts}
+        key={course.id}
+      />
 
       <div className="flex flex-wrap gap-2">
         {managementTabs.map(({ icon: Icon, key, label }) => {
