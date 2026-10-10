@@ -27,6 +27,7 @@ const emptyBasicInfo: ExamBasicInfo = {
   duration: "30",
   totalQuestions: "30",
   passMark: "40",
+  maxAttempts: "1",
   marksPerQuestion: "1",
   negativeMode: "percentage",
   negativeMark: "0.25",
@@ -60,6 +61,13 @@ export default function Page() {
     setIsPublishing(true);
     setPublishError(null);
 
+    const maxAttempts = Number(basicInfo.maxAttempts);
+    if (!Number.isInteger(maxAttempts) || maxAttempts < 1 || maxAttempts > 20) {
+      setPublishError("পরীক্ষার সুযোগ ১ থেকে ২০-এর মধ্যে একটি পূর্ণ সংখ্যা হতে হবে।");
+      setIsPublishing(false);
+      return;
+    }
+
     const durationMinutes = Number(basicInfo.duration) || 0;
     const startDateTime = combineDateTime(basicInfo.examDate, basicInfo.startTime);
     // Deadline is set independently of duration; the backend caps each student's
@@ -79,6 +87,7 @@ export default function Page() {
         negative_mark_per_wrong: basicInfo.negativeMark || "0",
         negative_mark_percentage: basicInfo.negativePercentage || "0",
         pass_mark_percentage: basicInfo.passMark || "0",
+        max_attempts: maxAttempts,
         exam_date: basicInfo.examDate || undefined,
         start_time: startDateTime,
         end_time: endDateTime,

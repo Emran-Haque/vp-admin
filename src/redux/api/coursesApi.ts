@@ -31,6 +31,8 @@ export type Course = {
   total_classes: number;
   total_quizzes: number;
   total_assignments: number;
+  /** Default inherited by newly-created online MCQ exams. */
+  default_mcq_attempts: number;
   inactivity_reminder_days: number | null;
   telegram_group_link: string;
   telegram_group_chat_id: number | null;
@@ -170,6 +172,12 @@ export type CreateCourseInput = Partial<
 
 export type UpdateCourseInput = Partial<CreateCourseInput>;
 
+export type UpdateCourseMcqAttemptLimitOutput = {
+  default_mcq_attempts: number;
+  updated_exams: number;
+  notified: boolean;
+};
+
 export type CourseCategory = {
   id: number;
   name: string;
@@ -287,6 +295,21 @@ export const coursesApi = baseApi.injectEndpoints({
       invalidatesTags: (_result, _error, { id }) => [
         { type: "Courses", id },
         { type: "Courses", id: "LIST" },
+      ],
+    }),
+    updateCourseMcqAttemptLimit: builder.mutation<
+      UpdateCourseMcqAttemptLimitOutput,
+      { id: number; max_attempts: number; apply_to_existing: boolean }
+    >({
+      query: ({ id, ...body }) => ({
+        url: `admin/courses/${id}/mcq-attempt-limit/`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: "Courses", id },
+        { type: "Courses", id: "LIST" },
+        { type: "Exams", id: "LIST" },
       ],
     }),
     deleteCourse: builder.mutation<void, number>({
@@ -426,6 +449,7 @@ export const {
   useGetCourseStudentPreviewQuery,
   useCreateCourseMutation,
   useUpdateCourseMutation,
+  useUpdateCourseMcqAttemptLimitMutation,
   useDeleteCourseMutation,
   usePublishCourseMutation,
   useGetCourseEnrollmentsQuery,

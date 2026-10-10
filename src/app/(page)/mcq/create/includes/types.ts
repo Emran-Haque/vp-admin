@@ -10,6 +10,8 @@ export type ExamBasicInfo = {
   duration: string;
   totalQuestions: string;
   passMark: string;
+  /** Maximum submissions per student. Attempt one alone is official. */
+  maxAttempts: string;
   /** Default mark for questions added from here on. Never rewrites existing ones. */
   marksPerQuestion: string;
   /**

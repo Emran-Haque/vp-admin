@@ -49,6 +49,8 @@ export type Exam = {
   auto_submit_on_time_end: boolean;
   auto_submit_on_violation: boolean;
   allow_late_enrolled_students: boolean;
+  /** Maximum submissions per student; only submission one affects ranking. */
+  max_attempts: number;
   created_by: number;
   published_by: number | null;
   /** "offline" = paper exam: no questions, marks entered by an admin. */
@@ -275,6 +277,7 @@ export type ExamAttempt = {
   is_passed: boolean;
   submitted_at: string;
   leaderboard_visible: boolean;
+  attempt_number: number;
 };
 
 export type ExamAttemptListParams = {

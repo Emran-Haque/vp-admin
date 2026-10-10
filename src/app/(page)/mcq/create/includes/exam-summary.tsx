@@ -50,6 +50,7 @@ export default function ExamSummary({
             : String(totalMarks),
     },
     { icon: Users, label: "পাস মার্ক", value: value.passMark ? `${value.passMark}%` : "—" },
+    { icon: Users, label: "পরীক্ষার সুযোগ", value: `${value.maxAttempts || "1"} বার` },
     {
       icon: TriangleAlert,
       label: "নেগেটিভ",

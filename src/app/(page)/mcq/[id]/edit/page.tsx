@@ -99,6 +99,7 @@ export default function Page() {
       duration: String(exam.duration_minutes),
       totalQuestions: String(exam.total_questions),
       passMark: exam.pass_mark_percentage,
+      maxAttempts: String(exam.max_attempts ?? 1),
       marksPerQuestion: normalizeMarks(exam.marks_per_question),
       negativeMode: exam.negative_marking_mode ?? "flat",
       negativeMark: exam.negative_mark_per_wrong,
@@ -180,6 +181,13 @@ export default function Page() {
     setSaveError(null);
     setSaveMessage(null);
 
+    const maxAttempts = Number(basicInfo.maxAttempts);
+    if (!Number.isInteger(maxAttempts) || maxAttempts < 1 || maxAttempts > 20) {
+      setSaveError("পরীক্ষার সুযোগ ১ থেকে ২০-এর মধ্যে একটি পূর্ণ সংখ্যা হতে হবে।");
+      setIsSaving(false);
+      return;
+    }
+
     const durationMinutes = Number(basicInfo.duration) || 0;
     const startDateTime = combineDateTime(basicInfo.examDate, basicInfo.startTime);
     const endDateTime = localDateTimeToIso(basicInfo.deadline);
@@ -197,6 +205,7 @@ export default function Page() {
           negative_mark_per_wrong: basicInfo.negativeMark || "0",
           negative_mark_percentage: basicInfo.negativePercentage || "0",
           pass_mark_percentage: basicInfo.passMark || "0",
+          max_attempts: maxAttempts,
           exam_date: basicInfo.examDate || undefined,
           start_time: startDateTime,
           end_time: endDateTime,

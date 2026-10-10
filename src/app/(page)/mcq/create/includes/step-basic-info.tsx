@@ -76,7 +76,17 @@ export default function StepBasicInfo({ value, onChange }: Props) {
         </label>
         <select
           value={value.course}
-          onChange={(e) => onChange({ ...value, course: e.target.value, subject: "", subjectName: "" })}
+          onChange={(e) => {
+            const courseId = e.target.value;
+            const course = courses.find((item) => String(item.id) === courseId);
+            onChange({
+              ...value,
+              course: courseId,
+              subject: "",
+              subjectName: "",
+              maxAttempts: String(course?.default_mcq_attempts ?? 1),
+            });
+          }}
           className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3.5 text-base text-blue-50 focus:outline-none"
         >
           <option value="">সিলেক্ট করুন</option>
@@ -88,7 +98,7 @@ export default function StepBasicInfo({ value, onChange }: Props) {
         </select>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 pt-6 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 pt-6 sm:grid-cols-3">
         <div>
           <label className="block pb-2 text-base font-medium text-blue-50">
             বিষয়<span className="text-red-600">*</span>
@@ -150,6 +160,24 @@ export default function StepBasicInfo({ value, onChange }: Props) {
             onChange={(e) => set("passMark", e.target.value)}
             className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 focus:outline-none"
           />
+        </div>
+
+        <div>
+          <label className="block pb-2 text-base font-medium text-blue-50">
+            সর্বোচ্চ পরীক্ষার সুযোগ
+          </label>
+          <input
+            type="number"
+            min="1"
+            max="20"
+            step="1"
+            value={value.maxAttempts}
+            onChange={(e) => set("maxAttempts", e.target.value)}
+            className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 focus:outline-none"
+          />
+          <p className="mt-1.5 text-sm text-slate-400">
+            প্রথমবারের ফলই লিডারবোর্ডে থাকবে। বাড়ালে যোগ্য শিক্ষার্থীরা নোটিফিকেশন পাবে।
+          </p>
         </div>
       </div>
 

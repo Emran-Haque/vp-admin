@@ -23,6 +23,7 @@ export default function StepReview({ basicInfo, questions, published, isPublishi
     { label: "বিষয়", value: basicInfo.subjectName || "—" },
     { label: "সময়", value: basicInfo.duration ? `${basicInfo.duration} মিনিট` : "—" },
     { label: "প্রশ্ন", value: `${questions.length} টি` },
+    { label: "পরীক্ষার সুযোগ", value: `${basicInfo.maxAttempts || "1"} বার` },
     { label: "নেগেটিভ", value: basicInfo.negativeMark || "0" },
   ];
 
@@ -68,7 +69,7 @@ export default function StepReview({ basicInfo, questions, published, isPublishi
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3.5 sm:grid-cols-4">
+        <div className="mt-6 grid grid-cols-2 gap-3.5 sm:grid-cols-5">
           {previewStats.map(({ label, value }) => (
             <div key={label} className="rounded-2xl border border-slate-800 bg-gray-900/40 p-3.5">
               <p className="text-sm text-slate-400">{label}</p>

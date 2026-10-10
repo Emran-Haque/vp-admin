@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { X, Save, AlertTriangle } from "lucide-react";
 import { useCreateExamMutation } from "@/redux/api/examsApi";
+import { useGetCourseQuery } from "@/redux/api/coursesApi";
 import { extractErrorMessage } from "@/lib/api-error";
 
 type AddExamModalProps = {
@@ -24,13 +25,26 @@ export default function AddExamModal({
   const [title, setTitle] = useState("");
   const [durationMinutes, setDurationMinutes] = useState("30");
   const [examDate, setExamDate] = useState("");
+  const [maxAttempts, setMaxAttempts] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
   const [createExam, { isLoading }] = useCreateExamMutation();
+  const { data: course } = useGetCourseQuery(courseId);
 
   const handleSave = async () => {
     setError(null);
+    const parsedMaxAttempts = Number(
+      maxAttempts ?? course?.default_mcq_attempts ?? 1,
+    );
+    if (
+      !Number.isInteger(parsedMaxAttempts) ||
+      parsedMaxAttempts < 1 ||
+      parsedMaxAttempts > 20
+    ) {
+      setError("পরীক্ষার সুযোগ ১ থেকে ২০-এর মধ্যে একটি পূর্ণ সংখ্যা হতে হবে।");
+      return;
+    }
     try {
       const created = await createExam({
         course: courseId,
@@ -38,6 +52,7 @@ export default function AddExamModal({
         title,
         subject: initialSubjectId ?? null,
         duration_minutes: Number(durationMinutes) || 0,
+        max_attempts: parsedMaxAttempts,
         exam_date: examDate,
       }).unwrap();
       onClose();
@@ -107,6 +122,24 @@ export default function AddExamModal({
                 className="w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block pb-1.5 text-xs font-semibold text-slate-400">
+              সর্বোচ্চ পরীক্ষার সুযোগ
+            </label>
+            <input
+              type="number"
+              min="1"
+              max="20"
+              step="1"
+              value={maxAttempts ?? String(course?.default_mcq_attempts ?? 1)}
+              onChange={(e) => setMaxAttempts(e.target.value)}
+              className="w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
+            />
+            <p className="mt-1.5 text-xs leading-5 text-slate-400">
+              কোর্সের ডিফল্ট মান দেওয়া আছে। প্রথমবারের ফলই লিডারবোর্ডে থাকবে।
+            </p>
           </div>
 
           <p className="text-xs text-slate-400">
