@@ -17,6 +17,7 @@ import {
   useUpdateExamMutation,
   useAddExamQuestionMutation,
   useUpdateQuestionMutation,
+  useUpdateQuestionImageMutation,
   useDeleteQuestionMutation,
   usePublishExamMutation,
   usePublishExamResultMutation,
@@ -32,6 +33,7 @@ import {
 } from "@/lib/exam-datetime";
 import { extractErrorMessage } from "@/lib/api-error";
 import ErrorState from "@/components/error-state";
+import { PageLoader } from "@/components/loaders";
 import ConfirmActionDialog from "@/components/confirm-action-dialog";
 import type { ExamBasicInfo, Question } from "../../create/includes/types";
 
@@ -57,7 +59,7 @@ export default function Page() {
     { exam: examId },
     { skip: !examId || !exam || exam.status !== "published" }
   );
-  const { data: courseSubjectsData } = useGetCourseSubjectsQuery(
+  const { data: courseSubjectsData, isLoading: isLoadingCourseSubjects } = useGetCourseSubjectsQuery(
     { course: exam?.course ?? undefined },
     { skip: !exam?.course }
   );
@@ -65,6 +67,7 @@ export default function Page() {
   const [updateExam] = useUpdateExamMutation();
   const [addExamQuestion] = useAddExamQuestionMutation();
   const [updateQuestion] = useUpdateQuestionMutation();
+  const [updateQuestionImage] = useUpdateQuestionImageMutation();
   const [deleteQuestion] = useDeleteQuestionMutation();
   const [publishExam] = usePublishExamMutation();
   const [publishExamResult] = usePublishExamResultMutation();
@@ -116,6 +119,10 @@ export default function Page() {
     const loadedQuestions: Question[] = questionsData.map((q) => ({
       id: String(q.id),
       text: q.question_text,
+      imageUrl: q.image,
+      imageFile: null,
+      imageAltText: q.image_alt_text,
+      removeImage: false,
       options: [q.option_a, q.option_b, q.option_c, q.option_d],
       correctIndex: ["A", "B", "C", "D"].indexOf(q.correct_option),
       explanation: q.explanation,
@@ -244,6 +251,8 @@ export default function Page() {
       const correctOption = optionLetters[q.correctIndex ?? 0];
       const data = {
         question_text: q.text,
+        image_alt_text: q.imageAltText,
+        ...(q.removeImage && !q.imageFile ? { image: null } : {}),
         option_a: q.options[0] ?? "",
         option_b: q.options[1] ?? "",
         option_c: q.options[2] ?? "",
@@ -256,16 +265,33 @@ export default function Page() {
         order: i + 1,
       };
       try {
+        let savedQuestion;
         if (isPersisted(q.id)) {
-          await updateQuestion({ id: Number(q.id), data }).unwrap();
-          savedQuestionIds.add(Number(q.id));
-          savedCorrectOptions.set(Number(q.id), correctOption);
+          savedQuestion = await updateQuestion({ id: Number(q.id), data }).unwrap();
         } else {
-          const created = await addExamQuestion({ examId, data }).unwrap();
-          savedQuestionIds.add(created.id);
-          savedCorrectOptions.set(created.id, correctOption);
-          setQuestions((prev) => prev.map((item) => (item.id === q.id ? { ...item, id: String(created.id) } : item)));
+          savedQuestion = await addExamQuestion({ examId, data }).unwrap();
         }
+        if (q.imageFile) {
+          savedQuestion = await updateQuestionImage({
+            id: savedQuestion.id,
+            file: q.imageFile,
+            altText: q.imageAltText,
+          }).unwrap();
+        }
+        savedQuestionIds.add(savedQuestion.id);
+        savedCorrectOptions.set(savedQuestion.id, correctOption);
+        setQuestions((prev) => prev.map((item) =>
+          item.id === q.id
+            ? {
+                ...item,
+                id: String(savedQuestion.id),
+                imageUrl: savedQuestion.image,
+                imageFile: null,
+                imageAltText: savedQuestion.image_alt_text,
+                removeImage: false,
+              }
+            : item
+        ));
       } catch (err) {
         setSaveError(`প্রশ্ন ${i + 1} সেভ করা যায়নি: ${extractErrorMessage(err)}`);
         setIsSaving(false);
@@ -331,8 +357,8 @@ export default function Page() {
     setSaveMessage("চেঞ্জ সেভ হয়ে গেছে।");
   };
 
-  if (isLoadingExam || isLoadingQuestions || !basicInfo) {
-    return <p className="text-center text-sm text-slate-400">পরীক্ষার ইনফো লোড হচ্ছে…</p>;
+  if (isLoadingExam || isLoadingQuestions || isLoadingCourseSubjects || !basicInfo) {
+    return <PageLoader label="পরীক্ষার তথ্য লোড হচ্ছে..." />;
   }
 
   if (isExamError || !exam) {

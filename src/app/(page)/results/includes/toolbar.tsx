@@ -7,6 +7,7 @@ type Props = {
   search: string;
   onSearchChange: (value: string) => void;
   courses: Course[];
+  coursesLoading?: boolean;
   courseFilter: number | "all";
   onCourseFilterChange: (value: number | "all") => void;
   statusFilter: "all" | "passed" | "failed";
@@ -17,6 +18,7 @@ export default function Toolbar({
   search,
   onSearchChange,
   courses,
+  coursesLoading = false,
   courseFilter,
   onCourseFilterChange,
   statusFilter,
@@ -38,11 +40,12 @@ export default function Toolbar({
       <div className="relative">
         <select
           value={courseFilter === "all" ? "all" : String(courseFilter)}
+          disabled={coursesLoading}
           onChange={(e) => onCourseFilterChange(e.target.value === "all" ? "all" : Number(e.target.value))}
-          className="cursor-pointer appearance-none rounded-lg border border-slate-800 bg-gray-800 py-2.5 pl-4 pr-9 text-xs text-white focus:outline-none"
+          className="cursor-pointer appearance-none rounded-lg border border-slate-800 bg-gray-800 py-2.5 pl-4 pr-9 text-xs text-white focus:outline-none disabled:cursor-wait disabled:opacity-60"
         >
           <option value="all" className="bg-gray-800 text-white">
-            সকল কোর্স
+            {coursesLoading ? "কোর্স লোড হচ্ছে..." : "সকল কোর্স"}
           </option>
           {courses.map((course) => (
             <option key={course.id} value={course.id} className="bg-gray-800 text-white">

@@ -50,7 +50,7 @@ export default function OfflineExamFormModal({
   const [passMark, setPassMark] = useState(plain(editItem?.pass_mark_percentage, "33"));
   const [error, setError] = useState<string | null>(null);
 
-  const { data: subjectsData } = useGetCourseSubjectsQuery({ course: courseId });
+  const { data: subjectsData, isLoading: subjectsLoading } = useGetCourseSubjectsQuery({ course: courseId });
   const subjects = subjectsData?.results ?? [];
   const [createExam, { isLoading: isCreating }] = useCreateOfflineExamMutation();
   const [updateExam, { isLoading: isUpdating }] = useUpdateOfflineExamMutation();
@@ -140,10 +140,12 @@ export default function OfflineExamFormModal({
               <label className="block pb-1.5 text-xs font-semibold text-slate-400">বিষয়</label>
               <select
                 value={subjectId}
+                disabled={subjectsLoading}
                 onChange={(e) => setSubjectId(e.target.value)}
-                className={inputClass}
+                className={`${inputClass} disabled:cursor-wait disabled:opacity-60`}
               >
-                <option value="">বিষয় ছাড়া</option>
+                <option value="">{subjectsLoading ? "বিষয় লোড হচ্ছে..." : "বিষয় ছাড়া"}</option>
+                {subjectsLoading && subjectId ? <option value={subjectId}>বিষয় লোড হচ্ছে...</option> : null}
                 {subjects.map((subject) => (
                   <option key={subject.id} value={subject.id}>
                     {subject.name}

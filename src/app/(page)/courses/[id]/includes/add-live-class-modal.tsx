@@ -41,9 +41,9 @@ export default function AddLiveClassModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  const { data: teachersData } = useGetTeachersQuery();
+  const { data: teachersData, isLoading: teachersLoading } = useGetTeachersQuery();
   const teachers = teachersData?.results ?? [];
-  const { data: subjectsData } = useGetCourseSubjectsQuery({ course: courseId });
+  const { data: subjectsData, isLoading: subjectsLoading } = useGetCourseSubjectsQuery({ course: courseId });
   const subjects = subjectsData?.results ?? [];
 
   useEffect(() => {
@@ -148,10 +148,12 @@ export default function AddLiveClassModal({
               <label className="block pb-1.5 text-xs font-semibold text-slate-400">বিষয়</label>
               <select
                 value={subjectId}
+                disabled={subjectsLoading}
                 onChange={(e) => setSubjectId(e.target.value)}
-                className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
+                className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none disabled:cursor-wait disabled:opacity-60"
               >
-                <option value="">কোনো বিষয় নয়</option>
+                <option value="">{subjectsLoading ? "বিষয় লোড হচ্ছে..." : "কোনো বিষয় নয়"}</option>
+                {subjectsLoading && subjectId ? <option value={subjectId}>বিষয় লোড হচ্ছে...</option> : null}
                 {subjects.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name}
@@ -208,10 +210,12 @@ export default function AddLiveClassModal({
             <label className="block pb-1.5 text-xs font-semibold text-slate-400">শিক্ষক</label>
             <select
               value={teacher}
+              disabled={teachersLoading}
               onChange={(e) => setTeacher(e.target.value)}
-              className="w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
+              className="w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none disabled:cursor-wait disabled:opacity-60"
             >
-              <option value="">নির্বাচন করুন</option>
+              <option value="">{teachersLoading ? "শিক্ষক লোড হচ্ছে..." : "নির্বাচন করুন"}</option>
+              {teachersLoading && teacher ? <option value={teacher}>শিক্ষক লোড হচ্ছে...</option> : null}
               {teachers.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name}

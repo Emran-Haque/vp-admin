@@ -37,8 +37,8 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 export default function FaqList({ onEdit }: { onEdit: (faq: Faq) => void }) {
   const { data, isLoading, isError, error } = useGetFaqsQuery();
-  const { data: coursesData } = useGetCoursesQuery();
-  const { data: booksData } = useGetBooksQuery();
+  const { data: coursesData, isLoading: coursesLoading } = useGetCoursesQuery();
+  const { data: booksData, isLoading: booksLoading } = useGetBooksQuery();
 
   const [deleteFaq] = useDeleteFaqMutation();
   const [updateFaq] = useUpdateFaqMutation();
@@ -49,7 +49,7 @@ export default function FaqList({ onEdit }: { onEdit: (faq: Faq) => void }) {
   const [selectedStatus, setSelectedStatus] = useState<"all" | "active" | "inactive">("all");
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
-  if (isLoading) {
+  if (isLoading || coursesLoading || booksLoading) {
     return <PageLoader label="FAQ তালিকা লোড হচ্ছে…" />;
   }
 

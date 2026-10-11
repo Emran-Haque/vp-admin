@@ -16,8 +16,8 @@ export default function EditFaqModal({
   onClose: () => void;
 }) {
   const [updateFaq, { isLoading }] = useUpdateFaqMutation();
-  const { data: coursesData } = useGetCoursesQuery();
-  const { data: booksData } = useGetBooksQuery();
+  const { data: coursesData, isLoading: coursesLoading } = useGetCoursesQuery();
+  const { data: booksData, isLoading: booksLoading } = useGetBooksQuery();
 
   const courses = coursesData?.results ?? [];
   const books = booksData?.results ?? [];
@@ -152,10 +152,12 @@ export default function EditFaqModal({
               </label>
               <select
                 value={relatedCourse}
+                disabled={coursesLoading}
                 onChange={(e) => setRelatedCourse(e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-2.5 text-sm text-blue-50 focus:border-indigo-500 focus:outline-none"
+                className="mt-1.5 w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-2.5 text-sm text-blue-50 focus:border-indigo-500 focus:outline-none disabled:cursor-wait disabled:opacity-60"
               >
-                <option value="">-- কোনো কোর্স যুক্ত নেই --</option>
+                <option value="">{coursesLoading ? "কোর্স লোড হচ্ছে..." : "-- কোনো কোর্স যুক্ত নেই --"}</option>
+                {coursesLoading && relatedCourse ? <option value={relatedCourse}>কোর্স লোড হচ্ছে...</option> : null}
                 {courses.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.title}
@@ -171,10 +173,12 @@ export default function EditFaqModal({
               </label>
               <select
                 value={relatedBook}
+                disabled={booksLoading}
                 onChange={(e) => setRelatedBook(e.target.value)}
-                className="mt-1.5 w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-2.5 text-sm text-blue-50 focus:border-indigo-500 focus:outline-none"
+                className="mt-1.5 w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-2.5 text-sm text-blue-50 focus:border-indigo-500 focus:outline-none disabled:cursor-wait disabled:opacity-60"
               >
-                <option value="">-- কোনো বই যুক্ত নেই --</option>
+                <option value="">{booksLoading ? "বই লোড হচ্ছে..." : "-- কোনো বই যুক্ত নেই --"}</option>
+                {booksLoading && relatedBook ? <option value={relatedBook}>বই লোড হচ্ছে...</option> : null}
                 {books.map((b) => (
                   <option key={b.id} value={b.id}>
                     {b.title}

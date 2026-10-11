@@ -33,7 +33,7 @@ export default function McqTab({ courseId }: { courseId: number }) {
   const [limitMessage, setLimitMessage] = useState<string | null>(null);
   const [limitError, setLimitError] = useState<string | null>(null);
   const { data, isLoading } = useGetExamsQuery({ course: courseId, mode: "online" });
-  const { data: course } = useGetCourseQuery(courseId);
+  const { data: course, isLoading: courseLoading } = useGetCourseQuery(courseId);
   const [deleteExam] = useDeleteExamMutation();
   const [updateAttemptLimit, { isLoading: isSavingLimit }] =
     useUpdateCourseMcqAttemptLimitMutation();
@@ -44,6 +44,7 @@ export default function McqTab({ courseId }: { courseId: number }) {
   const saveCourseLimit = async () => {
     setLimitError(null);
     setLimitMessage(null);
+    if (courseLoading) return;
     const maxAttempts = Number(courseLimit ?? course?.default_mcq_attempts ?? 1);
     if (!Number.isInteger(maxAttempts) || maxAttempts < 1 || maxAttempts > 20) {
       setLimitError("১ থেকে ২০-এর মধ্যে একটি পূর্ণ সংখ্যা দিন।");
@@ -98,15 +99,18 @@ export default function McqTab({ courseId }: { courseId: number }) {
                   min="1"
                   max="20"
                   step="1"
-                  value={courseLimit ?? String(course?.default_mcq_attempts ?? 1)}
+                  value={courseLimit ?? (courseLoading ? "" : String(course?.default_mcq_attempts ?? 1))}
+                  disabled={courseLoading || isSavingLimit}
+                  placeholder={courseLoading ? "লোড হচ্ছে..." : undefined}
                   onChange={(event) => setCourseLimit(event.target.value)}
-                  className="h-10 w-full rounded-xl border border-slate-700 bg-gray-900 px-3 text-sm text-blue-50 outline-none sm:w-28"
+                  className="h-10 w-full rounded-xl border border-slate-700 bg-gray-900 px-3 text-sm text-blue-50 outline-none disabled:cursor-wait disabled:opacity-60 sm:w-28"
                 />
               </label>
               <label className="flex h-10 cursor-pointer items-center gap-2 rounded-xl border border-slate-700 bg-gray-900 px-3 text-xs font-semibold text-slate-300">
                 <input
                   type="checkbox"
                   checked={applyToExisting}
+                  disabled={courseLoading || isSavingLimit}
                   onChange={(event) => setApplyToExisting(event.target.checked)}
                   className="size-4 accent-blue-500"
                 />
@@ -115,11 +119,11 @@ export default function McqTab({ courseId }: { courseId: number }) {
               <button
                 type="button"
                 onClick={saveCourseLimit}
-                disabled={isSavingLimit}
+                disabled={courseLoading || isSavingLimit}
                 className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-500 px-4 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Save size={15} />
-                {isSavingLimit ? "সংরক্ষণ হচ্ছে…" : "সংরক্ষণ করুন"}
+                {courseLoading ? "সেটিং লোড হচ্ছে..." : isSavingLimit ? "সংরক্ষণ হচ্ছে…" : "সংরক্ষণ করুন"}
               </button>
             </div>
           </div>

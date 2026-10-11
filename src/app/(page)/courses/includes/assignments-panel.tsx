@@ -278,8 +278,8 @@ export function AddAssignmentModal({
   const [status, setStatus] = useState<Assignment["status"]>(editItem?.status ?? "active");
   const [error, setError] = useState<string | null>(null);
 
-  const { data: classesData } = useGetClassesQuery({ course: courseId });
-  const { data: subjectsData } = useGetCourseSubjectsQuery({ course: courseId });
+  const { data: classesData, isLoading: classesLoading } = useGetClassesQuery({ course: courseId });
+  const { data: subjectsData, isLoading: subjectsLoading } = useGetCourseSubjectsQuery({ course: courseId });
   const [createAssignment, { isLoading: isCreating }] = useCreateAssignmentMutation();
   const [updateAssignment, { isLoading: isUpdating }] = useUpdateAssignmentMutation();
   const isLoading = isCreating || isUpdating;
@@ -376,6 +376,7 @@ export function AddAssignmentModal({
                 <label className="block pb-1.5 text-xs font-semibold text-slate-400">ক্লাস (ঐচ্ছিক)</label>
                 <select
                   value={courseClassId}
+                  disabled={classesLoading}
                   onChange={(e) => {
                     const cid = e.target.value;
                     setCourseClassId(cid);
@@ -384,9 +385,10 @@ export function AddAssignmentModal({
                     const cls = classes.find((c) => String(c.id) === cid);
                     if (cls?.subject) setSubjectId(String(cls.subject));
                   }}
-                  className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
+                  className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none disabled:cursor-wait disabled:opacity-60"
                 >
-                  <option value="">সব ক্লাস / কোনো ক্লাস নয়</option>
+                  <option value="">{classesLoading ? "ক্লাস লোড হচ্ছে..." : "সব ক্লাস / কোনো ক্লাস নয়"}</option>
+                  {classesLoading && courseClassId ? <option value={courseClassId}>ক্লাস লোড হচ্ছে...</option> : null}
                   {classes.map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.title}
@@ -399,10 +401,12 @@ export function AddAssignmentModal({
                 <label className="block pb-1.5 text-xs font-semibold text-slate-400">বিষয়</label>
                 <select
                   value={subjectId}
+                  disabled={subjectsLoading}
                   onChange={(e) => setSubjectId(e.target.value)}
-                  className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
+                  className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none disabled:cursor-wait disabled:opacity-60"
                 >
-                  <option value="">কোনো বিষয় নয়</option>
+                  <option value="">{subjectsLoading ? "বিষয় লোড হচ্ছে..." : "কোনো বিষয় নয়"}</option>
+                  {subjectsLoading && subjectId ? <option value={subjectId}>বিষয় লোড হচ্ছে...</option> : null}
                   {subjectOptions.map((subject) => (
                     <option key={subject.id} value={subject.id}>
                       {subject.name}

@@ -13,7 +13,7 @@ type Props = {
 };
 
 export default function StepReview({ basicInfo, files, materials, subjects, faqs, published }: Props) {
-  const { data: teachersData } = useGetTeachersQuery();
+  const { data: teachersData, isLoading: teachersLoading } = useGetTeachersQuery();
   const teacherNames = (teachersData?.results ?? [])
     .filter((t) => basicInfo.teacherIds.includes(String(t.id)))
     .map((t) => t.name);
@@ -119,7 +119,11 @@ export default function StepReview({ basicInfo, files, materials, subjects, faqs
               {name}
             </span>
           ))}
-          {teacherNames.length === 0 && <p className="text-sm text-slate-400">কোনো শিক্ষক নির্বাচন করা হয়নি</p>}
+          {teachersLoading ? (
+            <p className="text-sm text-slate-400">শিক্ষকের তথ্য লোড হচ্ছে...</p>
+          ) : teacherNames.length === 0 ? (
+            <p className="text-sm text-slate-400">কোনো শিক্ষক নির্বাচন করা হয়নি</p>
+          ) : null}
         </div>
       </section>
 

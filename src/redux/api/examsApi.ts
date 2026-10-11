@@ -174,6 +174,8 @@ export type ExamQuestion = {
   id: number;
   exam: number;
   question_text: string;
+  image: string | null;
+  image_alt_text: string;
   option_a: string;
   option_b: string;
   option_c: string;
@@ -185,10 +187,12 @@ export type ExamQuestion = {
   order: number;
 };
 
-export type CreateExamQuestionInput = Omit<ExamQuestion, "id" | "exam" | "marks"> & {
+export type CreateExamQuestionInput = Omit<ExamQuestion, "id" | "exam" | "marks" | "image"> & {
   marks?: string;
 };
-export type UpdateExamQuestionInput = Partial<CreateExamQuestionInput>;
+export type UpdateExamQuestionInput = Partial<CreateExamQuestionInput> & {
+  image?: null;
+};
 
 /** Quiz as nested read-only inside a CourseClass (session) response. */
 export type ClassQuiz = {
@@ -528,6 +532,18 @@ export const examsApi = baseApi.injectEndpoints({
       query: ({ id, data }) => ({ url: `admin/questions/${id}/`, method: "PATCH", body: data }),
       invalidatesTags: ["ExamQuestions", "ExamAttempts", "Exams"],
     }),
+    updateQuestionImage: builder.mutation<
+      ExamQuestion,
+      { id: number; file: File; altText?: string }
+    >({
+      query: ({ id, file, altText = "" }) => {
+        const body = new FormData();
+        body.append("image", file);
+        body.append("image_alt_text", altText);
+        return { url: `admin/questions/${id}/`, method: "PATCH", body };
+      },
+      invalidatesTags: ["ExamQuestions", "Exams"],
+    }),
     deleteQuestion: builder.mutation<void, number>({
       query: (id) => ({ url: `admin/questions/${id}/`, method: "DELETE" }),
       invalidatesTags: ["ExamQuestions", "ExamAttempts", "Exams"],
@@ -731,6 +747,7 @@ export const {
   useAddExamQuestionsMutation,
   useApplyDefaultMarksMutation,
   useUpdateQuestionMutation,
+  useUpdateQuestionImageMutation,
   useDeleteQuestionMutation,
   usePublishExamMutation,
   usePublishExamResultMutation,

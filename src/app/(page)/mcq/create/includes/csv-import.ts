@@ -137,6 +137,10 @@ export function parseQuestionsCsv(file: File): Promise<CsvImportResult> {
             options,
             correctIndex,
             explanation,
+            imageUrl: null,
+            imageFile: null,
+            imageAltText: "",
+            removeImage: false,
             marks,
           });
         });

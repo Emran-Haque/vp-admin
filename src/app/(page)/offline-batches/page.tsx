@@ -5,6 +5,7 @@ import { CalendarClock, MapPin, Plus, School, Users } from "lucide-react";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useGetCoursesQuery } from "@/redux/api/coursesApi";
 import ErrorState from "@/components/error-state";
+import { PageLoader } from "@/components/loaders";
 
 /**
  * অফলাইন ব্যাচ — classroom courses.
@@ -46,7 +47,7 @@ export default function Page() {
         )}
       </header>
 
-      {isLoading && <p className="text-center text-sm text-slate-400">ব্যাচ লোড হচ্ছে…</p>}
+      {isLoading && <PageLoader label="ব্যাচ লোড হচ্ছে..." />}
       {isError && (
         <ErrorState message="অফলাইন ব্যাচের তালিকা আনা যায়নি।" error={error} />
       )}

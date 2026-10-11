@@ -20,7 +20,7 @@ export default function Toolbar({
   availability,
   onAvailabilityChange,
 }: Props) {
-  const { data: categoriesData } = useGetBookCategoriesQuery();
+  const { data: categoriesData, isLoading: categoriesLoading } = useGetBookCategoriesQuery();
   const categories = categoriesData?.results ?? [];
 
   return (
@@ -38,10 +38,11 @@ export default function Toolbar({
 
       <select
         value={category}
+        disabled={categoriesLoading}
         onChange={(e) => onCategoryChange(e.target.value)}
-        className="cursor-pointer rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-white focus:outline-none"
+        className="cursor-pointer rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-white focus:outline-none disabled:cursor-wait disabled:opacity-60"
       >
-        <option value="">সব ক্যাটাগরি</option>
+        <option value="">{categoriesLoading ? "ক্যাটাগরি লোড হচ্ছে..." : "সব ক্যাটাগরি"}</option>
         {categories.map((c) => (
           <option key={c.id} value={c.id}>
             {c.name}

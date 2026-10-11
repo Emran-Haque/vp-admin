@@ -58,7 +58,7 @@ export default function AddRecordingModal({
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const { data: subjectsData } = useGetCourseSubjectsQuery({ course: courseId });
+  const { data: subjectsData, isLoading: subjectsLoading } = useGetCourseSubjectsQuery({ course: courseId });
   const subjects = subjectsData?.results ?? [];
 
   const [createClass] = useCreateClassMutation();
@@ -201,10 +201,12 @@ export default function AddRecordingModal({
               <label className="block pb-1.5 text-xs font-semibold text-slate-400">বিষয়</label>
               <select
                 value={subjectId}
+                disabled={subjectsLoading}
                 onChange={(e) => setSubjectId(e.target.value)}
-                className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
+                className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none disabled:cursor-wait disabled:opacity-60"
               >
-                <option value="">কোনো বিষয় নয়</option>
+                <option value="">{subjectsLoading ? "বিষয় লোড হচ্ছে..." : "কোনো বিষয় নয়"}</option>
+                {subjectsLoading && subjectId ? <option value={subjectId}>বিষয় লোড হচ্ছে...</option> : null}
                 {subjects.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name}

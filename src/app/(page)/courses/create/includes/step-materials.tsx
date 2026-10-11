@@ -50,6 +50,10 @@ const createQuestion = (): QuizQuestion => ({
   question: "",
   options: ["", "", "", ""],
   correctIndex: null,
+  imageUrl: null,
+  imageFile: null,
+  imageAltText: "",
+  removeImage: false,
 });
 
 // The titles a freshly-added material starts with. Publishing a material still

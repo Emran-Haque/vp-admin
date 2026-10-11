@@ -1,16 +1,18 @@
 import Link from "next/link";
 import { Save, ArrowRight, Check } from "lucide-react";
 import { usePermissions } from "@/hooks/use-permissions";
+import { Loader } from "@/components/loaders";
 
 type Props = {
   step: 1 | 2 | 3;
   published: boolean;
+  isPublishing: boolean;
   onPrev: () => void;
   onNext: () => void;
   onPublish: () => void;
 };
 
-export default function WizardFooter({ step, published, onPrev, onNext, onPublish }: Props) {
+export default function WizardFooter({ step, published, isPublishing, onPrev, onNext, onPublish }: Props) {
   const { hasPermission } = usePermissions();
   const canPublish = hasPermission(
     "can_create_exam",
@@ -26,7 +28,7 @@ export default function WizardFooter({ step, published, onPrev, onNext, onPublis
       {step === 1 ? (
         <Link
           href="/mcq"
-          className="cursor-pointer rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-base font-semibold text-blue-50 transition-colors duration-200 hover:bg-white/10"
+          className="cursor-pointer rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-base font-semibold text-blue-50 transition-colors duration-200 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
         >
           ক্যানসেল
         </Link>
@@ -34,6 +36,7 @@ export default function WizardFooter({ step, published, onPrev, onNext, onPublis
         <button
           type="button"
           onClick={onPrev}
+          disabled={isPublishing}
           className="cursor-pointer rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-base font-semibold text-blue-50 transition-colors duration-200 hover:bg-white/10"
         >
           আগের ধাপ
@@ -43,7 +46,8 @@ export default function WizardFooter({ step, published, onPrev, onNext, onPublis
       <div className="flex items-center gap-3">
         <button
           type="button"
-          className="flex cursor-pointer items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-base font-semibold text-blue-50 transition-colors duration-200 hover:bg-white/10"
+          disabled={isPublishing}
+          className="flex cursor-pointer items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-base font-semibold text-blue-50 transition-colors duration-200 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Save size={16} />
           ড্রাফট সেভ
@@ -53,7 +57,8 @@ export default function WizardFooter({ step, published, onPrev, onNext, onPublis
           <button
             type="button"
             onClick={onNext}
-            className="flex cursor-pointer items-center gap-2 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 px-6 py-3 text-lg font-semibold text-white shadow-[0px_0px_40px_-10px_rgba(0,229,200,0.50)] transition-all duration-200 hover:brightness-110"
+            disabled={isPublishing}
+            className="flex cursor-pointer items-center gap-2 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 px-6 py-3 text-lg font-semibold text-white shadow-[0px_0px_40px_-10px_rgba(0,229,200,0.50)] transition-all duration-200 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
           >
             পরের ধাপ
             <ArrowRight size={16} />
@@ -63,10 +68,11 @@ export default function WizardFooter({ step, published, onPrev, onNext, onPublis
             <button
               type="button"
               onClick={onPublish}
-              className="flex items-center gap-2 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 px-6 py-3 text-lg font-semibold text-white shadow-[0px_0px_40px_-10px_rgba(0,229,200,0.50)]"
+              disabled={isPublishing}
+              className="flex items-center gap-2 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 px-6 py-3 text-lg font-semibold text-white shadow-[0px_0px_40px_-10px_rgba(0,229,200,0.50)] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <Check size={16} />
-              পরীক্ষা পাবলিশ করুন
+              {isPublishing ? <Loader className="size-4 border-white/30 border-t-white" /> : <Check size={16} />}
+              {isPublishing ? "পাবলিশ হচ্ছে…" : "পরীক্ষা পাবলিশ করুন"}
             </button>
           )
         )}

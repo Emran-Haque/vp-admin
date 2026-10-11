@@ -1,4 +1,5 @@
 import { ListChecks, Trash2, CheckCircle2, HelpCircle } from "lucide-react";
+import QuestionImageInput from "@/components/question-image-input";
 import type { Question } from "./types";
 
 const optionLabels = ["ক", "খ", "গ", "ঘ"];
@@ -99,6 +100,13 @@ export default function QuestionEditor({
           placeholder="যেমন: 'অগ্নিবীণা' কাব্যগ্রন্থটি কার রচনা?"
           rows={2}
           className="w-full resize-none rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-base text-blue-50 placeholder:text-slate-400 focus:outline-none"
+        />
+        <QuestionImageInput
+          imageAltText={question.imageAltText}
+          imageFile={question.imageFile}
+          imageUrl={question.imageUrl}
+          removeImage={question.removeImage}
+          onChange={(patch) => onChange({ ...question, ...patch })}
         />
       </div>
 

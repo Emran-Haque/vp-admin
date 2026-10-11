@@ -7,11 +7,12 @@ import {
   useGetExamQuestionsQuery,
   useAddExamQuestionMutation,
   useUpdateQuestionMutation,
+  useUpdateQuestionImageMutation,
   useDeleteQuestionMutation,
   usePublishExamMutation,
 } from "@/redux/api/examsApi";
 import { extractErrorMessage } from "@/lib/api-error";
-import { PageLoader } from "@/components/loaders";
+import { Loader, PageLoader } from "@/components/loaders";
 import ErrorState from "@/components/error-state";
 import StepQuestions from "../../mcq/create/includes/step-questions";
 import { normalizeMarks } from "../../mcq/create/includes/marks";
@@ -36,11 +37,13 @@ export default function RoutineMcqEditor({
   const { data: questionsData, isLoading: questionsLoading } = useGetExamQuestionsQuery(examId);
   const [addQuestion] = useAddExamQuestionMutation();
   const [updateQuestion] = useUpdateQuestionMutation();
+  const [updateQuestionImage] = useUpdateQuestionImageMutation();
   const [deleteQuestion] = useDeleteQuestionMutation();
   const [publishExam] = usePublishExamMutation();
 
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [busy, setBusy] = useState(false);
+  const [busyAction, setBusyAction] = useState<"save" | "publish" | null>(null);
+  const busy = busyAction !== null;
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const initialized = useRef(false);
@@ -53,6 +56,10 @@ export default function RoutineMcqEditor({
       questionsData.map((q) => ({
         id: String(q.id),
         text: q.question_text,
+        imageUrl: q.image,
+        imageFile: null,
+        imageAltText: q.image_alt_text,
+        removeImage: false,
         options: [q.option_a, q.option_b, q.option_c, q.option_d],
         correctIndex: (["A", "B", "C", "D"] as const).indexOf(q.correct_option),
         explanation: q.explanation,
@@ -70,11 +77,14 @@ export default function RoutineMcqEditor({
     }
     // Create / update the rest, keeping order.
     const savedIds = new Set<number>();
+    const savedQuestions: Question[] = [];
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
       if (!q.text.trim()) continue;
       const data = {
         question_text: q.text,
+        image_alt_text: q.imageAltText,
+        ...(q.removeImage && !q.imageFile ? { image: null } : {}),
         option_a: q.options[0] ?? "",
         option_b: q.options[1] ?? "",
         option_c: q.options[2] ?? "",
@@ -85,20 +95,36 @@ export default function RoutineMcqEditor({
         ...(q.marks.trim() ? { marks: q.marks.trim() } : {}),
         order: i + 1,
       };
+      let savedQuestion;
       if (isPersisted(q.id)) {
-        await updateQuestion({ id: Number(q.id), data }).unwrap();
-        savedIds.add(Number(q.id));
+        savedQuestion = await updateQuestion({ id: Number(q.id), data }).unwrap();
       } else {
-        const created = await addQuestion({ examId, data }).unwrap();
-        savedIds.add(created.id);
+        savedQuestion = await addQuestion({ examId, data }).unwrap();
       }
+      if (q.imageFile) {
+        savedQuestion = await updateQuestionImage({
+          id: savedQuestion.id,
+          file: q.imageFile,
+          altText: q.imageAltText,
+        }).unwrap();
+      }
+      savedIds.add(savedQuestion.id);
+      savedQuestions.push({
+        ...q,
+        id: String(savedQuestion.id),
+        imageUrl: savedQuestion.image,
+        imageFile: null,
+        imageAltText: savedQuestion.image_alt_text,
+        removeImage: false,
+      });
     }
     originalIds.current = savedIds;
+    setQuestions(savedQuestions);
     return true;
   };
 
   const run = async (publish: boolean) => {
-    setBusy(true);
+    setBusyAction(publish ? "publish" : "save");
     setError(null);
     setMessage(null);
     try {
@@ -112,7 +138,7 @@ export default function RoutineMcqEditor({
     } catch (err) {
       setError(extractErrorMessage(err));
     } finally {
-      setBusy(false);
+      setBusyAction(null);
     }
   };
 
@@ -148,7 +174,8 @@ export default function RoutineMcqEditor({
               disabled={busy}
               className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-700 px-4 text-sm font-bold text-blue-50 hover:bg-white/5 disabled:opacity-50"
             >
-              <Save size={16} /> সংরক্ষণ করুন
+              {busyAction === "save" ? <Loader className="size-4 border-white/30 border-t-white" /> : <Save size={16} />}
+              {busyAction === "save" ? "সংরক্ষণ হচ্ছে…" : "সংরক্ষণ করুন"}
             </button>
             <button
               type="button"
@@ -156,7 +183,8 @@ export default function RoutineMcqEditor({
               disabled={busy || answered === 0}
               className="inline-flex h-11 items-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white hover:bg-emerald-500 disabled:opacity-50"
             >
-              <Send size={16} /> সংরক্ষণ করে প্রকাশ করুন
+              {busyAction === "publish" ? <Loader className="size-4 border-white/30 border-t-white" /> : <Send size={16} />}
+              {busyAction === "publish" ? "প্রকাশ হচ্ছে…" : "সংরক্ষণ করে প্রকাশ করুন"}
             </button>
           </div>
         </div>

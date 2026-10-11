@@ -40,6 +40,10 @@ export type Question = {
   options: string[];
   correctIndex: number | null;
   explanation: string;
+  imageUrl: string | null;
+  imageFile: File | null;
+  imageAltText: string;
+  removeImage: boolean;
   /**
    * What this question alone is worth, as typed (so the input stays
    * controlled). Empty means "use the exam default" — the server resolves it,

@@ -26,7 +26,7 @@ export default function EditNoticeModal({ notice, onClose }: { notice: Notice; o
   const [course, setCourse] = useState(notice.course != null ? String(notice.course) : "");
   const [visible, setVisible] = useState(notice.is_visible);
 
-  const { data: coursesData } = useGetCoursesQuery();
+  const { data: coursesData, isLoading: coursesLoading } = useGetCoursesQuery();
   const courses = coursesData?.results ?? [];
 
   const [updateNotice, { isLoading, isError }] = useUpdateNoticeMutation();
@@ -151,12 +151,14 @@ export default function EditNoticeModal({ notice, onClose }: { notice: Notice; o
               <label className="block pb-1.5 text-xs font-semibold text-slate-400">কোর্স নির্বাচন করুন</label>
               <select
                 value={course}
+                disabled={coursesLoading}
                 onChange={(e) => setCourse(e.target.value)}
-                className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
+                className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none disabled:cursor-wait disabled:opacity-60"
               >
                 <option value="" className="bg-slate-800 text-slate-200">
-                  নির্বাচন করুন
+                  {coursesLoading ? "কোর্স লোড হচ্ছে..." : "নির্বাচন করুন"}
                 </option>
+                {coursesLoading && course ? <option value={course}>কোর্স লোড হচ্ছে...</option> : null}
                 {courses.map((c) => (
                   <option key={c.id} value={c.id} className="bg-slate-800 text-slate-200">
                     {c.title}

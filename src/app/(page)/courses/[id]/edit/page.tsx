@@ -37,6 +37,7 @@ import {
   useDeleteExamMutation,
   useAddExamQuestionMutation,
   useUpdateQuestionMutation,
+  useUpdateQuestionImageMutation,
   useDeleteQuestionMutation,
   usePublishExamMutation,
   useLazyGetExamQuestionsQuery,
@@ -46,6 +47,7 @@ import { extractErrorMessage } from "@/lib/api-error";
 import { discountAmountFromLegacy, offerPreview, originalPriceFromOffer } from "@/lib/offer-pricing";
 import { draftsFromIncludes, serializeIncludes, type IncludeDraft } from "@/lib/rich-text";
 import ErrorState from "@/components/error-state";
+import { PageLoader } from "@/components/loaders";
 import CourseMcqAttemptSettings from "../includes/course-mcq-attempt-settings";
 import type { BasicInfo, CourseFiles, MaterialDraft, QuizQuestion, SubjectDraft, FaqDraft } from "../../create/includes/types";
 import { validateOfflineBatchInfo } from "../../create/includes/offline-batch-validation";
@@ -130,6 +132,10 @@ function toMaterialDrafts(
         (q): QuizQuestion => ({
           id: String(q.id),
           question: q.question_text,
+          imageUrl: q.image,
+          imageFile: null,
+          imageAltText: q.image_alt_text,
+          removeImage: false,
           options: [q.option_a, q.option_b, q.option_c, q.option_d],
           correctIndex: (["A", "B", "C", "D"] as const).indexOf(q.correct_option),
         })
@@ -184,6 +190,7 @@ export default function Page() {
   const [deleteExam] = useDeleteExamMutation();
   const [addExamQuestion] = useAddExamQuestionMutation();
   const [updateQuestion] = useUpdateQuestionMutation();
+  const [updateQuestionImage] = useUpdateQuestionImageMutation();
   const [deleteQuestion] = useDeleteQuestionMutation();
   const [publishExam] = usePublishExamMutation();
   const [fetchExamQuestions] = useLazyGetExamQuestionsQuery();
@@ -513,6 +520,8 @@ export default function Page() {
             if (!q.question.trim()) continue;
             const data = {
               question_text: q.question,
+              image_alt_text: q.imageAltText,
+              ...(q.removeImage && !q.imageFile ? { image: null } : {}),
               option_a: q.options[0] ?? "",
               option_b: q.options[1] ?? "",
               option_c: q.options[2] ?? "",
@@ -521,13 +530,27 @@ export default function Page() {
               explanation: "",
               order: qIndex + 1,
             };
+            let savedQuestion;
             if (isPersisted(q.id)) {
-              await updateQuestion({ id: Number(q.id), data }).unwrap();
-              nextQuestions.push(q);
+              savedQuestion = await updateQuestion({ id: Number(q.id), data }).unwrap();
             } else {
-              const createdQuestion = await addExamQuestion({ examId, data }).unwrap();
-              nextQuestions.push({ ...q, id: String(createdQuestion.id) });
+              savedQuestion = await addExamQuestion({ examId, data }).unwrap();
             }
+            if (q.imageFile) {
+              savedQuestion = await updateQuestionImage({
+                id: savedQuestion.id,
+                file: q.imageFile,
+                altText: q.imageAltText,
+              }).unwrap();
+            }
+            nextQuestions.push({
+              ...q,
+              id: String(savedQuestion.id),
+              imageUrl: savedQuestion.image,
+              imageFile: null,
+              imageAltText: savedQuestion.image_alt_text,
+              removeImage: false,
+            });
           }
           if (nextQuestions.length > 0) {
             await publishExam(examId).unwrap().catch(() => undefined);
@@ -575,7 +598,7 @@ export default function Page() {
   };
 
   if (isLoading || !basicInfo) {
-    return <p className="text-center text-sm text-slate-400">কোর্সের তথ্য লোড হচ্ছে…</p>;
+    return <PageLoader label="কোর্সের তথ্য লোড হচ্ছে..." />;
   }
 
   if (isCourseError || !course) {

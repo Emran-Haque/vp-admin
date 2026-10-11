@@ -24,7 +24,7 @@ type Draft = { total_fee: string; opening_paid: string; opening_method: string; 
  * is pre-filled from the course, and the due column updates as they type.
  */
 export default function Page() {
-  const { data: courses } = useGetCoursesQuery({});
+  const { data: courses, isLoading: coursesLoading } = useGetCoursesQuery({});
   const [courseId, setCourseId] = useState<number | null>(null);
   const [drafts, setDrafts] = useState<Record<number, Draft>>({});
   const [onlyPending, setOnlyPending] = useState(true);
@@ -119,10 +119,11 @@ export default function Page() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <select
           value={courseId ?? ""}
+          disabled={coursesLoading}
           onChange={(event) => setCourseId(event.target.value ? Number(event.target.value) : null)}
-          className="rounded-2xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-sm text-slate-200 outline-none focus:border-slate-600"
+          className="rounded-2xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-sm text-slate-200 outline-none focus:border-slate-600 disabled:cursor-wait disabled:opacity-60"
         >
-          <option value="">কোর্স বেছে নিন…</option>
+          <option value="">{coursesLoading ? "কোর্স লোড হচ্ছে..." : "কোর্স বেছে নিন…"}</option>
           {(courses?.results ?? []).map((item) => (
             <option key={item.id} value={item.id}>
               {item.title}

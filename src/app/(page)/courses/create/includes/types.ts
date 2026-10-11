@@ -5,6 +5,10 @@ export type QuizQuestion = {
   question: string;
   options: string[];
   correctIndex: number | null;
+  imageUrl: string | null;
+  imageFile: File | null;
+  imageAltText: string;
+  removeImage: boolean;
 };
 
 export type MaterialDraft = {

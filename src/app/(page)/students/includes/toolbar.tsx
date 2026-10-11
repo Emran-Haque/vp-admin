@@ -21,6 +21,7 @@ type Props = {
   course: string;
   onCourseChange: (value: string) => void;
   courseOptions: Option[];
+  courseOptionsLoading?: boolean;
   status: StatusFilter;
   onStatusChange: (value: StatusFilter) => void;
   canExport: boolean;
@@ -34,6 +35,7 @@ function FilterDropdown({
   options,
   onChange,
   className = "",
+  disabled = false,
 }: {
   label: string;
   value: string;
@@ -41,6 +43,7 @@ function FilterDropdown({
   onChange: (value: string) => void;
   /** Wrapper width on phones (desktop keeps its natural width). */
   className?: string;
+  disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -59,8 +62,9 @@ function FilterDropdown({
     <div ref={ref} className={`relative sm:w-auto ${className}`}>
       <button
         type="button"
+        disabled={disabled}
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-800 bg-gray-800 px-3.5 py-2.5 text-sm text-white sm:w-auto sm:justify-start sm:gap-6 sm:px-5 sm:py-3 sm:text-base"
+        className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-800 bg-gray-800 px-3.5 py-2.5 text-sm text-white disabled:cursor-wait disabled:opacity-60 sm:w-auto sm:justify-start sm:gap-6 sm:px-5 sm:py-3 sm:text-base"
       >
         <span className="min-w-0 truncate">{selectedLabel ?? label}</span>
         <ChevronDown size={16} className="shrink-0" />
@@ -108,6 +112,7 @@ export default function Toolbar({
   course,
   onCourseChange,
   courseOptions,
+  courseOptionsLoading = false,
   status,
   onStatusChange,
   canExport,
@@ -130,10 +135,11 @@ export default function Toolbar({
       <SlidersHorizontal size={20} className="hidden shrink-0 text-slate-400 sm:block" />
 
       <FilterDropdown
-        label="সব কোর্স"
+        label={courseOptionsLoading ? "কোর্স লোড হচ্ছে..." : "সব কোর্স"}
         value={course}
         onChange={onCourseChange}
         options={courseOptions}
+        disabled={courseOptionsLoading}
         className="w-full"
       />
 

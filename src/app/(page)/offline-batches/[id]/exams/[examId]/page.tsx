@@ -24,6 +24,7 @@ import {
 } from "@/redux/api/examsApi";
 import ConfirmActionDialog from "@/components/confirm-action-dialog";
 import ErrorState from "@/components/error-state";
+import { PageLoader } from "@/components/loaders";
 import { extractErrorMessage } from "@/lib/api-error";
 
 /**
@@ -303,7 +304,7 @@ export default function Page() {
   };
 
   if (isLoading) {
-    return <p className="text-center text-sm text-slate-400">নম্বরের তালিকা লোড হচ্ছে…</p>;
+    return <PageLoader label="নম্বরের তালিকা লোড হচ্ছে..." />;
   }
   if (isError || !sheet) {
     return <ErrorState message="নম্বরের তালিকা আনা যায়নি।" error={isError ? error : undefined} />;

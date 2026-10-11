@@ -206,7 +206,7 @@ function FileUploadField({
 }
 
 export default function StepBasicInfo({ value, onChange, files, onFilesChange, existingFiles }: Props) {
-  const { data: categoriesData } = useGetCourseCategoriesQuery();
+  const { data: categoriesData, isLoading: categoriesLoading } = useGetCourseCategoriesQuery();
   const categories = Array.isArray(categoriesData) ? categoriesData : categoriesData?.results ?? [];
   const [showCategoryModal, setShowCategoryModal] = useState(false);
 
@@ -283,17 +283,18 @@ export default function StepBasicInfo({ value, onChange, files, onFilesChange, e
             </div>
             <select
               value={value.category}
+              disabled={categoriesLoading}
               onChange={(e) => set("category", e.target.value)}
-              className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3.5 text-base text-blue-50 focus:outline-none"
+              className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3.5 text-base text-blue-50 focus:outline-none disabled:cursor-wait disabled:opacity-60"
             >
-              <option value="">নির্বাচন করুন</option>
+              <option value="">{categoriesLoading ? "ক্যাটাগরি লোড হচ্ছে..." : "নির্বাচন করুন"}</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>
               ))}
             </select>
-            {categories.length === 0 && (
+            {!categoriesLoading && categories.length === 0 && (
               <p className="pt-1.5 text-xs text-amber-400">
                 কোনো ক্যাটাগরি নেই। কোর্স তৈরি করতে আগে{" "}
                 <button

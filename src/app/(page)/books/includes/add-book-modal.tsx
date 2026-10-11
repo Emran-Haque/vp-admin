@@ -53,7 +53,7 @@ export default function AddBookModal({ onClose }: { onClose: () => void }) {
   const promoThumbInputRef = useRef<HTMLInputElement>(null);
   const sampleInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: categoriesData } = useGetBookCategoriesQuery();
+  const { data: categoriesData, isLoading: categoriesLoading } = useGetBookCategoriesQuery();
   const categories = categoriesData?.results ?? [];
 
   const [createBook, { isLoading, isError }] = useCreateBookMutation();
@@ -190,11 +190,12 @@ export default function AddBookModal({ onClose }: { onClose: () => void }) {
             <label className="block pb-1.5 text-xs font-semibold text-slate-400">ক্যাটাগরি</label>
             <select
               value={category}
+              disabled={categoriesLoading}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
+              className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none disabled:cursor-wait disabled:opacity-60"
             >
               <option value="" className="bg-slate-800 text-slate-200">
-                নির্বাচন করুন
+                {categoriesLoading ? "ক্যাটাগরি লোড হচ্ছে..." : "নির্বাচন করুন"}
               </option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id} className="bg-slate-800 text-slate-200">

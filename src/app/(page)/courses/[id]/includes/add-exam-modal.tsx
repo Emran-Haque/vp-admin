@@ -30,7 +30,7 @@ export default function AddExamModal({
 
   const router = useRouter();
   const [createExam, { isLoading }] = useCreateExamMutation();
-  const { data: course } = useGetCourseQuery(courseId);
+  const { data: course, isLoading: courseLoading } = useGetCourseQuery(courseId);
 
   const handleSave = async () => {
     setError(null);
@@ -133,9 +133,11 @@ export default function AddExamModal({
               min="1"
               max="20"
               step="1"
-              value={maxAttempts ?? String(course?.default_mcq_attempts ?? 1)}
+              value={maxAttempts ?? (courseLoading ? "" : String(course?.default_mcq_attempts ?? 1))}
+              disabled={courseLoading}
+              placeholder={courseLoading ? "লোড হচ্ছে..." : undefined}
               onChange={(e) => setMaxAttempts(e.target.value)}
-              className="w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
+              className="w-full rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none disabled:cursor-wait disabled:opacity-60"
             />
             <p className="mt-1.5 text-xs leading-5 text-slate-400">
               কোর্সের ডিফল্ট মান দেওয়া আছে। প্রথমবারের ফলই লিডারবোর্ডে থাকবে।
@@ -157,11 +159,11 @@ export default function AddExamModal({
             <button
               type="button"
               onClick={handleSave}
-              disabled={isLoading || !title.trim()}
+              disabled={isLoading || courseLoading || !title.trim()}
               className="flex cursor-pointer items-center gap-1.5 rounded-[10px] bg-gradient-to-br from-blue-500 to-blue-600 px-4 py-2 text-xs font-bold text-white shadow-[0px_4px_12px_0px_rgba(0,200,150,0.19)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Save size={14} />
-              {isLoading ? "সংরক্ষণ হচ্ছে…" : "সংরক্ষণ করুন"}
+              {courseLoading ? "কোর্স সেটিং লোড হচ্ছে..." : isLoading ? "সংরক্ষণ হচ্ছে…" : "সংরক্ষণ করুন"}
             </button>
           </div>
         </div>

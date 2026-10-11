@@ -4,6 +4,7 @@ import { Check, FileText, HelpCircle, PlayCircle, Plus, Trash2, Upload, Video, t
 import { formatMarks } from "@/lib/marks";
 import { useGetExamsQuery } from "@/redux/api/examsApi";
 import type { MaterialDraft, MaterialKind, QuizQuestion } from "./types";
+import QuestionImageInput from "@/components/question-image-input";
 
 const badgeConfig: Record<MaterialKind, { label: string; icon: LucideIcon; className: string }> = {
   pdf: { label: "পিডিএফ", icon: FileText, className: "bg-amber-500/20 text-amber-500" },
@@ -193,6 +194,13 @@ export default function MaterialItemCard({ item, courseId, onUpdate, onRemove, o
                     onChange={(e) => onUpdateQuestion(q.id, { question: e.target.value })}
                     placeholder={`প্রশ্ন ${qIndex + 1}`}
                     className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-sm text-blue-50 placeholder:text-slate-400 focus:outline-none"
+                  />
+                  <QuestionImageInput
+                    imageAltText={q.imageAltText}
+                    imageFile={q.imageFile}
+                    imageUrl={q.imageUrl}
+                    removeImage={q.removeImage}
+                    onChange={(patch) => onUpdateQuestion(q.id, patch)}
                   />
                   <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                     {q.options.map((opt, optIndex) => (

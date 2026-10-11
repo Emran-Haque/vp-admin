@@ -22,6 +22,10 @@ const createQuestion = (): Question => ({
   options: ["", "", "", ""],
   correctIndex: null,
   explanation: "",
+  imageUrl: null,
+  imageFile: null,
+  imageAltText: "",
+  removeImage: false,
   marks: "",
 });
 

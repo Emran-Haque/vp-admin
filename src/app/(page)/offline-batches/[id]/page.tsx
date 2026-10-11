@@ -17,6 +17,7 @@ import {
 import { usePermissions } from "@/hooks/use-permissions";
 import { useGetCourseQuery } from "@/redux/api/coursesApi";
 import ErrorState from "@/components/error-state";
+import { PageLoader } from "@/components/loaders";
 import CourseEnrolledStudents from "../../courses/[id]/includes/course-enrolled-students";
 import ClassesExamsTab from "./includes/classes-exams-tab";
 
@@ -46,7 +47,7 @@ export default function Page() {
   });
 
   if (isLoading) {
-    return <p className="text-center text-sm text-slate-400">ব্যাচের তথ্য লোড হচ্ছে…</p>;
+    return <PageLoader label="ব্যাচের তথ্য লোড হচ্ছে..." />;
   }
   if (isError || !course) {
     return <ErrorState message="ব্যাচটি খুঁজে পাওয়া যায়নি।" error={isError ? error : undefined} />;

@@ -16,8 +16,8 @@ export default function Page() {
   const [statusFilter, setStatusFilter] = useState<"all" | "passed" | "failed">("all");
   const [page, setPage] = useState(1);
 
-  const { data: examsData } = useGetExamsQuery();
-  const { data: coursesData } = useGetCoursesQuery();
+  const { data: examsData, isLoading: examsLoading } = useGetExamsQuery();
+  const { data: coursesData, isLoading: coursesLoading } = useGetCoursesQuery();
   const {
     data: attemptsData,
     isLoading,
@@ -67,6 +67,7 @@ export default function Page() {
               setPage(1);
             }}
             courses={courses}
+            coursesLoading={coursesLoading}
             courseFilter={courseFilter}
             onCourseFilterChange={(value) => {
               setCourseFilter(value);
@@ -75,7 +76,12 @@ export default function Page() {
             statusFilter={statusFilter}
             onStatusFilterChange={setStatusFilter}
           />
-          <ResultsTable rows={rows} isLoading={isLoading} isError={isError} error={error} />
+          <ResultsTable
+            rows={rows}
+            isLoading={isLoading || examsLoading || coursesLoading}
+            isError={isError}
+            error={error}
+          />
           <Pagination
             count={attemptsData?.count ?? 0}
             shown={rows.length}

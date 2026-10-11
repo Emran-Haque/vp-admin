@@ -41,7 +41,7 @@ export default function StepSubjectsFaqs({
   const [faqAnswer, setFaqAnswer] = useState("");
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
 
-  const { data: teachersData } = useGetTeachersQuery();
+  const { data: teachersData, isLoading: teachersLoading } = useGetTeachersQuery();
   const teachers = teachersData?.results ?? [];
   const availableTeachers = teachers.filter((t) => !teacherIds.includes(String(t.id)));
   const selectedTeachers = teacherIds
@@ -99,10 +99,11 @@ export default function StepSubjectsFaqs({
         <div className="mt-5 flex flex-col gap-2.5 rounded-2xl border border-slate-800 bg-gray-900/30 p-4 sm:flex-row">
           <select
             value={selectedTeacherId}
+            disabled={teachersLoading}
             onChange={(e) => setSelectedTeacherId(e.target.value)}
-            className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-2.5 text-sm text-blue-50 focus:outline-none"
+            className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-2.5 text-sm text-blue-50 focus:outline-none disabled:cursor-wait disabled:opacity-60"
           >
-            <option value="">শিক্ষক নির্বাচন করুন</option>
+            <option value="">{teachersLoading ? "শিক্ষক লোড হচ্ছে..." : "শিক্ষক নির্বাচন করুন"}</option>
             {availableTeachers.map((t) => (
               <option key={t.id} value={String(t.id)}>
                 {t.name}
@@ -113,7 +114,7 @@ export default function StepSubjectsFaqs({
           <button
             type="button"
             onClick={addTeacher}
-            disabled={!selectedTeacherId}
+            disabled={teachersLoading || !selectedTeacherId}
             className="flex w-fit shrink-0 items-center gap-2 rounded-xl bg-blue-500 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Plus size={16} />
@@ -138,8 +139,9 @@ export default function StepSubjectsFaqs({
               </button>
             </span>
           ))}
-          {teachers.length === 0 && <p className="text-sm text-slate-400">কোনো শিক্ষক পাওয়া যায়নি</p>}
-          {teachers.length > 0 && selectedTeachers.length === 0 && (
+          {teachersLoading && <p className="text-sm text-slate-400">শিক্ষকের তালিকা লোড হচ্ছে...</p>}
+          {!teachersLoading && teachers.length === 0 && <p className="text-sm text-slate-400">কোনো শিক্ষক পাওয়া যায়নি</p>}
+          {!teachersLoading && teachers.length > 0 && selectedTeachers.length === 0 && (
             <p className="text-sm text-slate-400">এখনো কোনো শিক্ষক যোগ হয়নি</p>
           )}
         </div>

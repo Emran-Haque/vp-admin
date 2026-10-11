@@ -54,7 +54,7 @@ export default function Page() {
     setPage(page - 1);
   }
 
-  const { data: courses } = useGetCoursesQuery();
+  const { data: courses, isLoading: coursesLoading } = useGetCoursesQuery();
   const courseOptions = [
     { value: NOT_ENROLLED_VALUE, label: "কোনো কোর্সে ভর্তি হয়নি" },
     ...(courses?.results ?? []).map((c) => ({
@@ -145,6 +145,7 @@ export default function Page() {
           setPage(1);
         }}
         courseOptions={courseOptions}
+        courseOptionsLoading={coursesLoading}
         status={status}
         onStatusChange={(value) => {
           setStatus(value);

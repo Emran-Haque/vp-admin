@@ -17,6 +17,7 @@ import { useCreateCourseMaterialMutation } from "@/redux/api/courseMaterialsApi"
 import {
   useCreateExamMutation,
   useAddExamQuestionMutation,
+  useUpdateQuestionImageMutation,
   usePublishExamMutation,
 } from "@/redux/api/examsApi";
 import { extractErrorMessage } from "@/lib/api-error";
@@ -116,6 +117,7 @@ function CourseCreateWizard({ initialMode }: { initialMode: BasicInfo["deliveryM
 
   const [published, setPublished] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submittingAction, setSubmittingAction] = useState<"draft" | "publish">("draft");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [draftMessage, setDraftMessage] = useState<string | null>(null);
 
@@ -126,9 +128,11 @@ function CourseCreateWizard({ initialMode }: { initialMode: BasicInfo["deliveryM
   const [createCourseMaterial] = useCreateCourseMaterialMutation();
   const [createExam] = useCreateExamMutation();
   const [addExamQuestion] = useAddExamQuestionMutation();
+  const [updateQuestionImage] = useUpdateQuestionImageMutation();
   const [publishExam] = usePublishExamMutation();
 
   const handleSubmit = async (isPublished: boolean): Promise<boolean> => {
+    setSubmittingAction(isPublished ? "publish" : "draft");
     setIsSubmitting(true);
     setSubmitError(null);
     setDraftMessage(null);
@@ -265,6 +269,7 @@ function CourseCreateWizard({ initialMode }: { initialMode: BasicInfo["deliveryM
           examId,
           data: {
             question_text: q.question,
+            image_alt_text: q.imageAltText,
             option_a: q.options[0] ?? "",
             option_b: q.options[1] ?? "",
             option_c: q.options[2] ?? "",
@@ -274,6 +279,13 @@ function CourseCreateWizard({ initialMode }: { initialMode: BasicInfo["deliveryM
             order: i + 1,
           },
         }).unwrap();
+        if (q.imageFile) {
+          await updateQuestionImage({
+            id: createdQuestion.id,
+            file: q.imageFile,
+            altText: q.imageAltText,
+          }).unwrap();
+        }
         setPersistedQuestionIds((prev) => ({ ...prev, [q.id]: createdQuestion.id }));
       }
     };
@@ -425,6 +437,7 @@ function CourseCreateWizard({ initialMode }: { initialMode: BasicInfo["deliveryM
         step={step}
         published={published}
         isSubmitting={isSubmitting}
+        submittingAction={isSubmitting ? submittingAction : null}
         onPrev={() => setStep((s) => (s > 1 ? ((s - 1) as CourseWizardStep) : s))}
         onNext={handleNext}
         onSaveDraft={() => handleSubmit(false)}

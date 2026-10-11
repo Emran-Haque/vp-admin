@@ -12,6 +12,7 @@ import WizardFooter from "./includes/wizard-footer";
 import {
   useCreateExamMutation,
   useAddExamQuestionsMutation,
+  useUpdateQuestionImageMutation,
   usePublishExamMutation,
   usePublishExamResultMutation,
 } from "@/redux/api/examsApi";
@@ -54,6 +55,7 @@ export default function Page() {
 
   const [createExam] = useCreateExamMutation();
   const [addExamQuestions] = useAddExamQuestionsMutation();
+  const [updateQuestionImage] = useUpdateQuestionImageMutation();
   const [publishExam] = usePublishExamMutation();
   const [publishExamResult] = usePublishExamResultMutation();
 
@@ -105,10 +107,11 @@ export default function Page() {
     // C-unit paper turns into 100 full regrades.
     if (questions.length > 0) {
       try {
-        await addExamQuestions({
+        const createdQuestions = await addExamQuestions({
           examId: exam.id,
           questions: questions.map((q, i) => ({
             question_text: q.text,
+            image_alt_text: q.imageAltText,
             option_a: q.options[0] ?? "",
             option_b: q.options[1] ?? "",
             option_c: q.options[2] ?? "",
@@ -120,6 +123,19 @@ export default function Page() {
             order: i + 1,
           })),
         }).unwrap();
+
+        // Keep the paper itself as one fast bulk request. Only questions that
+        // actually carry an image need a second multipart request.
+        for (let i = 0; i < questions.length; i++) {
+          const file = questions[i].imageFile;
+          const savedQuestion = createdQuestions[i];
+          if (!file || !savedQuestion) continue;
+          await updateQuestionImage({
+            id: savedQuestion.id,
+            file,
+            altText: questions[i].imageAltText,
+          }).unwrap();
+        }
       } catch (err) {
         console.error("Failed to add questions:", err);
         setPublishError(`প্রশ্ন অ্যাড করা যায়নি: ${extractErrorMessage(err)}`);
@@ -204,6 +220,7 @@ export default function Page() {
       <WizardFooter
         step={step}
         published={published}
+        isPublishing={isPublishing}
         onPrev={() => setStep((s) => (s > 1 ? ((s - 1) as 1 | 2) : s))}
         onNext={() => setStep((s) => (s < 3 ? ((s + 1) as 2 | 3) : s))}
         onPublish={handlePublish}

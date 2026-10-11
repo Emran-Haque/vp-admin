@@ -31,7 +31,7 @@ export default function ClassFormModal({
   const [endTime, setEndTime] = useState(editItem?.end_time?.slice(0, 5) ?? "");
   const [error, setError] = useState<string | null>(null);
 
-  const { data: subjectsData } = useGetCourseSubjectsQuery({ course: courseId });
+  const { data: subjectsData, isLoading: subjectsLoading } = useGetCourseSubjectsQuery({ course: courseId });
   const subjects = subjectsData?.results ?? [];
   const [createClass, { isLoading: isCreating }] = useCreateClassMutation();
   const [updateClass, { isLoading: isUpdating }] = useUpdateClassMutation();
@@ -100,10 +100,12 @@ export default function ClassFormModal({
             <label className="block pb-1.5 text-xs font-semibold text-slate-400">বিষয় (ঐচ্ছিক)</label>
             <select
               value={subjectId}
+              disabled={subjectsLoading}
               onChange={(e) => setSubjectId(e.target.value)}
-              className={inputClass}
+              className={`${inputClass} disabled:cursor-wait disabled:opacity-60`}
             >
-              <option value="">বিষয় ছাড়া</option>
+              <option value="">{subjectsLoading ? "বিষয় লোড হচ্ছে..." : "বিষয় ছাড়া"}</option>
+              {subjectsLoading && subjectId ? <option value={subjectId}>বিষয় লোড হচ্ছে...</option> : null}
               {subjects.map((subject) => (
                 <option key={subject.id} value={subject.id}>
                   {subject.name}

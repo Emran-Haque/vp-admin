@@ -4,7 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import Sidebar from "@/components/sidebar";
 import Header from "@/components/header";
-import { GlobalLoadingBar } from "@/components/loaders";
+import { GlobalLoadingBar, PageLoader } from "@/components/loaders";
 import { useAppSelector } from "@/redux/hooks";
 import { useNavPermissions } from "@/hooks/use-nav-permissions";
 import { navItems, type RouteGuard } from "@/components/nav-items";
@@ -44,7 +44,19 @@ export default function PageLayout({ children }: { children: ReactNode }) {
     if (mounted && !isAuthorized) router.replace("/login");
   }, [mounted, isAuthorized, router]);
 
-  if (!mounted || !isAuthorized || permissionsLoading || !isPagePermitted) return null;
+  if (!mounted || !isAuthorized || permissionsLoading || !isPagePermitted) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-zinc-900">
+        <PageLoader
+          label={
+            mounted && (!isAuthorized || !isPagePermitted)
+              ? "নিরাপদ পেজে নেওয়া হচ্ছে..."
+              : "অ্যাডমিন প্যানেল প্রস্তুত হচ্ছে..."
+          }
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-zinc-900">

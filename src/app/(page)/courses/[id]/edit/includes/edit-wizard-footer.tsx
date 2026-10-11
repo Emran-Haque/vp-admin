@@ -2,6 +2,7 @@
 
 import { Save } from "lucide-react";
 import { usePermissions } from "@/hooks/use-permissions";
+import { Loader } from "@/components/loaders";
 import type { CourseWizardStep } from "../../../create/includes/wizard-header";
 
 type Props = {
@@ -21,7 +22,7 @@ export default function EditWizardFooter({ step, isSaving, onPrev, onNext, onSav
       <button
         type="button"
         onClick={onPrev}
-        disabled={step === 1}
+        disabled={step === 1 || isSaving}
         className="rounded-2xl border border-slate-800 px-6 py-3 text-base font-semibold text-blue-50 disabled:opacity-40"
       >
         পূর্ববর্তী
@@ -32,7 +33,8 @@ export default function EditWizardFooter({ step, isSaving, onPrev, onNext, onSav
           <button
             type="button"
             onClick={onNext}
-            className="rounded-2xl border border-slate-800 px-6 py-3 text-base font-semibold text-blue-50"
+            disabled={isSaving}
+            className="rounded-2xl border border-slate-800 px-6 py-3 text-base font-semibold text-blue-50 disabled:cursor-not-allowed disabled:opacity-40"
           >
             পরবর্তী
           </button>
@@ -45,7 +47,7 @@ export default function EditWizardFooter({ step, isSaving, onPrev, onNext, onSav
             disabled={isSaving}
             className="flex items-center gap-2 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 px-6 py-3 text-lg font-semibold text-white shadow-[0px_0px_40px_-10px_rgba(0,229,200,0.50)] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <Save size={16} />
+            {isSaving ? <Loader className="size-4 border-white/30 border-t-white" /> : <Save size={16} />}
             {isSaving ? "সংরক্ষণ হচ্ছে..." : "পরিবর্তন সংরক্ষণ করুন"}
           </button>
         )}

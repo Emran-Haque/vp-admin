@@ -25,10 +25,10 @@ const NEGATIVE_MODES: {
 ];
 
 export default function StepBasicInfo({ value, onChange }: Props) {
-  const { data: coursesData } = useGetCoursesQuery();
+  const { data: coursesData, isLoading: coursesLoading } = useGetCoursesQuery();
   const courses = coursesData?.results ?? [];
 
-  const { data: courseSubjectsData } = useGetCourseSubjectsQuery(
+  const { data: courseSubjectsData, isLoading: subjectsLoading } = useGetCourseSubjectsQuery(
     { course: Number(value.course) },
     { skip: !value.course }
   );
@@ -76,6 +76,7 @@ export default function StepBasicInfo({ value, onChange }: Props) {
         </label>
         <select
           value={value.course}
+          disabled={coursesLoading}
           onChange={(e) => {
             const courseId = e.target.value;
             const course = courses.find((item) => String(item.id) === courseId);
@@ -87,9 +88,9 @@ export default function StepBasicInfo({ value, onChange }: Props) {
               maxAttempts: String(course?.default_mcq_attempts ?? 1),
             });
           }}
-          className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3.5 text-base text-blue-50 focus:outline-none"
+          className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3.5 text-base text-blue-50 focus:outline-none disabled:cursor-wait disabled:opacity-60"
         >
-          <option value="">সিলেক্ট করুন</option>
+          <option value="">{coursesLoading ? "কোর্স লোড হচ্ছে..." : "সিলেক্ট করুন"}</option>
           {courses.map((c) => (
             <option key={c.id} value={c.id}>
               {c.title}
@@ -105,7 +106,7 @@ export default function StepBasicInfo({ value, onChange }: Props) {
           </label>
           <select
             value={value.subject}
-            disabled={!value.course}
+            disabled={!value.course || subjectsLoading}
             onChange={(e) => {
               const id = e.target.value;
               const name = courseSubjects.find((s) => String(s.id) === id)?.name ?? "";
@@ -113,7 +114,7 @@ export default function StepBasicInfo({ value, onChange }: Props) {
             }}
             className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3.5 text-base text-blue-50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <option value="">সিলেক্ট করুন</option>
+            <option value="">{subjectsLoading ? "বিষয় লোড হচ্ছে..." : "সিলেক্ট করুন"}</option>
             {courseSubjects.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
@@ -121,7 +122,11 @@ export default function StepBasicInfo({ value, onChange }: Props) {
             ))}
           </select>
           <p className="mt-1.5 text-sm text-slate-400">
-            {value.course ? "সিলেক্ট করা কোর্সের বিষয়গুলো" : "আগে কোর্স সিলেক্ট করুন"}
+            {subjectsLoading
+              ? "বিষয়ের তালিকা লোড হচ্ছে..."
+              : value.course
+                ? "সিলেক্ট করা কোর্সের বিষয়গুলো"
+                : "আগে কোর্স সিলেক্ট করুন"}
           </p>
         </div>
 

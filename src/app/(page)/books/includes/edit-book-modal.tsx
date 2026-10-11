@@ -83,7 +83,7 @@ export default function EditBookModal({ book, onClose }: { book: Book; onClose: 
   const sampleInputRef = useRef<HTMLInputElement>(null);
   const originalFaqIdsRef = useRef<number[]>([]);
 
-  const { data: categoriesData } = useGetBookCategoriesQuery();
+  const { data: categoriesData, isLoading: categoriesLoading } = useGetBookCategoriesQuery();
   const categories = categoriesData?.results ?? [];
 
   const { data: faqsData } = useGetFaqsQuery({ related_book: book.id });
@@ -253,9 +253,13 @@ export default function EditBookModal({ book, onClose }: { book: Book; onClose: 
             <label className="block pb-1.5 text-xs font-semibold text-slate-400">ক্যাটাগরি</label>
             <select
               value={category}
+              disabled={categoriesLoading}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"
+              className="w-full cursor-pointer rounded-[10px] border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none disabled:cursor-wait disabled:opacity-60"
             >
+              {categoriesLoading ? (
+                <option value={category} className="bg-slate-800 text-slate-200">ক্যাটাগরি লোড হচ্ছে...</option>
+              ) : null}
               {categories.map((c) => (
                 <option key={c.id} value={c.id} className="bg-slate-800 text-slate-200">
                   {c.name}
