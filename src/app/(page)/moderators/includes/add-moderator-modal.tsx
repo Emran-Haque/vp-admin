@@ -2,12 +2,22 @@
 
 import { useState } from "react";
 import { X, Save, AlertTriangle, Search, UserPlus, ShieldCheck } from "lucide-react";
-import { useCreateModeratorMutation, usePromoteToModeratorMutation } from "@/redux/api/moderatorsApi";
+import {
+  useCreateModeratorMutation,
+  usePromoteToModeratorMutation,
+  type Moderator,
+} from "@/redux/api/moderatorsApi";
 import { useGetStudentsQuery } from "@/redux/api/studentsApi";
 
 type Mode = "new" | "existing";
 
-export default function AddModeratorModal({ onClose }: { onClose: () => void }) {
+export default function AddModeratorModal({
+  onClose,
+  onCompleted,
+}: {
+  onClose: () => void;
+  onCompleted: (moderator: Moderator, message: string) => void;
+}) {
   const [mode, setMode] = useState<Mode>("new");
 
   const [email, setEmail] = useState("");
@@ -31,8 +41,13 @@ export default function AddModeratorModal({ onClose }: { onClose: () => void }) 
 
   const handleCreate = async () => {
     try {
-      await createModerator({ email, full_name: fullName, phone, password }).unwrap();
-      onClose();
+      const moderator = await createModerator({ email, full_name: fullName, phone, password }).unwrap();
+      onCompleted(
+        moderator,
+        moderator.welcome_sms_sent
+          ? "মডারেটর তৈরি হয়েছে এবং স্বাগতম SMS পাঠানো হয়েছে। এখন ফিচার অ্যাক্সেস নির্বাচন করুন।"
+          : "মডারেটর তৈরি হয়েছে, তবে SMS পাঠানো যায়নি। নম্বর/SMS সেটিং যাচাই করুন এবং password নিরাপদভাবে জানান।",
+      );
     } catch {
       // error state shown inline below
     }
@@ -41,19 +56,23 @@ export default function AddModeratorModal({ onClose }: { onClose: () => void }) 
   const handlePromote = async () => {
     if (selectedStudentId == null) return;
     try {
-      await promoteToModerator(selectedStudentId).unwrap();
-      onClose();
+      const moderator = await promoteToModerator(selectedStudentId).unwrap();
+      onCompleted(
+        moderator,
+        "শিক্ষার্থীকে মডারেটর করা হয়েছে। তার আগের login অপরিবর্তিত আছে; এখন ফিচার অ্যাক্সেস নির্বাচন করুন।",
+      );
     } catch {
       // error state shown inline below
     }
   };
 
-  const canCreate = email.trim() && fullName.trim() && password.trim().length >= 8;
+  const canCreate =
+    email.trim() && phone.trim() && fullName.trim() && password.trim().length >= 8;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-800/95 p-4">
       <div className="flex max-h-[85vh] w-full max-w-[520px] flex-col rounded-[20px] border border-white/5 bg-gray-900/75 shadow-[0px_15px_30px_0px_rgba(59,130,246,0.46)]">
-        <div className="flex items-center justify-between p-7 pb-0">werQ7fRztY2MAnu
+        <div className="flex items-center justify-between p-7 pb-0">
           <h2 className="text-base font-bold text-slate-50">নতুন মডারেটর যোগ করুন</h2>
           <button
             type="button"
@@ -123,7 +142,7 @@ export default function AddModeratorModal({ onClose }: { onClose: () => void }) 
 
               <div className="grid grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block pb-1.5 text-xs font-semibold text-slate-400">ফোন</label>
+                  <label className="block pb-1.5 text-xs font-semibold text-slate-400">ফোন *</label>
                   <input
                     type="text"
                     value={phone}
@@ -146,8 +165,7 @@ export default function AddModeratorModal({ onClose }: { onClose: () => void }) 
               </div>
 
               <p className="text-xs text-slate-400">
-                তৈরি করার পর, তালিকায় &ldquo;অনুমতি পরিচালনা&rdquo; থেকে এই মডারেটরের নির্দিষ্ট অ্যাক্সেস (রোল)
-                নির্ধারণ করুন।
+                এই নম্বরে password ও Admin Panel link সহ একটি ছোট স্বাগতম SMS যাবে।
               </p>
             </>
           ) : (

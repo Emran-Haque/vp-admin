@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { usePermissions } from "@/hooks/use-permissions";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import WizardHeader from "./includes/wizard-header";
 import StepBasicInfo from "./includes/step-basic-info";
@@ -92,10 +93,13 @@ function CourseCreateFromUrl() {
 }
 
 function CourseCreateWizard({ initialMode }: { initialMode: BasicInfo["deliveryMode"] }) {
+  const { hasPermission } = usePermissions();
+  const offlineOnly =
+    hasPermission("can_manage_offline_batches") && !hasPermission("can_create_course");
   const [step, setStep] = useState<CourseWizardStep>(1);
   const [basicInfo, setBasicInfo] = useState<BasicInfo>({
     ...emptyBasicInfo,
-    deliveryMode: initialMode,
+    deliveryMode: offlineOnly ? "offline" : initialMode,
   });
   const [files, setFiles] = useState<CourseFiles>(emptyFiles);
   const [materials, setMaterials] = useState<MaterialDraft[]>([]);
@@ -405,7 +409,13 @@ function CourseCreateWizard({ initialMode }: { initialMode: BasicInfo["deliveryM
       )}
 
       {step === 1 && (
-        <StepBasicInfo value={basicInfo} onChange={setBasicInfo} files={files} onFilesChange={setFiles} />
+        <StepBasicInfo
+          value={basicInfo}
+          onChange={setBasicInfo}
+          files={files}
+          onFilesChange={setFiles}
+          lockDeliveryMode={offlineOnly}
+        />
       )}
       {step === 2 && <StepMaterials materials={materials} onChange={setMaterials} courseId={courseId ?? undefined} />}
       {step === 3 && (

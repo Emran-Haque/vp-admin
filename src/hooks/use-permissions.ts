@@ -24,5 +24,10 @@ export function usePermissions() {
     return permissions.every((permission) => !permission || granted.has(permission));
   };
 
-  return { isAdmin, hasAllAccess, loading, hasPermission };
+  const hasAnyPermission = (...permissions: (PermissionKey | undefined)[]) => {
+    if (hasAllAccess) return true;
+    return permissions.some((permission) => Boolean(permission && granted.has(permission)));
+  };
+
+  return { isAdmin, hasAllAccess, loading, hasPermission, hasAnyPermission };
 }

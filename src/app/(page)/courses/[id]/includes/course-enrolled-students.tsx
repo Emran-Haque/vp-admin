@@ -28,6 +28,7 @@ import {
 import { useGetStudentQuery } from "@/redux/api/studentsApi";
 import StudentAvatar from "@/components/student-avatar";
 import { usePermissions } from "@/hooks/use-permissions";
+import type { PermissionKey } from "@/components/nav-items";
 import { statusOf, studentStatusStyles } from "@/lib/student-status";
 import ConfirmActionDialog from "@/components/confirm-action-dialog";
 import StudentDetailModal from "../../../students/includes/student-detail-modal";
@@ -97,10 +98,12 @@ export default function CourseEnrolledStudents({
   courseId,
   courseTitle,
   verificationRequired,
+  fullAccessPermission,
 }: {
   courseId: number;
   courseTitle: string;
   verificationRequired: boolean;
+  fullAccessPermission?: PermissionKey;
 }) {
   const [page, setPage] = useState(1);
   const [tab, setTab] = useState<EnrollmentTab>("");
@@ -109,7 +112,12 @@ export default function CourseEnrolledStudents({
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const [actionError, setActionError] = useState("");
   const { hasPermission } = usePermissions();
-  const canManage = hasPermission("can_manage_course_enrollments");
+  const hasFeatureAccess = Boolean(
+    fullAccessPermission && hasPermission(fullAccessPermission),
+  );
+  const canView = hasFeatureAccess || hasPermission("can_view_course_enrollments");
+  const canManage = hasFeatureAccess || hasPermission("can_manage_course_enrollments");
+  const canViewStudentDetails = hasPermission("can_view_students");
   const [updateStatus, { isLoading: isUpdatingStatus }] = useUpdateEnrollmentStatusMutation();
   // Debounced so typing does not fire a request per keystroke.
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -145,7 +153,7 @@ export default function CourseEnrolledStudents({
     }
   };
 
-  if (!hasPermission("can_view_course_enrollments")) {
+  if (!canView) {
     return (
       <section className="rounded-3xl border border-slate-800 bg-slate-900 p-7 text-center shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
         <ShieldCheck size={28} className="mx-auto text-slate-500" />
@@ -172,11 +180,13 @@ export default function CourseEnrolledStudents({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <BulkEnrollmentImport
-            courseId={courseId}
-            courseTitle={courseTitle}
-            onCompleted={() => void refetch()}
-          />
+          {canManage ? (
+            <BulkEnrollmentImport
+              courseId={courseId}
+              courseTitle={courseTitle}
+              onCompleted={() => void refetch()}
+            />
+          ) : null}
           <label className="flex min-w-[260px] items-center gap-2 rounded-2xl border border-slate-800 bg-slate-950/35 px-3.5 py-2.5">
             <Search size={15} className="text-slate-500" />
             <input
@@ -242,7 +252,12 @@ export default function CourseEnrolledStudents({
             <EnrollmentStudentRow
               enrollment={enrollment}
               key={enrollment.id}
-              onSelect={() => setSelectedStudentId(enrollment.student)}
+              onSelect={
+                canViewStudentDetails
+                  ? () => setSelectedStudentId(enrollment.student)
+                  : undefined
+              }
+              canViewStudentDetails={canViewStudentDetails}
               verificationRequired={verificationRequired}
               canManage={canManage}
               onAction={(action, studentName) => {
@@ -305,17 +320,21 @@ export default function CourseEnrolledStudents({
 function EnrollmentStudentRow({
   enrollment,
   onSelect,
+  canViewStudentDetails,
   verificationRequired,
   canManage,
   onAction,
 }: {
   enrollment: Enrollment;
-  onSelect: () => void;
+  onSelect?: () => void;
+  canViewStudentDetails: boolean;
   verificationRequired: boolean;
   canManage: boolean;
   onAction: (action: EnrollmentStatusAction, studentName: string) => void;
 }) {
-  const { data: student, isLoading } = useGetStudentQuery(enrollment.student);
+  const { data: student, isLoading } = useGetStudentQuery(enrollment.student, {
+    skip: !canViewStudentDetails,
+  });
   const [updateVerification, { isLoading: isUpdating }] = useUpdateEnrollmentVerificationMutation();
   const studentName = student?.full_name || enrollment.student_name || `শিক্ষার্থী #${enrollment.student}`;
   const studentEmail = student?.email || enrollment.student_email || "-";
@@ -339,12 +358,14 @@ function EnrollmentStudentRow({
   return (
     <div
       onClick={onSelect}
-      role="button"
-      tabIndex={0}
+      role={onSelect ? "button" : undefined}
+      tabIndex={onSelect ? 0 : undefined}
       onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") onSelect();
+        if (onSelect && (event.key === "Enter" || event.key === " ")) onSelect();
       }}
-      className={`flex w-full cursor-pointer flex-wrap items-center gap-4 rounded-2xl border p-4 text-left transition hover:border-slate-700 ${
+      className={`flex w-full flex-wrap items-center gap-4 rounded-2xl border p-4 text-left transition ${
+        onSelect ? "cursor-pointer hover:border-slate-700" : "cursor-default"
+      } ${
         enrollment.is_suspended || isRemoved
           ? "border-red-500/20 bg-red-500/[0.03]"
           : "border-slate-800 bg-gray-900/40"
@@ -432,7 +453,7 @@ function EnrollmentStudentRow({
       </div>
 
       <div className="ml-auto flex flex-wrap items-end gap-2" onClick={(event) => event.stopPropagation()}>
-        {verificationRequired && !isRemoved && (
+        {canManage && verificationRequired && !isRemoved && (
           <label className="flex min-w-[170px] cursor-pointer flex-col gap-1.5 text-xs font-semibold text-slate-400">
             ভেরিফিকেশন
             <select

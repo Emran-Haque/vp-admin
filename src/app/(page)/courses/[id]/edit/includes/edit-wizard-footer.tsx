@@ -40,7 +40,7 @@ export default function EditWizardFooter({ step, isSaving, onPrev, onNext, onSav
           </button>
         )}
 
-        {showSave && hasPermission("can_edit_course") && (
+        {showSave && (hasPermission("can_edit_course") || hasPermission("can_manage_offline_batches")) && (
           <button
             type="button"
             onClick={onSave}

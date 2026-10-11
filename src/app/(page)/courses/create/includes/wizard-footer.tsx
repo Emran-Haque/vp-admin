@@ -61,7 +61,7 @@ export default function WizardFooter({
             <ChevronRight size={16} />
           </button>
         ) : (
-          hasPermission("can_publish_course") && (
+          (hasPermission("can_publish_course") || hasPermission("can_manage_offline_batches")) && (
             <button
               type="button"
               onClick={onPublish}

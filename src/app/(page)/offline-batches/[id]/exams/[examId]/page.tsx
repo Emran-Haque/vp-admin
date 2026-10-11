@@ -130,8 +130,8 @@ export default function Page() {
   const courseId = Number(params.id);
   const examId = Number(params.examId);
   const { hasPermission } = usePermissions();
-  const canEdit = hasPermission("can_edit_exam");
-  const canPublish = hasPermission("can_publish_result");
+  const canEdit = hasPermission("can_manage_offline_batches");
+  const canPublish = hasPermission("can_manage_offline_batches");
 
   const { data: sheet, isLoading, isError, error } = useGetOfflineMarksQuery(examId, {
     skip: !examId,

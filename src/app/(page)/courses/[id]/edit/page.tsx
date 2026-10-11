@@ -51,6 +51,7 @@ import { PageLoader } from "@/components/loaders";
 import CourseMcqAttemptSettings from "../includes/course-mcq-attempt-settings";
 import type { BasicInfo, CourseFiles, MaterialDraft, QuizQuestion, SubjectDraft, FaqDraft } from "../../create/includes/types";
 import { validateOfflineBatchInfo } from "../../create/includes/offline-batch-validation";
+import { usePermissions } from "@/hooks/use-permissions";
 
 const optionLetters = ["A", "B", "C", "D"] as const;
 const isPersisted = (id: string) => /^\d+$/.test(id);
@@ -156,6 +157,9 @@ type OriginalMaterial = {
 export default function Page() {
   const params = useParams<{ id: string }>();
   const courseId = Number(params.id);
+  const { hasPermission } = usePermissions();
+  const offlineOnly =
+    hasPermission("can_manage_offline_batches") && !hasPermission("can_edit_course");
 
   const {
     data: course,
@@ -169,7 +173,10 @@ export default function Page() {
     { course: courseId },
     { skip: !courseId }
   );
-  const { data: faqsData, isLoading: isLoadingFaqs } = useGetFaqsQuery();
+  const { data: faqsData, isLoading: isLoadingFaqs } = useGetFaqsQuery(
+    { related_course: courseId },
+    { skip: !courseId },
+  );
   const { data: materialsData, isLoading: isLoadingMaterials } = useGetCourseMaterialsQuery(
     { course: courseId },
     { skip: !courseId }
@@ -645,16 +652,19 @@ export default function Page() {
 
       {step === 1 && (
         <>
-          <CourseMcqAttemptSettings
-            courseId={course.id}
-            defaultAttempts={course.default_mcq_attempts}
-            key={course.id}
-          />
+          {course.delivery_mode !== "offline" ? (
+            <CourseMcqAttemptSettings
+              courseId={course.id}
+              defaultAttempts={course.default_mcq_attempts}
+              key={course.id}
+            />
+          ) : null}
           <StepBasicInfo
             value={basicInfo}
             onChange={setBasicInfo}
             files={files}
             onFilesChange={setFiles}
+            lockDeliveryMode={offlineOnly}
             existingFiles={{
               thumbnail: course.thumbnail,
               coverImage: course.cover_image,

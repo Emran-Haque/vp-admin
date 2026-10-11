@@ -60,8 +60,7 @@ function ExamBatchesPage({
   if (isError) return <ErrorState message="পরীক্ষা ব্যাচ আনতে সমস্যা হচ্ছে।" error={error} />;
 
   const batches = data?.results ?? [];
-  const canCreate = hasPermission("can_create_exam");
-  const canDelete = hasPermission("can_delete_exam");
+  const canManage = hasPermission("can_manage_exam_batches");
 
   // Manage view for one batch.
   if (manageId !== null) {
@@ -100,7 +99,7 @@ function ExamBatchesPage({
               </p>
             </div>
           </div>
-          {canCreate ? (
+          {canManage ? (
             <button
               type="button"
               onClick={() => setModal("new")}
@@ -125,7 +124,7 @@ function ExamBatchesPage({
               onManage={() => setManageId(batch.id)}
               onEdit={() => setModal(batch)}
               onDelete={() => setBatchToDelete(batch)}
-              canDelete={canDelete}
+              canDelete={canManage}
             />
           ))}
         </section>

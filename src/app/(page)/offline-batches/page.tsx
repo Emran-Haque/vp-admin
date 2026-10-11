@@ -36,7 +36,7 @@ export default function Page() {
             </p>
           </div>
         </div>
-        {hasPermission("can_create_course") && (
+        {hasPermission("can_manage_offline_batches") && (
           <Link
             href="/courses/create?mode=offline"
             className="flex items-center gap-1.5 rounded-[10px] bg-gradient-to-br from-blue-500 to-blue-600 px-4 py-2.5 text-xs font-bold text-white"

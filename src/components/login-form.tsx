@@ -60,7 +60,7 @@ export function LoginForm() {
   const dispatch = useAppDispatch();
   const [login, { isLoading }] = useLoginMutation();
 
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -69,13 +69,13 @@ export function LoginForm() {
     event.preventDefault();
     setError("");
 
-    if (!email.trim() || !password) {
-      setError("ইমেইল ও পাসওয়ার্ড দিন।");
+    if (!identifier.trim() || !password) {
+      setError("ইমেইল/ফোন ও পাসওয়ার্ড দিন।");
       return;
     }
 
     try {
-      const response = await login({ email: email.trim(), password }).unwrap();
+      const response = await login({ identifier: identifier.trim(), password }).unwrap();
 
       if (!ALLOWED_ROLES.includes(response.user.role)) {
         setError("এই প্যানেলে প্রবেশাধিকার শুধুমাত্র অ্যাডমিন ও মডারেটরদের জন্য।");
@@ -92,14 +92,15 @@ export function LoginForm() {
   return (
     <form className="space-y-3" onSubmit={handleSubmit}>
       <label className="block">
-        <span className={labelClass}>ইমেইল ঠিকানা</span>
+        <span className={labelClass}>ইমেইল অথবা ফোন নম্বর</span>
         <input
           className={inputClass}
-          type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          placeholder="your@email.com"
-          autoComplete="email"
+          type="text"
+          inputMode="email"
+          value={identifier}
+          onChange={(event) => setIdentifier(event.target.value)}
+          placeholder="email অথবা 01XXXXXXXXX"
+          autoComplete="username"
         />
       </label>
 

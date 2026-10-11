@@ -8,7 +8,7 @@ import {
   type Moderator,
   type ModeratorPermissions,
 } from "@/redux/api/moderatorsApi";
-import { groupLabels, permissionLabels } from "./permission-labels";
+import { groupLabels } from "./permission-labels";
 import ErrorState from "@/components/error-state";
 
 type Props = {
@@ -34,11 +34,13 @@ export default function PermissionsModal({ moderator, onClose }: Props) {
 
   const [flags, setFlags] = useState<FlagState>(() => toFlagState(moderator.permissions));
 
-  const grantedCount = useMemo(() => Object.values(flags).filter(Boolean).length, [flags]);
-
-  const toggle = (key: string) => {
-    setFlags((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
+  const grantedCount = useMemo(
+    () =>
+      catalog?.groups.filter(({ permissions }) =>
+        permissions.every((key) => flags[key]),
+      ).length ?? 0,
+    [catalog, flags],
+  );
 
   const toggleGroup = (permissions: string[], enable: boolean) => {
     setFlags((prev) => {
@@ -51,8 +53,19 @@ export default function PermissionsModal({ moderator, onClose }: Props) {
   };
 
   const handleSave = async () => {
+    if (!catalog) return;
+    // Feature access is deliberately all-or-nothing. Normalising here also
+    // cleans up any legacy partial permission combinations the next time an
+    // admin saves this moderator.
+    const normalized: FlagState = {};
+    catalog.groups.forEach(({ permissions }) => {
+      const enabled = permissions.every((key) => flags[key]);
+      permissions.forEach((key) => {
+        normalized[key] = enabled;
+      });
+    });
     try {
-      await updatePermissions({ id: moderator.id, data: flags }).unwrap();
+      await updatePermissions({ id: moderator.id, data: normalized }).unwrap();
       onClose();
     } catch {
       // error state shown inline below
@@ -69,7 +82,7 @@ export default function PermissionsModal({ moderator, onClose }: Props) {
             </span>
             <div>
               <h2 className="text-base font-bold text-slate-50">{moderator.full_name}-এর অনুমতি</h2>
-              <p className="mt-0.5 text-xs text-slate-400">{grantedCount}টি অনুমতি নির্বাচিত</p>
+              <p className="mt-0.5 text-xs text-slate-400">{grantedCount}টি ফিচারে পূর্ণ অ্যাক্সেস</p>
             </div>
           </div>
           <button
@@ -95,40 +108,32 @@ export default function PermissionsModal({ moderator, onClose }: Props) {
             </div>
           )}
 
-          <div className="flex flex-col gap-4">
+          <p className="mb-4 text-xs leading-5 text-slate-400">
+            একটি ফিচার চালু করলে সেই ফিচারের দেখা, যোগ, সম্পাদনা, মুছা ও প্রকাশসহ সম্পূর্ণ ব্যবস্থাপনা অ্যাক্সেস দেওয়া হবে।
+          </p>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {catalog?.groups.map(({ group, permissions }) => {
               const allChecked = permissions.every((key) => flags[key]);
               return (
-                <div key={group} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
-                  <div className="flex items-center justify-between pb-3">
-                    <p className="text-sm font-semibold text-blue-50">{groupLabels[group] ?? group}</p>
-                    <button
-                      type="button"
-                      onClick={() => toggleGroup(permissions, !allChecked)}
-                      className="cursor-pointer text-xs font-medium text-blue-400 hover:underline"
-                    >
-                      {allChecked ? "সব বাতিল করুন" : "সব নির্বাচন করুন"}
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                    {permissions.map((key) => (
-                      <label
-                        key={key}
-                        className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-800 bg-gray-900/50 px-3 py-2.5"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={!!flags[key]}
-                          onChange={() => toggle(key)}
-                          className="size-4 cursor-pointer accent-violet-500"
-                        />
-                        <span className="text-xs font-medium text-slate-300">
-                          {permissionLabels[key] ?? key}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
+                <label
+                  key={group}
+                  className={`flex cursor-pointer items-center gap-3 rounded-2xl border p-4 transition-colors ${
+                    allChecked
+                      ? "border-violet-500/40 bg-violet-500/10"
+                      : "border-slate-800 bg-slate-900/60 hover:border-slate-700"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={allChecked}
+                    onChange={() => toggleGroup(permissions, !allChecked)}
+                    className="size-5 cursor-pointer accent-violet-500"
+                  />
+                  <span className="text-sm font-semibold text-blue-50">
+                    {groupLabels[group] ?? group}
+                  </span>
+                </label>
               );
             })}
           </div>
@@ -145,7 +150,7 @@ export default function PermissionsModal({ moderator, onClose }: Props) {
           <button
             type="button"
             onClick={handleSave}
-            disabled={isSaving || isLoading}
+            disabled={isSaving || isLoading || !catalog}
             className="flex cursor-pointer items-center gap-1.5 rounded-[10px] bg-gradient-to-br from-violet-500 to-fuchsia-500 px-4 py-2 text-xs font-bold text-white shadow-[0px_4px_12px_0px_rgba(139,92,246,0.30)] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ShieldCheck size={14} />

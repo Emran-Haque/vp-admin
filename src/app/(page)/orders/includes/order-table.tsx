@@ -31,7 +31,7 @@ export default function OrderTable({ orders, isLoading, isError, error, onView }
         <thead>
           <tr className="bg-gray-900/50 text-xs font-medium text-slate-400">
             <th className="px-4 py-3">অর্ডার নং</th>
-            <th className="px-4 py-3">গ্রাহক</th>
+            <th className="px-4 py-3">মোবাইল নম্বর</th>
             <th className="px-4 py-3">আইটেম</th>
             <th className="px-4 py-3">মোট</th>
             <th className="px-4 py-3">পেমেন্ট</th>
@@ -44,7 +44,9 @@ export default function OrderTable({ orders, isLoading, isError, error, onView }
           {orders.map((order) => (
             <tr key={order.id} className="border-t border-slate-800">
               <td className="px-4 py-3.5 text-sm font-semibold text-blue-50">{order.order_number}</td>
-              <td className="px-4 py-3.5 text-sm text-slate-300">{order.user_email}</td>
+              <td className="px-4 py-3.5 text-sm text-slate-300">
+                {order.customer_phone || "—"}
+              </td>
               <td className="px-4 py-3.5 text-sm text-slate-400">
                 {order.items.length} টি আইটেম
                 {order.items[0] && (

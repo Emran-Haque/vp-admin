@@ -26,7 +26,9 @@ export type PermissionKey = keyof Omit<ModeratorPermissions, "user" | "granted">
 export type RouteGuard = {
   href: string;
   /** Moderators need this permission granted to see/access this route. Admins always have access. */
-  permission?: PermissionKey;
+  permission?: PermissionKey | PermissionKey[];
+  /** Optional exact/dynamic path matcher for routes that cannot be expressed by a prefix. */
+  matches?: (pathname: string) => boolean;
   /** Only admins/super admins can see/access this route, regardless of moderator permissions. */
   adminOnly?: boolean;
 };
@@ -40,9 +42,9 @@ export const navItems: NavItem[] = [
   { label: "ড্যাশবোর্ড", href: "/home", icon: LayoutGrid, permission: "can_view_dashboard" },
   { label: "শিক্ষার্থী", href: "/students", icon: Users, permission: "can_view_students" },
   { label: "কোর্স", href: "/courses", icon: BookOpen, permission: "can_view_courses" },
-  { label: "অফলাইন ব্যাচ", href: "/offline-batches", icon: School, permission: "can_view_courses" },
+  { label: "অফলাইন ব্যাচ", href: "/offline-batches", icon: School, permission: "can_manage_offline_batches" },
   { label: "MCQ পরীক্ষা", href: "/mcq", icon: ClipboardList, permission: "can_view_exams" },
-  { label: "পরীক্ষা ব্যাচ", href: "/exam-batches", icon: ClipboardCheck, permission: "can_view_exams" },
+  { label: "পরীক্ষা ব্যাচ", href: "/exam-batches", icon: ClipboardCheck, permission: "can_manage_exam_batches" },
   { label: "নোটিশ", href: "/notice", icon: Bell, permission: "can_manage_notices" },
   { label: "ফলাফল", href: "/results", icon: BarChart2, permission: "can_view_results" },
   { label: "অভিভাবক SMS", href: "/guardian-sms", icon: MessageSquare, permission: "can_send_guardian_sms" },

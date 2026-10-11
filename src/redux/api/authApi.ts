@@ -1,6 +1,6 @@
 import { baseApi } from "./baseApi";
 
-export type LoginRequest = { email: string; password: string };
+export type LoginRequest = { identifier: string; password: string };
 
 export type LoginResponse = {
   token: string;

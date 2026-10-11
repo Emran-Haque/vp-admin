@@ -23,6 +23,7 @@ type Props = {
   files: CourseFiles;
   onFilesChange: (files: CourseFiles) => void;
   existingFiles?: ExistingCourseFiles;
+  lockDeliveryMode?: boolean;
 };
 
 const levels = [
@@ -205,7 +206,14 @@ function FileUploadField({
   );
 }
 
-export default function StepBasicInfo({ value, onChange, files, onFilesChange, existingFiles }: Props) {
+export default function StepBasicInfo({
+  value,
+  onChange,
+  files,
+  onFilesChange,
+  existingFiles,
+  lockDeliveryMode = false,
+}: Props) {
   const { data: categoriesData, isLoading: categoriesLoading } = useGetCourseCategoriesQuery();
   const categories = Array.isArray(categoriesData) ? categoriesData : categoriesData?.results ?? [];
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -343,11 +351,14 @@ export default function StepBasicInfo({ value, onChange, files, onFilesChange, e
             <button
               key={mode}
               type="button"
-              onClick={() => set("deliveryMode", mode)}
+              onClick={() => {
+                if (!lockDeliveryMode) set("deliveryMode", mode);
+              }}
+              disabled={lockDeliveryMode && mode !== value.deliveryMode}
               className={`rounded-2xl border p-4 text-left transition-colors ${
                 value.deliveryMode === mode
                   ? "border-blue-500 bg-blue-500/10"
-                  : "border-slate-800 bg-gray-900/50 hover:border-slate-700"
+                  : "border-slate-800 bg-gray-900/50 hover:border-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
               }`}
             >
               <span className="block text-base font-semibold text-blue-50">{label}</span>

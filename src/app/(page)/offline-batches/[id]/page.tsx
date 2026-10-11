@@ -88,7 +88,7 @@ export default function Page() {
             ) : null}
           </div>
           </div>
-          {hasPermission("can_edit_course") && (
+          {hasPermission("can_manage_offline_batches") && (
           <Link
             href={`/courses/${course.id}/edit`}
             className="flex items-center gap-1.5 rounded-[10px] border border-slate-700 px-3.5 py-2 text-xs font-bold text-slate-200 hover:bg-white/5"
@@ -156,6 +156,7 @@ export default function Page() {
           courseId={course.id}
           courseTitle={course.title}
           verificationRequired={course.verification_required}
+          fullAccessPermission="can_manage_offline_batches"
         />
       )}
     </div>

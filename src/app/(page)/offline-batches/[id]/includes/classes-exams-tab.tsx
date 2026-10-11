@@ -59,14 +59,15 @@ export default function ClassesExamsTab({
   canAddExams: boolean;
 }) {
   const { hasPermission } = usePermissions();
-  const canCreateClass = hasPermission("can_create_live_class");
-  const canEditClass = hasPermission("can_edit_live_class");
-  const canDeleteClass = hasPermission("can_delete_live_class");
-  const canCreateExam = hasPermission("can_create_exam") && canAddExams;
-  const canEditExam = hasPermission("can_edit_exam");
-  const canDeleteExam = hasPermission("can_delete_exam");
-  const canViewMarks = hasPermission("can_view_results");
-  const canPublish = hasPermission("can_publish_result");
+  const canManage = hasPermission("can_manage_offline_batches");
+  const canCreateClass = canManage;
+  const canEditClass = canManage;
+  const canDeleteClass = canManage;
+  const canCreateExam = canManage && canAddExams;
+  const canEditExam = canManage;
+  const canDeleteExam = canManage;
+  const canViewMarks = canManage;
+  const canPublish = canManage;
 
   const [classForm, setClassForm] = useState<{ edit?: CourseClass } | null>(null);
   const [examForm, setExamForm] = useState<{ courseClass: CourseClass; edit?: ClassQuiz } | null>(

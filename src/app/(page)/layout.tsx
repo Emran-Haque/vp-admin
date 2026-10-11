@@ -23,7 +23,12 @@ export default function PageLayout({ children }: { children: ReactNode }) {
 
   const { visibleNavItems, isItemVisible, loading: permissionsLoading } = useNavPermissions();
   const matchedRoute = guardedRoutes
-    .filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))
+    .filter(
+      (item) =>
+        item.matches?.(pathname) ||
+        pathname === item.href ||
+        pathname.startsWith(`${item.href}/`),
+    )
     .sort((a, b) => b.href.length - a.href.length)[0];
   const isPagePermitted = !matchedRoute || isItemVisible(matchedRoute);
 

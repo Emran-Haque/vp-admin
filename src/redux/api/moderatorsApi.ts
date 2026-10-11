@@ -24,6 +24,7 @@ export type ModeratorPermissions = {
   can_delete_live_class: boolean;
   can_view_recorded_classes: boolean;
   can_manage_course_resources: boolean;
+  can_manage_offline_batches: boolean;
   can_view_exams: boolean;
   can_create_exam: boolean;
   can_edit_exam: boolean;
@@ -33,6 +34,7 @@ export type ModeratorPermissions = {
   can_publish_result: boolean;
   can_view_results: boolean;
   can_view_leaderboard: boolean;
+  can_manage_exam_batches: boolean;
   can_send_guardian_sms: boolean;
   can_manage_assignments: boolean;
   can_evaluate_assignments: boolean;
@@ -68,6 +70,11 @@ export type CreateModeratorInput = {
   full_name: string;
   phone: string;
   password: string;
+};
+
+export type CreateModeratorResult = Moderator & {
+  welcome_sms_sent: boolean;
+  welcome_sms_status: string;
 };
 
 export type UpdateModeratorInput = Partial<{
@@ -110,7 +117,7 @@ export const moderatorsApi = baseApi.injectEndpoints({
       query: (id) => `admin/moderators/${id}/`,
       providesTags: (_result, _error, id) => [{ type: "Moderators", id }],
     }),
-    createModerator: builder.mutation<Moderator, CreateModeratorInput>({
+    createModerator: builder.mutation<CreateModeratorResult, CreateModeratorInput>({
       query: (body) => ({ url: "admin/moderators/", method: "POST", body }),
       invalidatesTags: [{ type: "Moderators", id: "LIST" }],
     }),
@@ -120,10 +127,6 @@ export const moderatorsApi = baseApi.injectEndpoints({
         { type: "Moderators", id },
         { type: "Moderators", id: "LIST" },
       ],
-    }),
-    deleteModerator: builder.mutation<void, number>({
-      query: (id) => ({ url: `admin/moderators/${id}/`, method: "DELETE" }),
-      invalidatesTags: [{ type: "Moderators", id: "LIST" }],
     }),
     getModeratorPermissions: builder.query<ModeratorPermissions, number>({
       query: (id) => `admin/moderators/${id}/permissions/`,
@@ -185,7 +188,6 @@ export const {
   useGetModeratorQuery,
   useCreateModeratorMutation,
   useUpdateModeratorMutation,
-  useDeleteModeratorMutation,
   useGetModeratorPermissionsQuery,
   useUpdateModeratorPermissionsMutation,
   useDeactivateModeratorMutation,
