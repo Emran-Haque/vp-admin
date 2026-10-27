@@ -21,12 +21,12 @@ import {
 } from "lucide-react";
 import {
   useGetAssignmentQuery,
-  useGetAssignmentsQuery,
+  useGetAllAssignmentsQuery,
   useDeleteAssignmentMutation,
   type Assignment,
 } from "@/redux/api/assignmentsApi";
 import {
-  useGetClassesQuery,
+  useGetAllClassesQuery,
   useDeleteClassMutation,
   useDeleteClassMaterialMutation,
   type ClassMaterial,
@@ -41,7 +41,7 @@ import {
   type CourseSubject,
 } from "@/redux/api/courseSubjectsApi";
 import {
-  useGetExamsQuery,
+  useGetAllExamsQuery,
   useDeleteExamMutation,
   type Exam,
 } from "@/redux/api/examsApi";
@@ -49,7 +49,7 @@ import { useGetCourseMaterialsQuery } from "@/redux/api/courseMaterialsApi";
 import ConfirmDeleteDialog from "@/components/confirm-delete-dialog";
 import { extractErrorMessage } from "@/lib/api-error";
 import {
-  useGetResourcesQuery,
+  useGetAllResourcesQuery,
   useDeleteResourceMutation,
   type CourseResource,
 } from "@/redux/api/resourcesApi";
@@ -118,14 +118,14 @@ export default function CourseSubjectOverview({
   const [modal, setModal] = useState<ModalKey>(null);
   const { data: subjectsData, isLoading: subjectsLoading } =
     useGetCourseSubjectsQuery({ course: courseId });
-  const { data: classesData, isLoading: classesLoading } = useGetClassesQuery({
+  const { data: classesData, isLoading: classesLoading } = useGetAllClassesQuery({
     course: courseId,
   });
   const { data: resourcesData, isLoading: resourcesLoading } =
-    useGetResourcesQuery({ course: courseId });
+    useGetAllResourcesQuery({ course: courseId });
   const { data: assignmentsData, isLoading: assignmentsLoading } =
-    useGetAssignmentsQuery({ course: courseId });
-  const { data: examsData, isLoading: examsLoading } = useGetExamsQuery({
+    useGetAllAssignmentsQuery({ course: courseId });
+  const { data: examsData, isLoading: examsLoading } = useGetAllExamsQuery({
     course: courseId,
     mode: "online",
   });

@@ -1,4 +1,4 @@
-import { baseApi } from "./baseApi";
+import { baseApi, fetchAllPages } from "./baseApi";
 import type { IncludeItem, IncludePayloadItem, Paginated } from "./types";
 
 /**
@@ -435,6 +435,18 @@ export const examsApi = baseApi.injectEndpoints({
             ]
           : [{ type: "Exams" as const, id: "LIST" }],
     }),
+    /** Every exam matching the filters, across all pages. */
+    getAllExams: builder.query<Paginated<Exam>, Omit<ExamListParams, "page" | "page_size">>({
+      queryFn: (params, _api, _extra, fetchWithBQ) =>
+        fetchAllPages<Exam>(fetchWithBQ, "admin/exams/", params),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.results.map((e) => ({ type: "Exams" as const, id: e.id })),
+              { type: "Exams" as const, id: "LIST" },
+            ]
+          : [{ type: "Exams" as const, id: "LIST" }],
+    }),
     /** Scroll-to-load exam list for pickers that must reach every exam. */
     getExamList: builder.infiniteQuery<
       Paginated<Exam>,
@@ -736,6 +748,7 @@ export const examsApi = baseApi.injectEndpoints({
 
 export const {
   useGetExamsQuery,
+  useGetAllExamsQuery,
   useGetExamListInfiniteQuery,
   useGetExamQuery,
   useCreateExamMutation,

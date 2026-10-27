@@ -1,6 +1,7 @@
 import { createApi, fetchBaseQuery, type BaseQueryFn, type FetchArgs, type FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
 import type { RootState } from "../store";
 import { logout } from "../slices/authSlice";
+import type { Paginated } from "./types";
 
 const MAIN_API_BASE_URL = "https://api.vaiyaderpathshala.com/api/v1/";
 const configuredApiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
@@ -41,6 +42,28 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
   }
   return result;
 };
+
+/**
+ * Follows `next` links so a list query returns every row, not just the first
+ * 20-row page. Use it as a `queryFn` for views that group or filter the whole
+ * list on the client (a course's classes by subject, for instance).
+ */
+export async function fetchAllPages<T>(
+  fetchWithBQ: (args: FetchArgs) => ReturnType<typeof baseQueryWithReauth>,
+  url: string,
+  params: object = {},
+): Promise<{ data: Paginated<T> } | { error: FetchBaseQueryError }> {
+  const results: T[] = [];
+  for (let page = 1; ; page += 1) {
+    const response = await fetchWithBQ({ url, params: { ...params, page, page_size: 100 } });
+    if (response.error) return { error: response.error };
+    const data = response.data as Paginated<T>;
+    results.push(...data.results);
+    if (!data.next) {
+      return { data: { count: results.length, next: null, previous: null, results } };
+    }
+  }
+}
 
 export const baseApi = createApi({
   reducerPath: "api",

@@ -23,7 +23,7 @@ import {
   useUpdateAssignmentMutation,
   useDeleteAssignmentMutation,
   useEvaluateSubmissionMutation,
-  useGetAssignmentsQuery,
+  useGetAllAssignmentsQuery,
   useGetAssignmentTelegramStatusQuery,
   useGetSubmissionsQuery,
   usePostAssignmentToTelegramMutation,
@@ -33,7 +33,7 @@ import {
 } from "@/redux/api/assignmentsApi";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
-import { useGetClassesQuery } from "@/redux/api/classesApi";
+import { useGetAllClassesQuery } from "@/redux/api/classesApi";
 import { useGetCourseSubjectsQuery } from "@/redux/api/courseSubjectsApi";
 import { usePermissions } from "@/hooks/use-permissions";
 import { extractErrorMessage } from "@/lib/api-error";
@@ -80,7 +80,7 @@ export default function AssignmentsPanel({ courseId, compact = false }: Assignme
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [panelMessage, setPanelMessage] = useState<string | null>(null);
-  const { data, isLoading } = useGetAssignmentsQuery({ course: courseId });
+  const { data, isLoading } = useGetAllAssignmentsQuery({ course: courseId });
   const [deleteAssignment] = useDeleteAssignmentMutation();
   const { hasPermission } = usePermissions();
 
@@ -278,7 +278,7 @@ export function AddAssignmentModal({
   const [status, setStatus] = useState<Assignment["status"]>(editItem?.status ?? "active");
   const [error, setError] = useState<string | null>(null);
 
-  const { data: classesData, isLoading: classesLoading } = useGetClassesQuery({ course: courseId });
+  const { data: classesData, isLoading: classesLoading } = useGetAllClassesQuery({ course: courseId });
   const { data: subjectsData, isLoading: subjectsLoading } = useGetCourseSubjectsQuery({ course: courseId });
   const [createAssignment, { isLoading: isCreating }] = useCreateAssignmentMutation();
   const [updateAssignment, { isLoading: isUpdating }] = useUpdateAssignmentMutation();

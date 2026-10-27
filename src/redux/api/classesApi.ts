@@ -1,4 +1,4 @@
-import { baseApi } from "./baseApi";
+import { baseApi, fetchAllPages } from "./baseApi";
 import type { Paginated } from "./types";
 import type { ClassQuiz } from "./examsApi";
 
@@ -130,6 +130,23 @@ export const classesApi = baseApi.injectEndpoints({
             ]
           : [{ type: "Classes" as const, id: "LIST" }],
     }),
+    /** Every class matching the filters, across all pages. */
+    getAllClasses: builder.query<
+      Paginated<CourseClass>,
+      Omit<ClassListParams, "page" | "page_size">
+    >({
+      queryFn: (params, _api, _extra, fetchWithBQ) =>
+        fetchAllPages<CourseClass>(fetchWithBQ, "admin/classes/", params),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.results.map((c) => ({ type: "Classes" as const, id: c.id })),
+              { type: "Classes" as const, id: "LIST" },
+              // Exams hang off classes, so a new/edited exam must refresh these too.
+              { type: "Exams" as const, id: "LIST" },
+            ]
+          : [{ type: "Classes" as const, id: "LIST" }],
+    }),
     /** Scroll-to-load classes of one course (newest class date first). */
     getClassList: builder.infiniteQuery<
       Paginated<CourseClass>,
@@ -239,6 +256,7 @@ export const classesApi = baseApi.injectEndpoints({
 
 export const {
   useGetClassesQuery,
+  useGetAllClassesQuery,
   useGetClassListInfiniteQuery,
   useGetClassQuery,
   useCreateClassMutation,

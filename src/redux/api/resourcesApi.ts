@@ -1,4 +1,4 @@
-import { baseApi } from "./baseApi";
+import { baseApi, fetchAllPages } from "./baseApi";
 import type { Paginated } from "./types";
 
 /**
@@ -52,6 +52,18 @@ export const resourcesApi = baseApi.injectEndpoints({
             ]
           : [{ type: "Resources" as const, id: "LIST" }],
     }),
+    /** Every resource matching the filters, across all pages. */
+    getAllResources: builder.query<Paginated<CourseResource>, Omit<ResourceListParams, "page">>({
+      queryFn: (params, _api, _extra, fetchWithBQ) =>
+        fetchAllPages<CourseResource>(fetchWithBQ, "admin/resources/", params),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.results.map((r) => ({ type: "Resources" as const, id: r.id })),
+              { type: "Resources" as const, id: "LIST" },
+            ]
+          : [{ type: "Resources" as const, id: "LIST" }],
+    }),
     getResource: builder.query<CourseResource, number>({
       query: (id) => `admin/resources/${id}/`,
       providesTags: (_result, _error, id) => [{ type: "Resources", id }],
@@ -81,6 +93,7 @@ export const resourcesApi = baseApi.injectEndpoints({
 
 export const {
   useGetResourcesQuery,
+  useGetAllResourcesQuery,
   useGetResourceQuery,
   useCreateResourceMutation,
   useUpdateResourceMutation,

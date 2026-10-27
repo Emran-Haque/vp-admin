@@ -1,4 +1,4 @@
-import { baseApi } from "./baseApi";
+import { baseApi, fetchAllPages } from "./baseApi";
 import type { Paginated } from "./types";
 
 export type AssignmentAttachment = {
@@ -139,6 +139,18 @@ export const assignmentsApi = baseApi.injectEndpoints({
             ]
           : [{ type: "Assignments" as const, id: "LIST" }],
     }),
+    /** Every assignment matching the filters, across all pages. */
+    getAllAssignments: builder.query<Paginated<Assignment>, Omit<AssignmentListParams, "page">>({
+      queryFn: (params, _api, _extra, fetchWithBQ) =>
+        fetchAllPages<Assignment>(fetchWithBQ, "admin/assignments/", params),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.results.map((a) => ({ type: "Assignments" as const, id: a.id })),
+              { type: "Assignments" as const, id: "LIST" },
+            ]
+          : [{ type: "Assignments" as const, id: "LIST" }],
+    }),
     getAssignment: builder.query<Assignment, number>({
       query: (id) => `admin/assignments/${id}/`,
       providesTags: (_result, _error, id) => [{ type: "Assignments", id }],
@@ -206,6 +218,7 @@ export const assignmentsApi = baseApi.injectEndpoints({
 
 export const {
   useGetAssignmentsQuery,
+  useGetAllAssignmentsQuery,
   useGetAssignmentQuery,
   useCreateAssignmentMutation,
   useUpdateAssignmentMutation,
