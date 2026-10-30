@@ -18,7 +18,7 @@ import {
   Users,
 } from "lucide-react";
 import {
-  useGetExamsQuery,
+  useGetAllExamsQuery,
   useDeleteExamMutation,
   usePublishExamResultMutation,
   useGetExamAttemptsQuery,
@@ -43,7 +43,7 @@ function resultStatusOf(exam: Exam) {
 
 export default function ExamList() {
   // Paper (offline) exams live under অফলাইন ব্যাচ, not here.
-  const { data, isLoading, isError, error } = useGetExamsQuery({ mode: "online" });
+  const { data, isLoading, isError, error } = useGetAllExamsQuery({ mode: "online" });
   const [deleteExam] = useDeleteExamMutation();
   const [publishResult] = usePublishExamResultMutation();
   const { hasPermission } = usePermissions();

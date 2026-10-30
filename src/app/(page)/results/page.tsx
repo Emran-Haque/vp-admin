@@ -6,7 +6,7 @@ import Stats from "./includes/stats";
 import Toolbar from "./includes/toolbar";
 import ResultsTable from "./includes/results-table";
 import Pagination from "./includes/pagination";
-import { useGetExamAttemptsQuery, useGetExamsQuery } from "@/redux/api/examsApi";
+import { useGetAllExamsQuery, useGetExamAttemptsQuery } from "@/redux/api/examsApi";
 import { useGetCoursesQuery } from "@/redux/api/coursesApi";
 import { toResultRow } from "./includes/types";
 
@@ -16,7 +16,7 @@ export default function Page() {
   const [statusFilter, setStatusFilter] = useState<"all" | "passed" | "failed">("all");
   const [page, setPage] = useState(1);
 
-  const { data: examsData, isLoading: examsLoading } = useGetExamsQuery();
+  const { data: examsData, isLoading: examsLoading } = useGetAllExamsQuery({});
   const { data: coursesData, isLoading: coursesLoading } = useGetCoursesQuery();
   const {
     data: attemptsData,
@@ -27,6 +27,8 @@ export default function Page() {
     status: "submitted",
     course: courseFilter !== "all" ? courseFilter : undefined,
     search: search || undefined,
+    // Filtered by the API, not on the loaded page, so it spans every page.
+    is_passed: statusFilter === "all" ? undefined : statusFilter === "passed",
     page,
   });
 
@@ -42,14 +44,8 @@ export default function Page() {
 
   const rows = useMemo(() => {
     const attempts = attemptsData?.results ?? [];
-    return attempts
-      .map((attempt) => toResultRow(attempt, examsById, coursesById))
-      .filter((row) => {
-        if (statusFilter === "passed" && !row.passed) return false;
-        if (statusFilter === "failed" && row.passed) return false;
-        return true;
-      });
-  }, [attemptsData, examsById, coursesById, statusFilter]);
+    return attempts.map((attempt) => toResultRow(attempt, examsById, coursesById));
+  }, [attemptsData, examsById, coursesById]);
 
   return (
     <div className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.40)]">
@@ -74,7 +70,10 @@ export default function Page() {
               setPage(1);
             }}
             statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
+            onStatusFilterChange={(value) => {
+              setStatusFilter(value);
+              setPage(1);
+            }}
           />
           <ResultsTable
             rows={rows}

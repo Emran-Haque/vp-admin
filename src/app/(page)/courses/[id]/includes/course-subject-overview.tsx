@@ -45,7 +45,7 @@ import {
   useDeleteExamMutation,
   type Exam,
 } from "@/redux/api/examsApi";
-import { useGetCourseMaterialsQuery } from "@/redux/api/courseMaterialsApi";
+import { useGetAllCourseMaterialsQuery } from "@/redux/api/courseMaterialsApi";
 import ConfirmDeleteDialog from "@/components/confirm-delete-dialog";
 import { extractErrorMessage } from "@/lib/api-error";
 import {
@@ -130,7 +130,7 @@ export default function CourseSubjectOverview({
     mode: "online",
   });
   const { data: materialsData, isLoading: materialsLoading } =
-    useGetCourseMaterialsQuery({ course: courseId });
+    useGetAllCourseMaterialsQuery({ course: courseId });
 
   const subjects = useMemo(() => subjectsData?.results ?? [], [subjectsData?.results]);
   const classes = useMemo(() => classesData?.results ?? [], [classesData?.results]);

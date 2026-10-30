@@ -25,7 +25,7 @@ import {
   useEvaluateSubmissionMutation,
   useGetAllAssignmentsQuery,
   useGetAssignmentTelegramStatusQuery,
-  useGetSubmissionsQuery,
+  useGetAllSubmissionsQuery,
   usePostAssignmentToTelegramMutation,
   type Assignment,
   type Submission,
@@ -482,7 +482,7 @@ export function AddAssignmentModal({
 }
 
 export function AssignmentSubmissionsModal({ assignment, onClose }: { assignment: Assignment; onClose: () => void }) {
-  const { data, isLoading } = useGetSubmissionsQuery({ assignment: assignment.id });
+  const { data, isLoading } = useGetAllSubmissionsQuery({ assignment: assignment.id });
   const submissions = useMemo(() => data?.results ?? [], [data?.results]);
   const [filter, setFilter] = useState<"ungraded" | "all" | "graded">("ungraded");
   const [search, setSearch] = useState("");

@@ -289,6 +289,7 @@ export type ExamAttemptListParams = {
   course?: number;
   status?: string;
   completed?: boolean;
+  is_passed?: boolean;
   search?: string;
   ordering?: string;
   page?: number;

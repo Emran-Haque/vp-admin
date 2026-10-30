@@ -24,7 +24,7 @@ import {
   useDeleteFaqMutation,
 } from "@/redux/api/contentApi";
 import {
-  useGetCourseMaterialsQuery,
+  useGetAllCourseMaterialsQuery,
   useCreateCourseMaterialMutation,
   useUpdateCourseMaterialMutation,
   useDeleteCourseMaterialMutation,
@@ -177,7 +177,7 @@ export default function Page() {
     { related_course: courseId },
     { skip: !courseId },
   );
-  const { data: materialsData, isLoading: isLoadingMaterials } = useGetCourseMaterialsQuery(
+  const { data: materialsData, isLoading: isLoadingMaterials } = useGetAllCourseMaterialsQuery(
     { course: courseId },
     { skip: !courseId }
   );

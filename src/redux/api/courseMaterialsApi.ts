@@ -1,4 +1,4 @@
-import { baseApi } from "./baseApi";
+import { baseApi, fetchAllPages } from "./baseApi";
 import type { Paginated } from "./types";
 
 export type MaterialKind = "pdf" | "video" | "mcq";
@@ -47,6 +47,18 @@ export const courseMaterialsApi = baseApi.injectEndpoints({
             ]
           : [{ type: "CourseMaterials" as const, id: "LIST" }],
     }),
+    /** Every material matching the filters, across all pages. */
+    getAllCourseMaterials: builder.query<Paginated<CourseMaterial>, Omit<CourseMaterialListParams, "page">>({
+      queryFn: (params, _api, _extra, fetchWithBQ) =>
+        fetchAllPages<CourseMaterial>(fetchWithBQ, "admin/course-materials/", params),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.results.map((m) => ({ type: "CourseMaterials" as const, id: m.id })),
+              { type: "CourseMaterials" as const, id: "LIST" },
+            ]
+          : [{ type: "CourseMaterials" as const, id: "LIST" }],
+    }),
     createCourseMaterial: builder.mutation<CourseMaterial, CreateCourseMaterialInput>({
       query: (body) => ({ url: "admin/course-materials/", method: "POST", body }),
       invalidatesTags: [{ type: "CourseMaterials", id: "LIST" }],
@@ -68,6 +80,7 @@ export const courseMaterialsApi = baseApi.injectEndpoints({
 
 export const {
   useGetCourseMaterialsQuery,
+  useGetAllCourseMaterialsQuery,
   useCreateCourseMaterialMutation,
   useUpdateCourseMaterialMutation,
   useDeleteCourseMaterialMutation,

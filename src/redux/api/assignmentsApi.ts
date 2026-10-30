@@ -198,6 +198,18 @@ export const assignmentsApi = baseApi.injectEndpoints({
             ]
           : [{ type: "Submissions" as const, id: "LIST" }],
     }),
+    /** Every submission matching the filters, across all pages. */
+    getAllSubmissions: builder.query<Paginated<Submission>, Omit<SubmissionListParams, "page">>({
+      queryFn: (params, _api, _extra, fetchWithBQ) =>
+        fetchAllPages<Submission>(fetchWithBQ, "admin/submissions/", params),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.results.map((s) => ({ type: "Submissions" as const, id: s.id })),
+              { type: "Submissions" as const, id: "LIST" },
+            ]
+          : [{ type: "Submissions" as const, id: "LIST" }],
+    }),
     evaluateSubmission: builder.mutation<
       Submission,
       { id: number; data: EvaluateSubmissionInput }
@@ -226,5 +238,6 @@ export const {
   useGetAssignmentTelegramStatusQuery,
   usePostAssignmentToTelegramMutation,
   useGetSubmissionsQuery,
+  useGetAllSubmissionsQuery,
   useEvaluateSubmissionMutation,
 } = assignmentsApi;

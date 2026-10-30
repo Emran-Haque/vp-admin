@@ -2,7 +2,7 @@
 
 import { Check, FileText, HelpCircle, PlayCircle, Plus, Trash2, Upload, Video, type LucideIcon } from "lucide-react";
 import { formatMarks } from "@/lib/marks";
-import { useGetExamsQuery } from "@/redux/api/examsApi";
+import { useGetAllExamsQuery } from "@/redux/api/examsApi";
 import type { MaterialDraft, MaterialKind, QuizQuestion } from "./types";
 import QuestionImageInput from "@/components/question-image-input";
 
@@ -38,8 +38,8 @@ export default function MaterialItemCard({ item, courseId, onUpdate, onRemove, o
   const badge = badgeConfig[item.kind];
   const ytId = item.kind === "video" ? youtubeId(item.videoUrl ?? "") : null;
 
-  const { data: examsData, isLoading: isLoadingExams } = useGetExamsQuery(
-    item.kind === "mcq" ? (courseId ? { course: courseId, mode: "online" } : undefined) : undefined,
+  const { data: examsData, isLoading: isLoadingExams } = useGetAllExamsQuery(
+    item.kind === "mcq" && courseId ? { course: courseId, mode: "online" } : {},
     { skip: item.kind !== "mcq" }
   );
   const exams = examsData?.results ?? [];
