@@ -1,5 +1,5 @@
 import { Medal } from "lucide-react";
-import type { ResultRow } from "./types";
+import type { EndedBy, ResultRow } from "./types";
 import ErrorState from "@/components/error-state";
 
 const medalColor: Record<number, string> = {
@@ -7,6 +7,32 @@ const medalColor: Record<number, string> = {
   2: "text-cyan-400",
   3: "text-blue-400",
 };
+
+const endedByLabel: Record<Exclude<EndedBy, null>, { text: string; title: string; className: string }> = {
+  time: {
+    text: "সময় শেষে জমা",
+    title: "সময় শেষ হওয়ায় পরীক্ষাটি নিজে থেকে জমা হয়েছে",
+    className: "bg-amber-500/10 text-amber-400",
+  },
+  left_screen: {
+    text: "স্ক্রিন ছাড়ায় জমা",
+    title: "পরীক্ষার স্ক্রিন ছেড়ে অন্য ট্যাব/অ্যাপে যাওয়ায় পরীক্ষাটি নিজে থেকে জমা হয়েছে",
+    className: "bg-orange-500/10 text-orange-400",
+  },
+  offline: {
+    text: "অফলাইন",
+    title: "অফলাইন (কাগজের) পরীক্ষা — নম্বর অ্যাডমিন দিয়েছেন",
+    className: "bg-cyan-500/10 text-cyan-400",
+  },
+};
+
+const bnDigits = (value: number) => String(value).replace(/[0-9]/g, (d) => "০১২৩৪৫৬৭৮৯"[Number(d)]);
+
+/** ১ম, ২য়, ৩য়, ৪র্থ, ৫ম, ৬ষ্ঠ, ৭ম … */
+function bnOrdinal(n: number) {
+  const suffix: Record<number, string> = { 1: "ম", 2: "য়", 3: "য়", 4: "র্থ", 6: "ষ্ঠ" };
+  return `${bnDigits(n)}${suffix[n] ?? (n <= 10 ? "ম" : "তম")}`;
+}
 
 type Props = {
   rows: ResultRow[];
@@ -46,7 +72,14 @@ export default function ResultsTable({ rows, isLoading, isError, error }: Props)
             return (
               <tr key={row.id} className="border-t border-slate-800">
                 <td className="px-4 py-3.5">
-                  {row.rank <= 3 ? (
+                  {row.rank == null ? (
+                    <span
+                      className="text-sm text-slate-600"
+                      title="র‍্যাঙ্ক শুধু প্রথম চেষ্টার ফলের হয়; পরের চেষ্টার কোনো র‍্যাঙ্ক নেই"
+                    >
+                      —
+                    </span>
+                  ) : row.rank <= 3 ? (
                     <Medal size={16} className={medalColor[row.rank]} />
                   ) : (
                     <span className="text-sm text-slate-400">{row.rank}</span>
@@ -66,7 +99,29 @@ export default function ResultsTable({ rows, isLoading, isError, error }: Props)
                 </td>
 
                 <td className="px-4 py-3.5 text-sm text-slate-300">{row.course}</td>
-                <td className="px-4 py-3.5 text-sm text-slate-300">{row.exam}</td>
+                <td className="px-4 py-3.5 text-sm text-slate-300">
+                  <p>{row.exam}</p>
+                  {(row.attemptNumber > 1 || row.endedBy) && (
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      {row.attemptNumber > 1 && (
+                        <span
+                          className="rounded-full bg-slate-700/60 px-2 py-0.5 text-[11px] font-semibold text-slate-300"
+                          title="আবার দেওয়া পরীক্ষা — লিডারবোর্ডে শুধু প্রথম চেষ্টা গণনা হয়"
+                        >
+                          {bnOrdinal(row.attemptNumber)} চেষ্টা
+                        </span>
+                      )}
+                      {row.endedBy && (
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${endedByLabel[row.endedBy].className}`}
+                          title={endedByLabel[row.endedBy].title}
+                        >
+                          {endedByLabel[row.endedBy].text}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </td>
 
                 <td className="px-4 py-3.5">
                   <div className="flex items-center gap-2">

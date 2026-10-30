@@ -1,9 +1,15 @@
 import type { Exam, ExamAttempt } from "@/redux/api/examsApi";
 import type { Course } from "@/redux/api/coursesApi";
 
+/** How an attempt ended, when it was not a normal submit. */
+export type EndedBy = "time" | "left_screen" | "offline" | null;
+
 export type ResultRow = {
   id: number;
-  rank: number;
+  /** Only a student's first attempt is ranked; retakes have none. */
+  rank: number | null;
+  attemptNumber: number;
+  endedBy: EndedBy;
   studentName: string;
   studentId: string;
   course: string;
@@ -12,6 +18,12 @@ export type ResultRow = {
   maxScore: number;
   passed: boolean;
   date: string;
+};
+
+const endedByStatus: Record<string, EndedBy> = {
+  auto_submitted: "time",
+  violation_submitted: "left_screen",
+  offline: "offline",
 };
 
 export function toResultRow(
@@ -24,7 +36,9 @@ export function toResultRow(
 
   return {
     id: attempt.id,
-    rank: attempt.rank,
+    rank: attempt.rank ?? null,
+    attemptNumber: attempt.attempt_number ?? 1,
+    endedBy: endedByStatus[attempt.status] ?? null,
     studentName: attempt.student_name,
     studentId: `#${attempt.student}`,
     course: course?.title ?? "—",

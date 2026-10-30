@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Bell, ClipboardCheck, Save } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Bell, ClipboardCheck, Info, Save } from "lucide-react";
 import { useUpdateCourseMcqAttemptLimitMutation } from "@/redux/api/coursesApi";
+import { useGetAllExamsQuery } from "@/redux/api/examsApi";
 import { extractErrorMessage } from "@/lib/api-error";
 import { usePermissions } from "@/hooks/use-permissions";
 
@@ -22,8 +23,20 @@ export default function CourseMcqAttemptSettings({
   const [updateAttemptLimit, { isLoading }] =
     useUpdateCourseMcqAttemptLimitMutation();
   const { hasPermission } = usePermissions();
+  // Same query (and cache entry) as the course content overview below.
+  const { data: examsData } = useGetAllExamsQuery({ course: courseId, mode: "online" });
 
   const visibleLimit = draftLimit ?? String(defaultAttempts || 1);
+  const courseLimit = defaultAttempts || 1;
+  // Each exam keeps its own limit, and that is what students actually get —
+  // so list the ones that differ from the course number shown here.
+  const differentExams = useMemo(
+    () =>
+      (examsData?.results ?? [])
+        .filter((exam) => exam.max_attempts !== courseLimit)
+        .sort((a, b) => a.title.localeCompare(b.title)),
+    [examsData?.results, courseLimit],
+  );
 
   if (!hasPermission("can_edit_course")) return null;
 
@@ -122,6 +135,33 @@ export default function CourseMcqAttemptSettings({
         </div>
       </div>
 
+      {differentExams.length > 0 ? (
+        <details className="mt-3 rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-xs text-amber-100">
+          <summary className="flex cursor-pointer list-none items-start gap-2 font-semibold leading-5">
+            <Info className="mt-0.5 shrink-0 text-amber-400" size={14} />
+            <span>
+              {bn(differentExams.length)}টি পরীক্ষায় কোর্সের সীমা ({bn(courseLimit)}) নয়, নিজস্ব আলাদা সীমা আছে —
+              শিক্ষার্থীরা সেই পরীক্ষার নিজস্ব সীমা অনুযায়ীই সুযোগ পায়।{" "}
+              <span className="text-amber-300 underline underline-offset-2">তালিকা দেখুন</span>
+            </span>
+          </summary>
+          <ul className="mt-2 grid gap-1 border-t border-amber-500/10 pt-2 sm:grid-cols-2">
+            {differentExams.map((exam) => (
+              <li key={exam.id} className="flex items-center justify-between gap-3 rounded-lg bg-gray-900/60 px-2.5 py-1.5">
+                <span className="truncate text-slate-300" title={exam.title}>
+                  {exam.title}
+                </span>
+                <span className="shrink-0 font-bold text-amber-300">{bn(exam.max_attempts)} বার</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 leading-5 text-slate-400">
+            সব পরীক্ষায় একই সীমা চাইলে উপরে সংখ্যা দিয়ে “বর্তমান সব Online MCQ/Model Test-এও প্রয়োগ করুন” টিক দিয়ে সংরক্ষণ করুন।
+            কোনো শিক্ষার্থী আগেই এর চেয়ে বেশিবার দিয়ে থাকলে কম সংখ্যা গ্রহণ করা হবে না।
+          </p>
+        </details>
+      ) : null}
+
       {error ? (
         <p className="mt-3 text-xs font-semibold text-red-400" role="alert">
           {error}
@@ -138,4 +178,8 @@ export default function CourseMcqAttemptSettings({
       ) : null}
     </section>
   );
+}
+
+function bn(value: number) {
+  return String(value).replace(/[0-9]/g, (d) => "০১২৩৪৫৬৭৮৯"[Number(d)]);
 }

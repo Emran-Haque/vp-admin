@@ -24,7 +24,9 @@ export default function Page() {
     isError,
     error,
   } = useGetExamAttemptsQuery({
-    status: "submitted",
+    // Every finished attempt — time-out, left-screen and offline results too,
+    // not only ones the student submitted by hand.
+    completed: true,
     course: courseFilter !== "all" ? courseFilter : undefined,
     search: search || undefined,
     // Filtered by the API, not on the loaded page, so it spans every page.

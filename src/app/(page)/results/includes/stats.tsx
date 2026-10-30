@@ -15,7 +15,7 @@ type Stat = {
 export default function Stats() {
   const { data: dashboard } = useGetAdminDashboardQuery();
   const { data: topAttempt } = useGetExamAttemptsQuery({
-    status: "submitted",
+    completed: true,
     ordering: "-final_marks",
     page: 1,
   });
