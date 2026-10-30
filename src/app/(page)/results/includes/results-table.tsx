@@ -10,12 +10,12 @@ const medalColor: Record<number, string> = {
 
 const endedByLabel: Record<Exclude<EndedBy, null>, { text: string; title: string; className: string }> = {
   time: {
-    text: "সময় শেষে জমা",
+    text: "সময় শেষ",
     title: "সময় শেষ হওয়ায় পরীক্ষাটি নিজে থেকে জমা হয়েছে",
     className: "bg-amber-500/10 text-amber-400",
   },
   left_screen: {
-    text: "স্ক্রিন ছাড়ায় জমা",
+    text: "ট্যাব পরিবর্তন",
     title: "পরীক্ষার স্ক্রিন ছেড়ে অন্য ট্যাব/অ্যাপে যাওয়ায় পরীক্ষাটি নিজে থেকে জমা হয়েছে",
     className: "bg-orange-500/10 text-orange-400",
   },
