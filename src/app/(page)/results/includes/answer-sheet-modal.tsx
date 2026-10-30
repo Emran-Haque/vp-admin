@@ -5,6 +5,7 @@ import { AlertTriangle, X } from "lucide-react";
 import { useGetAttemptAnswerSheetQuery, type AnswerSheetQuestion } from "@/redux/api/examsApi";
 import { getMediaUrl } from "@/redux/api/baseApi";
 import StudentNameLink from "@/components/student-name-link";
+import { htmlToPlainText } from "@/lib/rich-text";
 import { endedByStatus } from "./types";
 import { bnDigits, bnOrdinal, endedByLabel } from "./attempt-labels";
 
@@ -228,7 +229,7 @@ function QuestionCard({ question, number }: { question: AnswerSheetQuestion; num
   const status = statusOf(question);
   const badge = statusBadge[status];
   const image = getMediaUrl(question.image);
-  const explanation = question.explanation?.trim();
+  const explanation = htmlToPlainText(question.explanation);
   const awarded = Number(question.marks_awarded);
 
   return (
@@ -248,7 +249,7 @@ function QuestionCard({ question, number }: { question: AnswerSheetQuestion; num
       </div>
 
       <p className="mt-3 whitespace-pre-wrap break-words text-sm font-semibold leading-relaxed text-slate-100">
-        {question.question_text}
+        {htmlToPlainText(question.question_text)}
       </p>
 
       {image && (
@@ -262,7 +263,7 @@ function QuestionCard({ question, number }: { question: AnswerSheetQuestion; num
 
       <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
         {OPTION_KEYS.map((key) => {
-          const text = question.options[key];
+          const text = htmlToPlainText(question.options[key]);
           if (!text) return null;
           const isRight = key === question.correct_answer;
           const isMine = key === question.my_answer;

@@ -188,3 +188,34 @@ export function draftsFromIncludes(
     icon: item.icon ?? "",
   }));
 }
+
+/** Tags MCQ text picks up from Word/Docs/CSV imports; anything else is left as typed. */
+const KNOWN_TAG = /<\/?(?:p|div|span|b|strong|i|em|u|s|del|font|sub|sup|ul|ol|li|h[1-6]|code|mark|small)(?:\s[^<>]*)?\/?>/gi;
+const BLOCK_END = /<\/(?:p|div|li|h[1-6])>/gi;
+
+const ENTITIES: Record<string, string> = { nbsp: " ", lt: "<", gt: ">", quot: '"', apos: "'", amp: "&" };
+
+/**
+ * Turns stray markup in question text (e.g. `লাসা <br />`) into readable plain
+ * text for `whitespace-pre-wrap` display. Only known tags are touched, so math
+ * like `x<y` survives; the result is rendered as a React string, never as HTML.
+ */
+export function htmlToPlainText(text: string | null | undefined): string {
+  if (!text) return "";
+  if (!/[<&]/.test(text)) return text;
+  return text
+    // Imports often store "<br />" *and* a real newline; count that as one break.
+    .replace(/<br\s*\/?>(?:\r?\n)?/gi, "\n")
+    .replace(BLOCK_END, "\n")
+    .replace(KNOWN_TAG, "")
+    .replace(/&(#\d+|#x[0-9a-f]+|[a-z]+);/gi, (match, code: string) => {
+      if (code[0] === "#") {
+        const value = code[1] === "x" || code[1] === "X" ? parseInt(code.slice(2), 16) : parseInt(code.slice(1), 10);
+        return Number.isFinite(value) ? String.fromCodePoint(value) : match;
+      }
+      return ENTITIES[code.toLowerCase()] ?? match;
+    })
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
