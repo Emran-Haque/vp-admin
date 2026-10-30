@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { useSaveCourseGridMutation, type LedgerRow } from "@/redux/api/ledgersApi";
 import { extractErrorMessage } from "@/lib/api-error";
 import { bdt } from "./schedule-editor";
+import StudentNameLink from "@/components/student-name-link";
 
 export const PAYMENT_METHODS = [
   { value: "", label: "জানা নেই" },
@@ -74,7 +75,9 @@ export default function SetupLedgerModal({
         <div className="flex items-start justify-between">
           <div>
             <h3 className="text-lg font-semibold text-slate-100">লেজার সেটআপ</h3>
-            <p className="text-sm text-slate-400">{row.student_name}</p>
+            <p className="text-sm text-slate-400">
+              <StudentNameLink studentId={row.student}>{row.student_name}</StudentNameLink>
+            </p>
             <p className="text-xs text-slate-500">{row.course_title}</p>
           </div>
           <button type="button" onClick={onClose} className="rounded-xl p-2 text-slate-400 hover:bg-slate-800">

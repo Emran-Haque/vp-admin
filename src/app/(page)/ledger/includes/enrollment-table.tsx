@@ -6,6 +6,7 @@ import type { LedgerRow } from "@/redux/api/ledgersApi";
 import ErrorState from "@/components/error-state";
 import { PageLoader } from "@/components/loaders";
 import { bdt } from "./schedule-editor";
+import StudentNameLink from "@/components/student-name-link";
 
 type Props = {
   rows: LedgerRow[];
@@ -86,7 +87,9 @@ export default function EnrollmentTable({ rows, isLoading, isError, error, onOpe
                       iconSize={14}
                     />
                     <div className="min-w-0">
-                      <div className="font-medium text-slate-100">{row.student_name || "—"}</div>
+                      <StudentNameLink studentId={row.student} className="block font-medium text-slate-100">
+                        {row.student_name || "—"}
+                      </StudentNameLink>
                       <div className="text-xs text-slate-500">
                         #{row.student} · {row.student_phone || row.student_email}
                       </div>

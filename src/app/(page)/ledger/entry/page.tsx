@@ -13,6 +13,7 @@ import { PageLoader } from "@/components/loaders";
 import LedgerTabs from "../includes/ledger-tabs";
 import { bdt } from "../includes/schedule-editor";
 import { PAYMENT_METHODS } from "../includes/setup-ledger-modal";
+import StudentNameLink from "@/components/student-name-link";
 
 type Draft = { total_fee: string; opening_paid: string; opening_method: string; opening_note: string };
 
@@ -197,7 +198,9 @@ export default function Page() {
                       className={`border-t border-slate-800 ${rowError ? "bg-rose-950/20" : ""}`}
                     >
                       <td className="px-4 py-2">
-                        <div className="font-medium text-slate-100">{row.student_name}</div>
+                        <StudentNameLink studentId={row.student} className="block font-medium text-slate-100">
+                          {row.student_name}
+                        </StudentNameLink>
                         <div className="text-xs text-slate-500">#{row.student}</div>
                         {rowError && (
                           <div className="mt-0.5 flex items-center gap-1 text-xs text-rose-400">

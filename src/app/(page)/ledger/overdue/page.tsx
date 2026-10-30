@@ -8,6 +8,7 @@ import ErrorState from "@/components/error-state";
 import { PageLoader } from "@/components/loaders";
 import LedgerTabs from "../includes/ledger-tabs";
 import { bdt } from "../includes/schedule-editor";
+import StudentNameLink from "@/components/student-name-link";
 
 export default function Page() {
   const [page, setPage] = useState(1);
@@ -81,7 +82,9 @@ export default function Page() {
                         iconSize={14}
                       />
                       <div className="min-w-0">
-                        <div className="font-medium text-slate-100">{row.student_name}</div>
+                        <StudentNameLink studentId={row.student} className="block font-medium text-slate-100">
+                          {row.student_name}
+                        </StudentNameLink>
                         <div className="flex items-center gap-1 text-xs text-slate-500">
                           <Phone className="size-3" />
                           {row.student_phone || row.student_email}

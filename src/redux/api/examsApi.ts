@@ -284,6 +284,32 @@ export type ExamAttempt = {
   attempt_number: number;
 };
 
+export type AnswerSheetQuestion = {
+  question_id: number;
+  order: number;
+  question_text: string;
+  image: string | null;
+  image_alt_text: string;
+  options: Record<"A" | "B" | "C" | "D", string>;
+  /** "" when the student left it blank. */
+  my_answer: string;
+  correct_answer: string;
+  is_correct: boolean;
+  marks: string;
+  marks_awarded: string;
+  explanation: string;
+};
+
+/** One attempt with every question and the student's answer. */
+export type AttemptAnswerSheet = ExamAttempt & {
+  exam_title: string;
+  exam_total_marks: string;
+  exam_mode: string;
+  is_result_published: boolean;
+  /** Empty for a paper (offline) exam: those have marks only. */
+  questions: AnswerSheetQuestion[];
+};
+
 export type ExamAttemptListParams = {
   exam?: number;
   course?: number;
@@ -658,6 +684,10 @@ export const examsApi = baseApi.injectEndpoints({
       query: (params) => ({ url: "admin/exam-attempts/", params: params ?? undefined }),
       providesTags: ["ExamAttempts"],
     }),
+    getAttemptAnswerSheet: builder.query<AttemptAnswerSheet, number>({
+      query: (id) => `admin/exam-attempts/${id}/answers/`,
+      providesTags: ["ExamAttempts"],
+    }),
     getExamBatches: builder.query<Paginated<ExamBatch>, { search?: string; page?: number } | void>({
       query: (params) => ({ url: "admin/exam-batches/", params: params ?? undefined }),
       providesTags: (result) =>
@@ -774,6 +804,7 @@ export const {
   useGetExamLeaderboardQuery,
   useGetExamAnalyticsQuery,
   useGetExamAttemptsQuery,
+  useGetAttemptAnswerSheetQuery,
   useGetExamBatchesQuery,
   useGetExamBatchQuery,
   useCreateExamBatchMutation,

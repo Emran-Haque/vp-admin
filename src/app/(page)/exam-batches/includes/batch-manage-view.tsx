@@ -29,6 +29,7 @@ import RoutineCsvImport from "./routine-csv-import";
 import RoutineMcqEditor from "./routine-mcq-editor";
 import JoinRequestsPanel from "./join-requests-panel";
 import EditRoutineExamModal from "./edit-routine-exam-modal";
+import StudentNameLink from "@/components/student-name-link";
 
 const bn = (n: number | string) => String(n).replace(/[0-9]/g, (d) => "০১২৩৪৫৬৭৮৯"[Number(d)]);
 
@@ -292,7 +293,9 @@ function EnrollmentPanel({ batchId }: { batchId: number }) {
                         className="size-8 rounded-full"
                         iconSize={14}
                       />
-                      <span className="min-w-0 truncate">{item.student_name || item.student}</span>
+                      <StudentNameLink studentId={item.student} className="min-w-0 truncate">
+                        {item.student_name || item.student}
+                      </StudentNameLink>
                     </span>
                   </td>
                   <td className="px-4 py-3 text-slate-400">{item.student_email}</td>

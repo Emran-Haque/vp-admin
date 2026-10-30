@@ -38,6 +38,7 @@ import { useGetCourseSubjectsQuery } from "@/redux/api/courseSubjectsApi";
 import { usePermissions } from "@/hooks/use-permissions";
 import { extractErrorMessage } from "@/lib/api-error";
 import AdminDeleteButton from "@/components/admin-delete-button";
+import StudentNameLink from "@/components/student-name-link";
 
 const statusStyles: Record<string, string> = {
   active: "bg-emerald-500/10 text-emerald-500 outline-emerald-500/40",
@@ -681,9 +682,9 @@ function GradingPanel({ submission }: { submission: Submission }) {
             iconSize={18}
           />
           <div className="min-w-0">
-            <p className="text-sm font-bold text-blue-50">
+            <StudentNameLink studentId={submission.student} className="block text-sm font-bold text-blue-50">
               {submission.student_name || submission.student_email || `শিক্ষার্থী #${submission.student}`}
-            </p>
+            </StudentNameLink>
             <p className="mt-1 text-xs text-slate-400">
               জমা: {formatDateTime(submission.submitted_at)}
               {submission.student_email ? ` • ${submission.student_email}` : ""}

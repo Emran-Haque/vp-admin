@@ -21,6 +21,7 @@ import ErrorState from "@/components/error-state";
 import { PageLoader } from "@/components/loaders";
 import { getApiErrorStatus } from "@/lib/api-error";
 import Pagination from "../../students/includes/pagination";
+import StudentNameLink from "@/components/student-name-link";
 
 /**
  * The moderation queue. Nothing a student writes reaches the public site until
@@ -277,7 +278,7 @@ export function ReviewCard({
             className="min-w-0 max-w-full truncate text-xs text-slate-400"
             title={`${review.student_name || "—"}${review.institution ? ` · ${review.institution}` : ""}`}
           >
-            {review.student_name || "—"}
+            <StudentNameLink studentId={review.student}>{review.student_name || "—"}</StudentNameLink>
             {review.institution ? ` · ${review.institution}` : ""}
           </span>
           {review.status === "rejected" && review.moderation_note ? (

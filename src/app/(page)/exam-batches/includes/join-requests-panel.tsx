@@ -7,6 +7,7 @@ import {
   useUpdateJoinRequestMutation,
 } from "@/redux/api/examsApi";
 import ErrorState from "@/components/error-state";
+import StudentNameLink from "@/components/student-name-link";
 
 const bn = (n: number | string) => String(n).replace(/[0-9]/g, (d) => "০১২৩৪৫৬৭৮৯"[Number(d)]);
 
@@ -68,7 +69,7 @@ export default function JoinRequestsPanel({ batchId }: { batchId: number }) {
                   {req.name}
                 </p>
                 <p className="mt-0.5 truncate text-xs text-slate-500">
-                  {req.student_name || req.student_email}
+                  <StudentNameLink studentId={req.student}>{req.student_name || req.student_email}</StudentNameLink>
                   {req.student_name && req.student_email ? ` · ${req.student_email}` : ""}
                 </p>
               </div>

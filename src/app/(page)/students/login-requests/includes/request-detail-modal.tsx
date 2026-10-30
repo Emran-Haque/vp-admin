@@ -8,6 +8,7 @@ import ErrorState from "@/components/error-state";
 import { formatDateTime, localPhone, requestStatusStyles } from "@/lib/device-lock";
 import DeviceHistory from "../../includes/device-history";
 import DecisionDialog, { type Decision } from "./decision-dialog";
+import StudentNameLink from "@/components/student-name-link";
 
 /** One request in full: both devices, the reason, earlier requests and history. */
 export default function RequestDetailModal({
@@ -44,7 +45,9 @@ export default function RequestDetailModal({
           {request ? (
             <>
               <div className="flex flex-wrap items-center gap-2.5">
-                <p className="text-lg font-semibold text-blue-50">{request.student.full_name}</p>
+                <StudentNameLink studentId={request.student.id} className="text-lg font-semibold text-blue-50">
+                  {request.student.full_name}
+                </StudentNameLink>
                 <span
                   className={`rounded-full border px-3 py-1 text-xs font-semibold ${requestStatusStyles[request.status].className}`}
                 >

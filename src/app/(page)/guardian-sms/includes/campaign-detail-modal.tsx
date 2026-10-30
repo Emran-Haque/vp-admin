@@ -21,6 +21,7 @@ import {
   useRetryFailedCampaignMutation,
   useSendCampaignMutation,
 } from "@/redux/api/guardianSmsApi";
+import StudentNameLink from "@/components/student-name-link";
 
 /**
  * The preview-and-approve screen.
@@ -270,7 +271,7 @@ export default function CampaignDetailModal({
                               iconSize={13}
                             />
                             <div className="min-w-0">
-                              {row.student_name}
+                              <StudentNameLink studentId={row.student}>{row.student_name}</StudentNameLink>
                               {row.student_code && (
                                 <span className="block text-[11px] text-slate-500">
                                   {row.student_code}

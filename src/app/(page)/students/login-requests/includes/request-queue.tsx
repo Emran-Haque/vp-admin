@@ -16,6 +16,7 @@ import { formatDateTime, localPhone, requestStatusStyles } from "@/lib/device-lo
 import Pagination from "../../includes/pagination";
 import DecisionDialog, { type Decision } from "./decision-dialog";
 import RequestDetailModal from "./request-detail-modal";
+import StudentNameLink from "@/components/student-name-link";
 
 type Tab = DeviceRequestStatus | "all";
 
@@ -162,7 +163,9 @@ function RequestCard({
           className="size-8 rounded-full"
           iconSize={14}
         />
-        <span className="min-w-0 truncate text-sm font-bold text-blue-50">{request.student.full_name}</span>
+        <StudentNameLink studentId={request.student.id} className="min-w-0 truncate text-sm font-bold text-blue-50">
+          {request.student.full_name}
+        </StudentNameLink>
         <span className="text-xs text-slate-400">
           {localPhone(request.student.phone)}
           {request.student.student_id ? ` · ID ${request.student.student_id}` : ""}

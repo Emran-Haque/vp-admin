@@ -11,6 +11,7 @@ import ErrorState from "@/components/error-state";
 import { PageLoader } from "@/components/loaders";
 import LedgerTabs from "../includes/ledger-tabs";
 import { bdt } from "../includes/schedule-editor";
+import StudentNameLink from "@/components/student-name-link";
 
 const statusMeta: Record<ChangeCode["effective_status"], { label: string; className: string }> = {
   issued: { label: "সক্রিয়", className: "border-sky-800 bg-sky-950/40 text-sky-300" },
@@ -126,7 +127,7 @@ export default function Page() {
                       </span>
                     </div>
                     <p className="mt-1.5 text-sm text-slate-200">
-                      {row.student_name}{" "}
+                      <StudentNameLink studentId={row.student}>{row.student_name}</StudentNameLink>{" "}
                       <span className="text-slate-500">· {row.course_title}</span>
                     </p>
                     <p className="text-xs text-slate-500">

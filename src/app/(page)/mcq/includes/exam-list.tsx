@@ -27,6 +27,8 @@ import {
 } from "@/redux/api/examsApi";
 import { usePermissions } from "@/hooks/use-permissions";
 import ErrorState from "@/components/error-state";
+import StudentNameLink from "@/components/student-name-link";
+import AnswerSheetModal from "../../results/includes/answer-sheet-modal";
 import AdminDeleteButton from "@/components/admin-delete-button";
 import { PageLoader } from "@/components/loaders";
 
@@ -262,8 +264,13 @@ function ExamAttemptsButton({ exam }: { exam: Exam }) {
 }
 
 function ExamAttemptsTable({ attempts }: { attempts: ExamAttempt[] }) {
+  const [openAttemptId, setOpenAttemptId] = useState<number | null>(null);
+
   return (
     <div className="overflow-x-auto">
+      {openAttemptId != null && (
+        <AnswerSheetModal attemptId={openAttemptId} onClose={() => setOpenAttemptId(null)} />
+      )}
       <table className="w-full min-w-[860px] border-collapse text-left">
         <thead>
           <tr className="bg-slate-950/60 text-xs font-semibold text-slate-400">
@@ -278,7 +285,12 @@ function ExamAttemptsTable({ attempts }: { attempts: ExamAttempt[] }) {
         </thead>
         <tbody>
           {attempts.map((attempt) => (
-            <tr key={attempt.id} className="border-t border-slate-800">
+            <tr
+              key={attempt.id}
+              onClick={() => setOpenAttemptId(attempt.id)}
+              title="উত্তরপত্র দেখতে ক্লিক করুন"
+              className="cursor-pointer border-t border-slate-800 transition hover:bg-white/[0.03]"
+            >
               <td className="px-4 py-3">
                 <div className="flex items-center gap-2.5">
                   <StudentAvatar
@@ -288,9 +300,9 @@ function ExamAttemptsTable({ attempts }: { attempts: ExamAttempt[] }) {
                     iconSize={16}
                   />
                   <div>
-                    <p className="text-sm font-semibold text-blue-50">
+                    <StudentNameLink studentId={attempt.student} className="text-sm font-semibold text-blue-50">
                       {attempt.student_name || `Student #${attempt.student}`}
-                    </p>
+                    </StudentNameLink>
                     <p className="text-xs text-slate-500">ID #{attempt.student}</p>
                   </div>
                 </div>

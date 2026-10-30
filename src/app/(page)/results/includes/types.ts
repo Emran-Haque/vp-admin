@@ -12,6 +12,8 @@ export type ResultRow = {
   endedBy: EndedBy;
   studentName: string;
   studentId: string;
+  /** The student's user id, for the details popup. */
+  studentUserId: number;
   course: string;
   exam: string;
   score: number;
@@ -20,7 +22,7 @@ export type ResultRow = {
   date: string;
 };
 
-const endedByStatus: Record<string, EndedBy> = {
+export const endedByStatus: Record<string, EndedBy> = {
   auto_submitted: "time",
   violation_submitted: "left_screen",
   offline: "offline",
@@ -41,6 +43,7 @@ export function toResultRow(
     endedBy: endedByStatus[attempt.status] ?? null,
     studentName: attempt.student_name,
     studentId: `#${attempt.student}`,
+    studentUserId: attempt.student,
     course: course?.title ?? "—",
     exam: exam?.title ?? `পরীক্ষা #${attempt.exam}`,
     score: Number(attempt.final_marks || 0),

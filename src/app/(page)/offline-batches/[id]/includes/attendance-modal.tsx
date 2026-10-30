@@ -11,6 +11,7 @@ import {
   type CourseClass,
 } from "@/redux/api/classesApi";
 import { extractErrorMessage } from "@/lib/api-error";
+import StudentNameLink from "@/components/student-name-link";
 
 const statuses: { value: AttendanceStatus; label: string; tone: string }[] = [
   { value: "", label: "চিহ্নিত নয়", tone: "text-slate-300" },
@@ -107,7 +108,9 @@ export default function AttendanceModal({
                 <div className="flex min-w-0 items-center gap-2.5">
                   <StudentAvatar name={row.student_name} image={row.student_image} className="size-9 rounded-full" iconSize={16} />
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-slate-100">{row.student_name}</p>
+                    <StudentNameLink studentId={row.student} className="block max-w-full truncate text-sm font-semibold text-slate-100">
+                      {row.student_name}
+                    </StudentNameLink>
                     <p className="mt-0.5 truncate text-xs text-slate-500">{[row.student_code, row.student_phone].filter(Boolean).join(" · ") || `#${row.student}`}</p>
                   </div>
                 </div>

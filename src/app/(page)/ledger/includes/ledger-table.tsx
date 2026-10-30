@@ -6,6 +6,7 @@ import type { Ledger } from "@/redux/api/ledgersApi";
 import ErrorState from "@/components/error-state";
 import { PageLoader } from "@/components/loaders";
 import { bdt } from "./schedule-editor";
+import StudentNameLink from "@/components/student-name-link";
 
 type Props = {
   ledgers: Ledger[];
@@ -78,7 +79,9 @@ export default function LedgerTable({ ledgers, isLoading, isError, error, onView
                     iconSize={14}
                   />
                   <div className="min-w-0">
-                    <div className="font-medium text-slate-100">{ledger.student_name || "—"}</div>
+                    <StudentNameLink studentId={ledger.student} className="block font-medium text-slate-100">
+                      {ledger.student_name || "—"}
+                    </StudentNameLink>
                     <div className="text-xs text-slate-500">
                       {ledger.student_phone || ledger.student_email}
                     </div>

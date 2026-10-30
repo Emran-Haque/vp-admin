@@ -14,6 +14,7 @@ import {
 } from "@/redux/api/ledgersApi";
 import { extractErrorMessage } from "@/lib/api-error";
 import ScheduleEditor, { bdt, sumRows } from "./schedule-editor";
+import StudentNameLink from "@/components/student-name-link";
 
 const originLabel: Record<string, string> = {
   initial: "প্রথম তালিকা",
@@ -98,7 +99,9 @@ export default function LedgerDetailModal({
       >
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-slate-100">{detail.student_name}</h3>
+            <h3 className="text-lg font-semibold text-slate-100">
+              <StudentNameLink studentId={detail.student}>{detail.student_name}</StudentNameLink>
+            </h3>
             <p className="text-sm text-slate-400">{detail.course_title}</p>
             <p className="text-xs text-slate-500">
               {detail.student_phone || "—"} · {detail.student_email}

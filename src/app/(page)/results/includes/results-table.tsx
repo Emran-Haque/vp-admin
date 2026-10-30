@@ -1,38 +1,18 @@
+"use client";
+
+import { useState } from "react";
 import { Medal } from "lucide-react";
-import type { EndedBy, ResultRow } from "./types";
+import type { ResultRow } from "./types";
+import { bnOrdinal, endedByLabel } from "./attempt-labels";
 import ErrorState from "@/components/error-state";
+import StudentNameLink from "@/components/student-name-link";
+import AnswerSheetModal from "./answer-sheet-modal";
 
 const medalColor: Record<number, string> = {
   1: "text-amber-500",
   2: "text-cyan-400",
   3: "text-blue-400",
 };
-
-const endedByLabel: Record<Exclude<EndedBy, null>, { text: string; title: string; className: string }> = {
-  time: {
-    text: "সময় শেষ",
-    title: "সময় শেষ হওয়ায় পরীক্ষাটি নিজে থেকে জমা হয়েছে",
-    className: "bg-amber-500/10 text-amber-400",
-  },
-  left_screen: {
-    text: "ট্যাব পরিবর্তন",
-    title: "পরীক্ষার স্ক্রিন ছেড়ে অন্য ট্যাব/অ্যাপে যাওয়ায় পরীক্ষাটি নিজে থেকে জমা হয়েছে",
-    className: "bg-orange-500/10 text-orange-400",
-  },
-  offline: {
-    text: "অফলাইন",
-    title: "অফলাইন (কাগজের) পরীক্ষা — নম্বর অ্যাডমিন দিয়েছেন",
-    className: "bg-cyan-500/10 text-cyan-400",
-  },
-};
-
-const bnDigits = (value: number) => String(value).replace(/[0-9]/g, (d) => "০১২৩৪৫৬৭৮৯"[Number(d)]);
-
-/** ১ম, ২য়, ৩য়, ৪র্থ, ৫ম, ৬ষ্ঠ, ৭ম … */
-function bnOrdinal(n: number) {
-  const suffix: Record<number, string> = { 1: "ম", 2: "য়", 3: "য়", 4: "র্থ", 6: "ষ্ঠ" };
-  return `${bnDigits(n)}${suffix[n] ?? (n <= 10 ? "ম" : "তম")}`;
-}
 
 type Props = {
   rows: ResultRow[];
@@ -42,6 +22,8 @@ type Props = {
 };
 
 export default function ResultsTable({ rows, isLoading, isError, error }: Props) {
+  const [openAttemptId, setOpenAttemptId] = useState<number | null>(null);
+
   if (isLoading) {
     return <p className="p-8 text-center text-sm text-slate-400">ফলাফলের তালিকা লোড হচ্ছে…</p>;
   }
@@ -70,7 +52,12 @@ export default function ResultsTable({ rows, isLoading, isError, error }: Props)
           {rows.map((row) => {
             const percent = row.maxScore > 0 ? Math.round((row.score / row.maxScore) * 100) : 0;
             return (
-              <tr key={row.id} className="border-t border-slate-800">
+              <tr
+                key={row.id}
+                onClick={() => setOpenAttemptId(row.id)}
+                title="উত্তরপত্র দেখতে ক্লিক করুন"
+                className="cursor-pointer border-t border-slate-800 transition hover:bg-white/[0.03]"
+              >
                 <td className="px-4 py-3.5">
                   {row.rank == null ? (
                     <span
@@ -92,7 +79,9 @@ export default function ResultsTable({ rows, isLoading, isError, error }: Props)
                       {row.studentName[0]}
                     </span>
                     <div>
-                      <p className="text-sm font-semibold text-blue-50">{row.studentName}</p>
+                      <StudentNameLink studentId={row.studentUserId} className="text-sm font-semibold text-blue-50">
+                        {row.studentName}
+                      </StudentNameLink>
                       <p className="text-xs text-slate-400">{row.studentId}</p>
                     </div>
                   </div>
@@ -153,6 +142,10 @@ export default function ResultsTable({ rows, isLoading, isError, error }: Props)
           })}
         </tbody>
       </table>
+
+      {openAttemptId != null && (
+        <AnswerSheetModal attemptId={openAttemptId} onClose={() => setOpenAttemptId(null)} />
+      )}
 
       {rows.length === 0 && (
         <p className="p-8 text-center text-sm text-slate-400">কোনো ফলাফল পাওয়া যায়নি।</p>
