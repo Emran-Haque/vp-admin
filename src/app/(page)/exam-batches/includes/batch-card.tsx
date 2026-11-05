@@ -1,6 +1,8 @@
 "use client";
 
 import { CalendarClock, ClipboardCheck, Pencil, Settings2, Trash2, Users } from "lucide-react";
+import CopyShareLinkButton from "@/components/copy-share-link-button";
+import { batchShareUrl } from "@/lib/share-links";
 import type { ExamBatch } from "@/redux/api/examsApi";
 
 const bn = (n: number | string) => String(n).replace(/[0-9]/g, (d) => "০১২৩৪৫৬৭৮৯"[Number(d)]);
@@ -104,6 +106,15 @@ export default function BatchCard({
           >
             <Pencil size={16} />
           </button>
+          {/* Short /b/{id} link; the wrapper keeps the click off the card. */}
+          <span onClick={(e) => e.stopPropagation()}>
+            <CopyShareLinkButton
+              url={batchShareUrl(batch.id)}
+              label="শিক্ষার্থীদের জন্য ব্যাচের লিংক কপি করুন"
+              isDraft={!batch.is_published}
+              className="grid size-10 place-items-center rounded-xl border border-slate-800 text-blue-50 hover:bg-white/5"
+            />
+          </span>
           {canDelete ? (
             <button
               type="button"

@@ -36,6 +36,9 @@ import { getMediaUrl } from "@/redux/api/baseApi";
 import CopyExamLinkButton from "./copy-exam-link-button";
 import AssignmentCard from "./assignment-card";
 import ClassCard from "./class-card";
+import LinkCoursesButton from "@/components/link-courses-button";
+import LinkedCoursesBadge from "@/components/linked-courses-badge";
+import { usePermissions } from "@/hooks/use-permissions";
 import {
   useGetCourseSubjectsQuery,
   type CourseSubject,
@@ -66,7 +69,15 @@ import {
 
 type SubjectTab = "lectures" | "live" | "notes" | "assignments" | "mcq";
 type ModalKey = "recording" | "live" | "material" | "resource" | "assignment" | "exam" | null;
-type DeleteTarget = { tab: SubjectTab; id: number; title: string };
+type DeleteTarget = {
+  tab: SubjectTab;
+  id: number;
+  title: string;
+  /** Linked into other courses: deleting removes only this course's copy. */
+  linked?: boolean;
+};
+
+const isLinked = (item: { linked_courses?: unknown[] }) => (item.linked_courses?.length ?? 0) > 0;
 
 type SubjectBundle = {
   subject: CourseSubject;
@@ -263,9 +274,9 @@ export default function CourseSubjectOverview({
     mcq: "MCQ পরীক্ষা",
   };
 
-  const handleDelete = (tab: SubjectTab, id: number, title: string) => {
+  const handleDelete = (tab: SubjectTab, id: number, title: string, linked = false) => {
     setDeleteError(null);
-    setDeleteTarget({ tab, id, title });
+    setDeleteTarget({ tab, id, title, linked });
   };
 
   const confirmDelete = async () => {
@@ -405,7 +416,7 @@ export default function CourseSubjectOverview({
                     <ClassCardList
                       empty=""
                       items={unassignedItems.lectures}
-                      onDelete={(item) => handleDelete("lectures", item.id, item.title)}
+                      onDelete={(item) => handleDelete("lectures", item.id, item.title, isLinked(item))}
                       onEdit={(item) => setEditTarget({ type: "lectures", item })}
                       variant="lecture"
                     />
@@ -417,7 +428,7 @@ export default function CourseSubjectOverview({
                     <ClassCardList
                       empty=""
                       items={unassignedItems.live}
-                      onDelete={(item) => handleDelete("live", item.id, item.title)}
+                      onDelete={(item) => handleDelete("live", item.id, item.title, isLinked(item))}
                       onEdit={(item) => setEditTarget({ type: "live", item })}
                       variant="live"
                     />
@@ -461,7 +472,7 @@ export default function CourseSubjectOverview({
                         title: item.title,
                         meta: `${item.total_questions} প্রশ্ন`,
                         onEdit: () => router.push(`/mcq/${item.id}/edit`),
-                        onDelete: () => handleDelete("mcq", item.id, item.title),
+                        onDelete: () => handleDelete("mcq", item.id, item.title, isLinked(item)),
                       }))}
                     />
                   </div>
@@ -513,9 +524,9 @@ export default function CourseSubjectOverview({
                   setEditMaterial(null);
                   setModal("material");
                 }}
-                onDeleteClass={(item) => handleDelete("lectures", item.id, item.title)}
+                onDeleteClass={(item) => handleDelete("lectures", item.id, item.title, isLinked(item))}
                 onDeleteAssignment={(item) => handleDelete("assignments", item.id, item.title)}
-                onDeleteExam={(item) => handleDelete("mcq", item.id, item.title)}
+                onDeleteExam={(item) => handleDelete("mcq", item.id, item.title, isLinked(item))}
                 onDeleteMaterial={(item) => void deleteClassMaterial(item.id)}
                 onEditClass={(item) => setEditTarget({ type: "lectures", item })}
                 onEditMaterial={(lecture, material) => {
@@ -627,7 +638,11 @@ export default function CourseSubjectOverview({
         open={Boolean(deleteTarget)}
         itemType={deleteTarget ? deleteTypeLabels[deleteTarget.tab] : "কন্টেন্ট"}
         itemName={deleteTarget?.title || ""}
-        impact="এটি মুছে ফেললে সংশ্লিষ্ট ভিডিও, ম্যাটেরিয়াল এবং শিক্ষার্থীদের অ্যাক্সেসও প্রভাবিত হতে পারে।"
+        impact={
+          deleteTarget?.linked
+            ? "শুধু এই কোর্সের কপি মুছবে — একই জিনিস অন্য যে কোর্সগুলোতে যুক্ত আছে, সেখানে থেকে যাবে।"
+            : "এটি মুছে ফেললে সংশ্লিষ্ট ভিডিও, ম্যাটেরিয়াল এবং শিক্ষার্থীদের অ্যাক্সেসও প্রভাবিত হতে পারে।"
+        }
         error={deleteError}
         isLoading={isDeleting}
         onClose={() => {
@@ -772,9 +787,11 @@ function AdminLectureCard({
   subjectName: string;
 }) {
   const router = useRouter();
+  const { hasPermission } = usePermissions();
   const [activeModal, setActiveModal] = useState<AdminLectureModal>(null);
   const [activeVideo, setActiveVideo] = useState<AdminVideoSource | null>(null);
   const firstVideo = lecture.videos[0];
+  const linked = lecture.linked_courses ?? [];
   const poster =
     getMediaUrl(firstVideo?.thumbnail ?? null) ?? getMediaUrl(lecture.thumbnail);
   const publishedResults = exams.filter(
@@ -862,6 +879,12 @@ function AdminLectureCard({
                   লাইভ যুক্ত
                 </span>
               ) : null}
+              <LinkedCoursesBadge
+                kind="class"
+                id={lecture.id}
+                linked={linked}
+                canUnlink={hasPermission("can_edit_live_class")}
+              />
             </div>
             <h4 className="mt-2 truncate text-[16px] font-black leading-snug text-blue-50 max-[720px]:mt-1.5 max-[720px]:line-clamp-2 max-[720px]:whitespace-normal max-[720px]:text-[13px]">
               {lecture.title}
@@ -874,6 +897,17 @@ function AdminLectureCard({
           </div>
 
           <div className="flex shrink-0 items-center gap-2 max-[720px]:col-span-2 max-[720px]:justify-end">
+            {hasPermission("can_create_live_class") ? (
+              <LinkCoursesButton
+                label="অন্য কোর্সে"
+                kind="class"
+                itemId={lecture.id}
+                itemTitle={lecture.title}
+                sourceCourseId={lecture.course}
+                linked={linked}
+                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-[12px] border border-cyan-500/30 bg-cyan-500/10 px-3.5 text-[13px] font-bold text-cyan-100 hover:bg-cyan-500/20 max-[720px]:h-8 max-[720px]:px-2.5 max-[720px]:text-[10px]"
+              />
+            ) : null}
             <button
               className="inline-flex h-10 items-center justify-center gap-1.5 rounded-[12px] border border-slate-700 bg-white/[0.03] px-4 text-[13px] font-bold text-blue-50 hover:bg-white/[0.07] max-[720px]:h-8 max-[720px]:px-3 max-[720px]:text-[10px]"
               onClick={onEditClass}

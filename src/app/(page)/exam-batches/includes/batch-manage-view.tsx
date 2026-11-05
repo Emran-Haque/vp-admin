@@ -1,6 +1,8 @@
 "use client";
 
 import StudentAvatar from "@/components/student-avatar";
+import CopyShareLinkButton from "@/components/copy-share-link-button";
+import { batchShareUrl } from "@/lib/share-links";
 import { useState } from "react";
 import { formatMarks } from "@/lib/marks";
 import {
@@ -117,6 +119,12 @@ export default function BatchManageView({
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
+            <CopyShareLinkButton
+              url={batchShareUrl(batch.id)}
+              label="শিক্ষার্থীদের জন্য ব্যাচের লিংক কপি করুন"
+              isDraft={!batch.is_published}
+              text="লিংক কপি"
+            />
             <button type="button" onClick={() => setShowJoinRequests((s) => !s)} className="inline-flex h-11 items-center gap-2 rounded-xl border border-cyan-500/30 px-4 text-sm font-bold text-cyan-100 hover:bg-white/5">
               <UserPlus size={16} /> জয়েন রিকোয়েস্ট
             </button>

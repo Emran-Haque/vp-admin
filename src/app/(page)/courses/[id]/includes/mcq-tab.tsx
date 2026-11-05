@@ -10,6 +10,9 @@ import {
 } from "@/redux/api/coursesApi";
 import { usePermissions } from "@/hooks/use-permissions";
 import AdminDeleteButton from "@/components/admin-delete-button";
+import LinkCoursesButton from "@/components/link-courses-button";
+import CopyExamLinkButton from "./copy-exam-link-button";
+import LinkedCoursesBadge from "@/components/linked-courses-badge";
 import { extractErrorMessage } from "@/lib/api-error";
 import EmptyState from "./empty-state";
 import AddExamModal from "./add-exam-modal";
@@ -164,6 +167,13 @@ export default function McqTab({ courseId }: { courseId: number }) {
                       <p className="text-xs text-slate-400">
                         {exam.total_questions} প্রশ্ন • {exam.duration_minutes} মিনিট • সর্বোচ্চ {exam.max_attempts ?? 1} বার
                       </p>
+                      <LinkedCoursesBadge
+                        kind="exam"
+                        id={exam.id}
+                        linked={exam.linked_courses ?? []}
+                        canUnlink={hasPermission("can_edit_exam")}
+                        className="mt-1.5"
+                      />
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -172,6 +182,22 @@ export default function McqTab({ courseId }: { courseId: number }) {
                     >
                       {statusLabels[exam.status] ?? exam.status}
                     </span>
+                    <CopyExamLinkButton
+                      examId={exam.id}
+                      courseId={courseId}
+                      isDraft={exam.status !== "published"}
+                    />
+                    {hasPermission("can_create_exam") && (
+                      <LinkCoursesButton
+                label="অন্য কোর্সে"
+                        kind="exam"
+                        itemId={exam.id}
+                        itemTitle={exam.title}
+                        sourceCourseId={courseId}
+                        linked={exam.linked_courses ?? []}
+                        className="flex h-9 items-center gap-1.5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-3 text-xs font-black text-cyan-100 hover:bg-cyan-500/20"
+                      />
+                    )}
                     {hasPermission("can_edit_exam") && (
                       <Link
                         href={`/mcq/${exam.id}/edit`}
@@ -185,7 +211,11 @@ export default function McqTab({ courseId }: { courseId: number }) {
                       <AdminDeleteButton
                         itemName={exam.title}
                         itemType="MCQ পরীক্ষা"
-                        impact="পরীক্ষা, প্রশ্ন এবং সংশ্লিষ্ট ফলাফল ডেটা মুছে যেতে পারে।"
+                        impact={
+                          (exam.linked_courses?.length ?? 0) > 0
+                            ? "শুধু এই কোর্সের কপি ও তার ফলাফল মুছবে — অন্য কোর্সের কপি থেকে যাবে।"
+                            : "পরীক্ষা, প্রশ্ন এবং সংশ্লিষ্ট ফলাফল ডেটা মুছে যেতে পারে।"
+                        }
                         onDelete={() => deleteExam(exam.id).unwrap()}
                         className="flex size-9 items-center justify-center rounded-xl border border-red-600/40 bg-red-600/10 text-red-600"
                       >

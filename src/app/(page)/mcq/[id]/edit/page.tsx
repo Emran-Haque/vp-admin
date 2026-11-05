@@ -35,6 +35,9 @@ import { extractErrorMessage } from "@/lib/api-error";
 import ErrorState from "@/components/error-state";
 import { PageLoader } from "@/components/loaders";
 import ConfirmActionDialog from "@/components/confirm-action-dialog";
+import LinkCoursesButton from "@/components/link-courses-button";
+import { usePermissions } from "@/hooks/use-permissions";
+import LinkedCoursesBadge from "@/components/linked-courses-badge";
 import type { ExamBasicInfo, Question } from "../../create/includes/types";
 
 const optionLetters = ["A", "B", "C", "D"] as const;
@@ -43,6 +46,7 @@ const isPersisted = (id: string) => /^\d+$/.test(id);
 export default function Page() {
   const params = useParams<{ id: string }>();
   const examId = Number(params.id);
+  const { hasPermission } = usePermissions();
 
   const {
     data: exam,
@@ -394,6 +398,37 @@ export default function Page() {
         onNext={() => setStep((s) => (s < 3 ? ((s + 1) as 2 | 3) : s))}
         onSave={handleSave}
       />
+
+      {exam.course !== null && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-cyan-500/25 bg-cyan-500/5 p-5">
+          <div className="min-w-0 flex-1">
+            {(exam.linked_courses?.length ?? 0) > 0 ? (
+              <>
+                <p className="flex flex-wrap items-center gap-2 text-sm font-bold text-cyan-100">
+                  এই পরীক্ষা অন্য কোর্সেও আছে
+                  <LinkedCoursesBadge kind="exam" id={exam.id} linked={exam.linked_courses ?? []} canUnlink />
+                </p>
+                <p className="mt-1 text-sm leading-6 text-cyan-100/70">
+                  এখানে যা সেভ করবেন — প্রশ্ন, উত্তর, নম্বর, সময়, পাবলিশ — সব কোর্সে একসাথে বদলাবে। কোর্স ও বিষয় প্রতিটি কোর্সের নিজের থাকবে, ফলাফলও আলাদা।
+                </p>
+              </>
+            ) : (
+              <p className="text-sm leading-6 text-cyan-100/80">
+                একই পরীক্ষা অন্য কোর্সেও দিতে চাইলে যোগ করুন — পরে এখান থেকে এডিট করলে সব কোর্সে একসাথে বদলাবে।
+              </p>
+            )}
+          </div>
+          {hasPermission("can_create_exam") ? (
+            <LinkCoursesButton
+              kind="exam"
+              itemId={exam.id}
+              itemTitle={exam.title}
+              sourceCourseId={exam.course}
+              linked={exam.linked_courses ?? []}
+            />
+          ) : null}
+        </div>
+      )}
 
       {exam.status === "published" && (
         <div className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5">

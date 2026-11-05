@@ -21,6 +21,10 @@ export type Exam = {
   /** null for standalone exam-batch (routine) exams — they have no course. */
   course: number | null;
   course_class: number | null;
+  /** Title of `course` (null for exam-batch exams). */
+  course_title?: string | null;
+  /** Other courses this paper is linked into (see linkingApi). Empty = not linked. */
+  linked_courses?: { exam: number; course: number; course_title: string }[];
   title: string;
   slug: string;
   subject: number | null;
@@ -203,6 +207,8 @@ export type ClassQuiz = {
   total_marks: string;
   status: string;
   questions: ExamQuestion[];
+  /** Other courses this quiz is linked into. Empty = not linked. */
+  linked_courses?: { exam: number; course: number; course_title: string }[];
   // Present once the API carries them (offline-batch release onwards).
   mode?: ExamMode;
   subject?: number | null;

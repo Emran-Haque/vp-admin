@@ -29,6 +29,11 @@ export function extractErrorMessage(error: unknown): string {
       }
       const data = err.data;
       if (typeof data === "string" && data) return `(${err.status}) ${data}`;
+      // DRF sends a bare ValidationError("…") as a list of messages.
+      if (Array.isArray(data)) {
+        const messages = data.filter((item): item is string => typeof item === "string");
+        if (messages.length) return `(${err.status}) ${messages.join(" ")}`;
+      }
       if (data && typeof data === "object") {
         const obj = data as Record<string, unknown>;
         if (typeof obj.detail === "string") return `(${err.status}) ${obj.detail}`;

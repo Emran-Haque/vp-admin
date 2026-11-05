@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { copyText, courseShareUrl } from "@/lib/share-links";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, Video, HelpCircle, ClipboardList, Users, Clock, Pencil, Trash2, Sparkles, ShieldCheck, Eye, EyeOff, Copy, Check, GraduationCap, type LucideIcon } from "lucide-react";
@@ -24,9 +25,6 @@ const statBoxes: { key: keyof Course; label: string; icon: LucideIcon }[] = [
 ];
 
 const API_ORIGIN = "https://api.vaiyaderpathshala.com";
-const STUDENT_SITE_ORIGIN = (
-  process.env.NEXT_PUBLIC_STUDENT_SITE_URL ?? "https://www.vaiyaderpathshala.com"
-).replace(/\/$/, "");
 
 function resolveMediaUrl(value: string | null) {
   if (!value) return "";
@@ -67,15 +65,13 @@ export default function CourseList() {
   const courses = data?.results ?? [];
 
   const copyCourseUrl = async (courseId: number) => {
-    const next = encodeURIComponent(`/my-courses/${courseId}`);
-    const url = `${STUDENT_SITE_ORIGIN}/auth/login?next=${next}`;
-    try {
-      await navigator.clipboard.writeText(url);
+    // Short /c/{id} link: a real redirect to the login page (lib/share-links.ts).
+    if (await copyText(courseShareUrl(courseId))) {
       setCopiedCourseId(courseId);
       window.setTimeout(() => {
         setCopiedCourseId((current) => current === courseId ? null : current);
       }, 2000);
-    } catch {
+    } else {
       setCopiedCourseId(null);
     }
   };

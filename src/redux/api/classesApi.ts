@@ -42,6 +42,8 @@ export type CourseClass = {
   videos: ClassVideo[];
   class_materials: ClassMaterial[];
   quizzes: ClassQuiz[];
+  /** Other courses this class is linked into (see linkingApi). Empty = not linked. */
+  linked_courses?: { class: number; course: number; course_title: string }[];
 };
 
 export type AttendanceStatus = "" | "present" | "absent" | "late" | "excused";

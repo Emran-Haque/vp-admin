@@ -30,6 +30,9 @@ import ErrorState from "@/components/error-state";
 import StudentNameLink from "@/components/student-name-link";
 import AnswerSheetModal from "../../results/includes/answer-sheet-modal";
 import AdminDeleteButton from "@/components/admin-delete-button";
+import LinkCoursesButton from "@/components/link-courses-button";
+import CopyExamLinkButton from "../../courses/[id]/includes/copy-exam-link-button";
+import LinkedCoursesBadge from "@/components/linked-courses-badge";
 import { PageLoader } from "@/components/loaders";
 
 const resultStatusStyles: Record<string, { label: string; className: string }> = {
@@ -76,6 +79,21 @@ export default function ExamList() {
 
             <div className="min-w-64 flex-1">
               <p className="text-lg font-semibold text-blue-50">{exam.title}</p>
+              {exam.course_title || (exam.linked_courses?.length ?? 0) > 0 ? (
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  {exam.course_title ? (
+                    <span className="rounded-full bg-white/5 px-2.5 py-1 text-xs font-semibold text-slate-300">
+                      কোর্স: {exam.course_title}
+                    </span>
+                  ) : null}
+                  <LinkedCoursesBadge
+                    kind="exam"
+                    id={exam.id}
+                    linked={exam.linked_courses ?? []}
+                    canUnlink={hasPermission("can_edit_exam")}
+                  />
+                </div>
+              ) : null}
               <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-400">
                 <span className="flex items-center gap-1">
                   <HelpCircle size={14} className="text-red-600" />
@@ -127,6 +145,26 @@ export default function ExamList() {
 
               {hasPermission("can_view_results") && <ExamAttemptsButton exam={exam} />}
 
+              {/* Short /t/{course}/{exam} link for students (free MCQs included). */}
+              {exam.course !== null && (
+                <CopyExamLinkButton
+                  examId={exam.id}
+                  courseId={exam.course}
+                  isDraft={exam.status !== "published"}
+                  text="লিংক কপি"
+                />
+              )}
+
+              {exam.course !== null && hasPermission("can_create_exam") && (
+                <LinkCoursesButton
+                  kind="exam"
+                  itemId={exam.id}
+                  itemTitle={exam.title}
+                  sourceCourseId={exam.course}
+                  linked={exam.linked_courses ?? []}
+                />
+              )}
+
               {hasPermission("can_edit_exam") && (
                 <Link
                   href={`/mcq/${exam.id}/edit`}
@@ -142,7 +180,11 @@ export default function ExamList() {
                 <AdminDeleteButton
                   itemName={exam.title}
                   itemType="পরীক্ষা"
-                  impact="পরীক্ষাটি এবং এর প্রশ্ন/রেজাল্ট সম্পর্কিত ডেটা মুছে যেতে পারে।"
+                  impact={
+                    (exam.linked_courses?.length ?? 0) > 0
+                      ? "শুধু এই কোর্সের কপি ও তার ফলাফল মুছবে — অন্য কোর্সের কপি থেকে যাবে।"
+                      : "পরীক্ষাটি এবং এর প্রশ্ন/রেজাল্ট সম্পর্কিত ডেটা মুছে যেতে পারে।"
+                  }
                   onDelete={() => deleteExam(exam.id).unwrap()}
                   className="flex size-10 items-center justify-center rounded-xl border border-red-600/40 bg-red-600/10 text-red-600"
                 >

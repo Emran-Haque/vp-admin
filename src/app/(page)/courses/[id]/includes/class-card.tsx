@@ -4,6 +4,9 @@ import Image from "next/image";
 import { Pencil, Play, Radio, Trash2 } from "lucide-react";
 import { getMediaUrl } from "@/redux/api/baseApi";
 import type { CourseClass } from "@/redux/api/classesApi";
+import { usePermissions } from "@/hooks/use-permissions";
+import LinkCoursesButton from "@/components/link-courses-button";
+import LinkedCoursesBadge from "@/components/linked-courses-badge";
 
 /**
  * A lecture or live class, laid out the way the student sees it.
@@ -13,7 +16,7 @@ import type { CourseClass } from "@/redux/api/classesApi";
  * looking at the same thing a student will. The card stacks below 860px for the
  * same reason the student one does: most people are on a phone.
  *
- * The only additions are the edit and delete controls.
+ * The only additions are the edit, delete and "add to other courses" controls.
  */
 export default function ClassCard({
   item,
@@ -30,6 +33,8 @@ export default function ClassCard({
 }) {
   const isLive = variant === "live";
   const firstVideo = item.videos[0];
+  const { hasPermission } = usePermissions();
+  const linked = item.linked_courses ?? [];
   // The lecture form uploads a thumbnail against the video; the live-class form
   // uploads one against the class. Take whichever this card actually has.
   const poster = getMediaUrl(firstVideo?.thumbnail ?? null) ?? getMediaUrl(item.thumbnail);
@@ -95,6 +100,12 @@ export default function ClassCard({
                 লাইভ
               </span>
             ) : null}
+            <LinkedCoursesBadge
+              kind="class"
+              id={item.id}
+              linked={linked}
+              canUnlink={hasPermission("can_edit_live_class")}
+            />
           </div>
 
           <h3 className="m-0 mt-2 truncate text-[16px] font-black leading-snug text-blue-50 max-[860px]:text-[15px]">
@@ -135,6 +146,17 @@ export default function ClassCard({
         </div>
 
         <div className="flex shrink-0 items-center gap-2 max-[860px]:flex-col max-[860px]:items-stretch">
+          {hasPermission("can_create_live_class") ? (
+            <LinkCoursesButton
+                label="অন্য কোর্সে"
+              kind="class"
+              itemId={item.id}
+              itemTitle={item.title}
+              sourceCourseId={item.course}
+              linked={linked}
+              className="inline-flex h-10 items-center justify-center gap-1.5 rounded-[12px] border border-cyan-500/30 bg-cyan-500/10 px-3.5 text-[13px] font-bold text-cyan-100 hover:bg-cyan-500/20"
+            />
+          ) : null}
           <button
             type="button"
             onClick={onEdit}

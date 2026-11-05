@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import LinkedEditNotice from "@/components/linked-edit-notice";
 import { X, Save, AlertTriangle } from "lucide-react";
 import {
   useCreateClassMutation,
@@ -189,6 +190,8 @@ export default function AddRecordingModal({
               <p className="text-xs text-red-500">{error}</p>
             </div>
           )}
+
+          <LinkedEditNotice linked={editItem?.linked_courses} noun="ক্লাস" />
 
           {initialSubjectName ? (
             <div className="rounded-[10px] border border-blue-500/25 bg-blue-500/10 px-3.5 py-2 text-xs font-semibold text-blue-100">
