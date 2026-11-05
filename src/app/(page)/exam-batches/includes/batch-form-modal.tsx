@@ -34,6 +34,8 @@ type BatchForm = {
   short_description: string;
   description: string;
   promo_video_url: string;
+  /** Form-only switch: a free batch is saved as price 0 and needs no price. */
+  is_free: boolean;
   price: string;
   discount_amount: string;
   start_date: string;
@@ -47,7 +49,10 @@ const emptyForm: BatchForm = {
   short_description: "",
   description: "",
   promo_video_url: "",
-  price: "0.00",
+  // A new batch starts paid with no price, so a batch only becomes free when
+  // the admin ticks "ফ্রি ব্যাচ" — never by leaving the price at 0.
+  is_free: false,
+  price: "",
   discount_amount: "0.00",
   start_date: "",
   end_date: "",
@@ -61,6 +66,8 @@ function formFromBatch(batch: ExamBatch): BatchForm {
     short_description: batch.short_description || "",
     description: batch.description || "",
     promo_video_url: batch.promo_video_url || "",
+    // The API's only notion of "free" is price 0, so that is what ticks it.
+    is_free: !(Number(batch.price) > 0),
     price: originalPriceFromOffer({
       price: batch.price,
       oldPrice: batch.old_price,
@@ -114,10 +121,16 @@ export default function BatchFormModal({
   const save = async () => {
     if (!form.title.trim()) return;
     setError(null);
+    const offer = form.is_free
+      ? { salePrice: 0, discountAmount: 0 }
+      : offerPreview(form.price, form.discount_amount);
+    if (!form.is_free && !(offer.salePrice > 0)) {
+      setError("ব্যাচের দাম দিন। ফ্রি ব্যাচ হলে \"ফ্রি ব্যাচ\" টিক দিন।");
+      return;
+    }
     try {
       let saved: ExamBatch;
       const includePayload = serializeIncludes(includes);
-      const offer = offerPreview(form.price, form.discount_amount);
       if (thumbnail || videoThumbnail) {
         // Multipart when either image is picked — JSON cannot carry a file.
         const fd = new FormData();
@@ -142,6 +155,9 @@ export default function BatchFormModal({
       } else {
         const payload = {
           ...form,
+          // Form-only switch (undefined is dropped from the JSON body); the
+          // API stores a free batch as price 0.
+          is_free: undefined,
           price: String(offer.salePrice),
           discount_amount: String(offer.discountAmount),
           start_date: form.start_date || null,
@@ -245,23 +261,41 @@ export default function BatchFormModal({
               প্লে বাটনের পেছনে এই ছবিটি দেখা যাবে। না দিলে কভার ছবিটিই ব্যবহার হবে।
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-2 max-[520px]:grid-cols-1">
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold text-slate-400">মূল দাম (৳)</label>
-              <input className={fieldClass} placeholder="0.00" value={form.price} onChange={(e) => set("price", e.target.value)} />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold text-slate-400">ডিসকাউন্ট এমাউন্ট (৳)</label>
-              <input className={fieldClass} placeholder="0" value={form.discount_amount} onChange={(e) => set("discount_amount", e.target.value)} />
-            </div>
-          </div>
-          <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-3 text-xs leading-6 text-slate-300">
-            <span className="font-semibold text-cyan-200">অটো হিসাব:</span>{" "}
-            ছাড়ের পর দাম {formatBanglaMoney(pricingPreview.salePrice)} · ছাড়{" "}
-            {formatBanglaMoney(pricingPreview.discountAmount)} (
-            {pricingPreview.percent.toLocaleString("bn-BD", { maximumFractionDigits: 2 })}%)
-            {pricingPreview.hasOffer ? ` · আগের দাম ${formatBanglaMoney(pricingPreview.oldPrice)}` : ""}
-          </div>
+          <label className="flex items-start gap-2 rounded-xl border border-slate-800 bg-gray-800/50 px-4 py-3 text-sm font-semibold text-slate-200">
+            <input
+              type="checkbox"
+              className="mt-1"
+              checked={form.is_free}
+              onChange={(e) => set("is_free", e.target.checked)}
+            />
+            <span>
+              ফ্রি ব্যাচ
+              <span className="mt-0.5 block text-[11px] font-normal leading-5 text-slate-500">
+                টিক দিলে দাম লাগবে না। লগইন করা শিক্ষার্থী ব্যাচ খুললেই যুক্ত হয়ে পরীক্ষা দিতে পারবে।
+              </span>
+            </span>
+          </label>
+          {form.is_free ? null : (
+            <>
+              <div className="grid grid-cols-2 gap-2 max-[520px]:grid-cols-1">
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-slate-400">মূল দাম (৳)</label>
+                  <input className={fieldClass} placeholder="যেমন: 500" value={form.price} onChange={(e) => set("price", e.target.value)} />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold text-slate-400">ডিসকাউন্ট এমাউন্ট (৳)</label>
+                  <input className={fieldClass} placeholder="0" value={form.discount_amount} onChange={(e) => set("discount_amount", e.target.value)} />
+                </div>
+              </div>
+              <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-3 text-xs leading-6 text-slate-300">
+                <span className="font-semibold text-cyan-200">অটো হিসাব:</span>{" "}
+                ছাড়ের পর দাম {formatBanglaMoney(pricingPreview.salePrice)} · ছাড়{" "}
+                {formatBanglaMoney(pricingPreview.discountAmount)} (
+                {pricingPreview.percent.toLocaleString("bn-BD", { maximumFractionDigits: 2 })}%)
+                {pricingPreview.hasOffer ? ` · আগের দাম ${formatBanglaMoney(pricingPreview.oldPrice)}` : ""}
+              </div>
+            </>
+          )}
           <div className="grid grid-cols-2 gap-2 max-[520px]:grid-cols-1">
             <div>
               <label className="mb-1.5 block text-xs font-semibold text-slate-400">শুরুর তারিখ</label>

@@ -112,7 +112,7 @@ export default function BatchManageView({
                 </span>
               </div>
               <p className="mt-1 text-sm text-slate-400">
-                {bn(batch.exam_count)} টি পরীক্ষা · {bn(batch.enrolled_count)} শিক্ষার্থী · ৳{Number(batch.price).toLocaleString("bn-BD")}
+                {bn(batch.exam_count)} টি পরীক্ষা · {bn(batch.enrolled_count)} শিক্ষার্থী · {Number(batch.price) > 0 ? `৳${Number(batch.price).toLocaleString("bn-BD")}` : "ফ্রি"}
               </p>
             </div>
           </div>
