@@ -17,6 +17,16 @@ const SOCIAL_KEYS: { key: string; label: string; placeholder: string }[] = [
   { key: "telegram", label: "Telegram", placeholder: "https://t.me/..." },
 ];
 
+/**
+ * Call numbers shown in the footer's যোগাযোগ column. They ride in
+ * `social_links` under these keys so no backend field is needed; the student
+ * site reads the same keys and never renders them as social icons.
+ */
+const PHONE_KEYS: { key: string; label: string }[] = [
+  { key: "phone_1", label: "ফোন নম্বর ১" },
+  { key: "phone_2", label: "ফোন নম্বর ২" },
+];
+
 type LinkRow = { label: string; url: string };
 
 export default function FooterModal({ onClose }: { onClose: () => void }) {
@@ -104,6 +114,26 @@ export default function FooterModal({ onClose }: { onClose: () => void }) {
                 value={value.whatsapp_number}
               />
             </Field>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            {PHONE_KEYS.map((phone) => (
+              <Field
+                hint="ফুটারে কল করার নম্বর হিসেবে দেখাবে। খালি রাখলে দেখাবে না।"
+                key={phone.key}
+                label={phone.label}
+              >
+                <input
+                  className={fieldClass}
+                  inputMode="tel"
+                  onChange={(e) =>
+                    set("social_links", { ...value.social_links, [phone.key]: e.target.value })
+                  }
+                  placeholder="01XXXXXXXXX"
+                  value={value.social_links[phone.key] ?? ""}
+                />
+              </Field>
+            ))}
           </div>
 
           <Field label="সংক্ষিপ্ত বিবরণ">
