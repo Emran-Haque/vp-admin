@@ -139,6 +139,8 @@ function toMaterialDrafts(
           removeImage: false,
           options: [q.option_a, q.option_b, q.option_c, q.option_d],
           correctIndex: (["A", "B", "C", "D"] as const).indexOf(q.correct_option),
+          explanation: q.explanation ?? "",
+          marks: q.marks ?? "",
         })
       ),
     };
@@ -534,7 +536,9 @@ export default function Page() {
               option_c: q.options[2] ?? "",
               option_d: q.options[3] ?? "",
               correct_option: optionLetters[q.correctIndex ?? 0],
-              explanation: "",
+              // Sent back as loaded: this save used to blank every explanation.
+              explanation: q.explanation.trim(),
+              ...(q.marks.trim() ? { marks: q.marks.trim() } : {}),
               order: qIndex + 1,
             };
             let savedQuestion;

@@ -5,6 +5,11 @@ export type QuizQuestion = {
   question: string;
   options: string[];
   correctIndex: number | null;
+  /** Shown to the student after answering. Carried through every save so an
+   *  edit never wipes an explanation written on the MCQ page or in a CSV. */
+  explanation: string;
+  /** This question's own marks as typed; empty = the exam's default. */
+  marks: string;
   imageUrl: string | null;
   imageFile: File | null;
   imageAltText: string;

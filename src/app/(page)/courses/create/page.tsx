@@ -279,7 +279,9 @@ function CourseCreateWizard({ initialMode }: { initialMode: BasicInfo["deliveryM
             option_c: q.options[2] ?? "",
             option_d: q.options[3] ?? "",
             correct_option: optionLetters[q.correctIndex ?? 0],
-            explanation: "",
+            explanation: q.explanation.trim(),
+            // Blank = the exam default, so a typed or CSV mark is only sent when set.
+            ...(q.marks.trim() ? { marks: q.marks.trim() } : {}),
             order: i + 1,
           },
         }).unwrap();

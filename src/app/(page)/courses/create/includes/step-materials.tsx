@@ -50,11 +50,16 @@ const createQuestion = (): QuizQuestion => ({
   question: "",
   options: ["", "", "", ""],
   correctIndex: null,
+  explanation: "",
+  marks: "",
   imageUrl: null,
   imageFile: null,
   imageAltText: "",
   removeImage: false,
 });
+
+const isBlankQuestion = (q: QuizQuestion) =>
+  !q.question.trim() && q.options.every((opt) => !opt.trim()) && !q.imageFile && !q.imageUrl;
 
 // The titles a freshly-added material starts with. Publishing a material still
 // carrying one of these means it was never named, so we block the save.
@@ -120,6 +125,28 @@ export default function StepMaterials({ materials, courseId, onChange }: Props) 
     );
   };
 
+  const removeQuestion = (materialId: string, questionId: string) => {
+    onChange(
+      materials.map((m) =>
+        m.id !== materialId || m.kind !== "mcq"
+          ? m
+          : { ...m, questions: (m.questions ?? []).filter((q) => q.id !== questionId) }
+      )
+    );
+  };
+
+  /** Appends CSV-imported questions, first dropping untouched blank rows (a new
+   *  quiz starts with one) so the import doesn't leave an empty question 1. */
+  const importQuestions = (materialId: string, imported: QuizQuestion[]) => {
+    onChange(
+      materials.map((m) =>
+        m.id !== materialId || m.kind !== "mcq"
+          ? m
+          : { ...m, questions: [...(m.questions ?? []).filter((q) => !isBlankQuestion(q)), ...imported] }
+      )
+    );
+  };
+
   const activeTab = TABS.find((t) => t.kind === activeKind)!;
   // Normally 0 or 1 item; older courses may carry more, so we render whatever exists.
   const items = materials.filter((m) => m.kind === activeKind);
@@ -169,6 +196,8 @@ export default function StepMaterials({ materials, courseId, onChange }: Props) 
             onRemove={() => removeMaterial(item.id)}
             onAddQuestion={() => addQuestion(item.id)}
             onUpdateQuestion={(questionId, patch) => updateQuestion(item.id, questionId, patch)}
+            onRemoveQuestion={(questionId) => removeQuestion(item.id, questionId)}
+            onImportQuestions={(imported) => importQuestions(item.id, imported)}
           />
         ))}
 

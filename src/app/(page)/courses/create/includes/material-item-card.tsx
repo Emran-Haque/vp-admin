@@ -1,10 +1,28 @@
 "use client";
 
-import { Check, FileText, HelpCircle, PlayCircle, Plus, Trash2, Upload, Video, type LucideIcon } from "lucide-react";
+import { useState } from "react";
+import { AlertTriangle, Check, FileText, HelpCircle, PlayCircle, Plus, Trash2, Upload, Video, type LucideIcon } from "lucide-react";
 import { formatMarks } from "@/lib/marks";
 import { useGetAllExamsQuery } from "@/redux/api/examsApi";
 import type { MaterialDraft, MaterialKind, QuizQuestion } from "./types";
 import QuestionImageInput from "@/components/question-image-input";
+import CsvImportButton from "../../../mcq/create/includes/csv-import-button";
+import CsvSampleButton from "../../../mcq/create/includes/csv-sample";
+import type { Question } from "../../../mcq/create/includes/types";
+
+/** A CSV row (MCQ page format) as an inline quiz question. */
+const fromCsvQuestion = (q: Question): QuizQuestion => ({
+  id: crypto.randomUUID(),
+  question: q.text,
+  options: q.options,
+  correctIndex: q.correctIndex,
+  explanation: q.explanation,
+  marks: q.marks,
+  imageUrl: null,
+  imageFile: null,
+  imageAltText: "",
+  removeImage: false,
+});
 
 const badgeConfig: Record<MaterialKind, { label: string; icon: LucideIcon; className: string }> = {
   pdf: { label: "পিডিএফ", icon: FileText, className: "bg-amber-500/20 text-amber-500" },
@@ -32,9 +50,22 @@ type Props = {
   onRemove: () => void;
   onAddQuestion: () => void;
   onUpdateQuestion: (questionId: string, patch: Partial<QuizQuestion>) => void;
+  onRemoveQuestion: (questionId: string) => void;
+  onImportQuestions: (questions: QuizQuestion[]) => void;
 };
 
-export default function MaterialItemCard({ item, courseId, onUpdate, onRemove, onAddQuestion, onUpdateQuestion }: Props) {
+export default function MaterialItemCard({
+  item,
+  courseId,
+  onUpdate,
+  onRemove,
+  onAddQuestion,
+  onUpdateQuestion,
+  onRemoveQuestion,
+  onImportQuestions,
+}: Props) {
+  const [csvErrors, setCsvErrors] = useState<string[]>([]);
+  const [csvImported, setCsvImported] = useState<number | null>(null);
   const badge = badgeConfig[item.kind];
   const ytId = item.kind === "video" ? youtubeId(item.videoUrl ?? "") : null;
 
@@ -186,15 +217,59 @@ export default function MaterialItemCard({ item, courseId, onUpdate, onRemove, o
 
           {!item.quizId && (
             <div className="flex flex-col gap-3">
+              {/* Same CSV format and sample as the MCQ page. */}
+              <div className="flex flex-wrap items-center gap-2 rounded-xl border border-dashed border-slate-700 bg-gray-900/40 p-3">
+                <CsvImportButton
+                  className="flex cursor-pointer items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500"
+                  onImport={(questions) => {
+                    onImportQuestions(questions.map(fromCsvQuestion));
+                    setCsvImported(questions.length);
+                  }}
+                  onErrors={setCsvErrors}
+                />
+                <CsvSampleButton className="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-700/60 px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-white/5" />
+                <span className="text-xs text-slate-500">
+                  একসাথে অনেক প্রশ্ন যোগ করতে CSV ফাইল দিন — নিচের প্রশ্নগুলোর পরে যোগ হবে।
+                </span>
+              </div>
+              {csvImported ? (
+                <p className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-300">
+                  {csvImported} টি প্রশ্ন CSV থেকে যোগ হয়েছে। সেভ করলে কুইজে যুক্ত হবে।
+                </p>
+              ) : null}
+              {csvErrors.length > 0 ? (
+                <div className="rounded-xl border border-red-500/30 bg-red-500/5 p-3 text-xs text-red-300">
+                  <p className="mb-1 flex items-center gap-1.5 font-semibold">
+                    <AlertTriangle size={14} /> CSV-এর কিছু সারি যোগ করা যায়নি:
+                  </p>
+                  <ul className="list-disc space-y-0.5 pl-5">
+                    {csvErrors.slice(0, 10).map((error) => (
+                      <li key={error}>{error}</li>
+                    ))}
+                  </ul>
+                  {csvErrors.length > 10 ? <p className="mt-1">আরও {csvErrors.length - 10} টি সমস্যা আছে।</p> : null}
+                </div>
+              ) : null}
               {(item.questions ?? []).map((q, qIndex) => (
                 <div key={q.id} className="rounded-xl border border-slate-800 bg-gray-900/60 p-3">
-                  <input
-                    type="text"
-                    value={q.question}
-                    onChange={(e) => onUpdateQuestion(q.id, { question: e.target.value })}
-                    placeholder={`প্রশ্ন ${qIndex + 1}`}
-                    className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-sm text-blue-50 placeholder:text-slate-400 focus:outline-none"
-                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={q.question}
+                      onChange={(e) => onUpdateQuestion(q.id, { question: e.target.value })}
+                      placeholder={`প্রশ্ন ${qIndex + 1}`}
+                      className="w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-sm text-blue-50 placeholder:text-slate-400 focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => onRemoveQuestion(q.id)}
+                      aria-label={`প্রশ্ন ${qIndex + 1} মুছুন`}
+                      title="প্রশ্ন মুছুন"
+                      className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-red-600/40 bg-red-600/10 text-red-500 hover:bg-red-600/20"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
                   <QuestionImageInput
                     imageAltText={q.imageAltText}
                     imageFile={q.imageFile}
@@ -235,6 +310,24 @@ export default function MaterialItemCard({ item, courseId, onUpdate, onRemove, o
                         />
                       </div>
                     ))}
+                  </div>
+                  <div className="mt-2 grid grid-cols-[1fr_130px] gap-2 max-[520px]:grid-cols-1">
+                    <input
+                      type="text"
+                      value={q.explanation}
+                      onChange={(e) => onUpdateQuestion(q.id, { explanation: e.target.value })}
+                      placeholder="ব্যাখ্যা (অপশনাল)"
+                      className="rounded-xl border border-slate-800 bg-gray-800 px-4 py-2.5 text-sm text-blue-50 placeholder:text-slate-400 focus:outline-none"
+                    />
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={q.marks}
+                      onChange={(e) => onUpdateQuestion(q.id, { marks: e.target.value })}
+                      placeholder="নম্বর (ডিফল্ট)"
+                      title="খালি রাখলে কুইজের ডিফল্ট নম্বর ধরা হবে"
+                      className="rounded-xl border border-slate-800 bg-gray-800 px-4 py-2.5 text-sm text-blue-50 placeholder:text-slate-400 focus:outline-none"
+                    />
                   </div>
                 </div>
               ))}
