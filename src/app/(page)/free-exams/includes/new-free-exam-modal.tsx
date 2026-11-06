@@ -5,6 +5,7 @@ import { AlertTriangle, Gift, X } from "lucide-react";
 import {
   useCreateExamBatchMutation,
   useImportRoutineMutation,
+  useLazyGetExamBatchQuery,
   usePublishExamResultMutation,
   type ExamBatch,
 } from "@/redux/api/examsApi";
@@ -48,6 +49,7 @@ export default function NewFreeExamModal({
   const [busy, setBusy] = useState(false);
   const [createBatch] = useCreateExamBatchMutation();
   const [importRoutine] = useImportRoutineMutation();
+  const [loadBatch] = useLazyGetExamBatchQuery();
   const [publishResult] = usePublishExamResultMutation();
 
   const save = async () => {
@@ -73,7 +75,7 @@ export default function NewFreeExamModal({
         }).unwrap());
       const startIso = scheduled ? localDateTimeToIso(start) ?? null : null;
       const before = new Set(batch.exams?.map((row) => row.exam) ?? []);
-      const { batch: updated } = await importRoutine({
+      await importRoutine({
         batchId: batch.id,
         publish: false,
         exams: [
@@ -91,6 +93,9 @@ export default function NewFreeExamModal({
           },
         ],
       }).unwrap();
+      // The import's reply lists the batch's exams as they were *before* the
+      // import, so read the batch again to find the new one.
+      const updated = await loadBatch(batch.id, false).unwrap();
       const created = [...(updated.exams ?? [])]
         .filter((row) => !before.has(row.exam))
         .sort((a, b) => b.exam - a.exam)[0];

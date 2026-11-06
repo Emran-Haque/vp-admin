@@ -815,6 +815,7 @@ export const {
   useGetAttemptAnswerSheetQuery,
   useGetExamBatchesQuery,
   useGetExamBatchQuery,
+  useLazyGetExamBatchQuery,
   useCreateExamBatchMutation,
   useUpdateExamBatchMutation,
   useDeleteExamBatchMutation,
