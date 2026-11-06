@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
-import { CheckCircle2, Clock, Gift, Link2, ListChecks, Plus, Trash2 } from "lucide-react";
+import { CalendarClock, CheckCircle2, Clock, Gift, Link2, ListChecks, Plus, Trash2 } from "lucide-react";
 import ErrorState from "@/components/error-state";
 import { PageLoader } from "@/components/loaders";
 import { usePermissions } from "@/hooks/use-permissions";
@@ -14,6 +14,7 @@ import {
   usePublishExamResultMutation,
   type ExamBatchExam,
 } from "@/redux/api/examsApi";
+import EditRoutineExamModal from "../exam-batches/includes/edit-routine-exam-modal";
 import RoutineMcqEditor from "../exam-batches/includes/routine-mcq-editor";
 import NewFreeExamModal, { FREE_EXAMS_BATCH_TITLE } from "./includes/new-free-exam-modal";
 import { ResultTimingModal, resultTimingLabel } from "./includes/result-timing";
@@ -26,6 +27,17 @@ const examLink = (examId: number) =>
   `${STUDENT_SITE}/auth/login?next=${encodeURIComponent(`/mcq-exams?exam=${examId}`)}`;
 
 type Row = ExamBatchExam & { batchTitle: string };
+
+const when = (iso: string) =>
+  new Date(iso).toLocaleString("bn-BD", { day: "numeric", month: "long", hour: "numeric", minute: "2-digit" });
+
+/** "যেকোনো সময়", or the exam's window in plain words. */
+function examWindow(row: Row): string {
+  if (row.start_time && row.end_time) return `${when(row.start_time)} → ${when(row.end_time)}`;
+  if (row.start_time) return `শুরু ${when(row.start_time)}`;
+  if (row.end_time) return `শেষ ${when(row.end_time)}`;
+  return "যেকোনো সময়";
+}
 
 /**
  * The simple free-exam flow: ১) নতুন ফ্রি পরীক্ষা → ২) প্রশ্ন যোগ → ৩) প্রকাশ.
@@ -45,6 +57,7 @@ export default function FreeExamsPage() {
   const [copied, setCopied] = useState<number | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [timingFor, setTimingFor] = useState<Row | null>(null);
+  const [scheduleFor, setScheduleFor] = useState<Row | null>(null);
 
   if (editor) {
     return (
@@ -146,7 +159,7 @@ export default function FreeExamsPage() {
                   <div className="min-w-0">
                     <p className="truncate font-bold text-blue-50">{row.exam_title}</p>
                     <p className="mt-0.5 text-xs text-slate-400">
-                      {bn(row.total_questions)} প্রশ্ন · {bn(row.duration_minutes)} মিনিট
+                      {bn(row.total_questions)} প্রশ্ন · {bn(row.duration_minutes)} মিনিট · পরীক্ষা: {examWindow(row)}
                       {row.batchTitle !== FREE_EXAMS_BATCH_TITLE ? ` · ব্যাচ: ${row.batchTitle}` : ""}
                     </p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
@@ -171,6 +184,15 @@ export default function FreeExamsPage() {
                         className="inline-flex h-9 items-center gap-1.5 rounded-full bg-slate-800 px-3.5 text-sm font-semibold text-slate-200 hover:bg-slate-700"
                       >
                         <Link2 size={14} /> {copied === row.exam ? "কপি হয়েছে ✓" : "লিংক কপি"}
+                      </button>
+                    ) : null}
+                    {hasPermission("can_edit_exam") ? (
+                      <button
+                        type="button"
+                        onClick={() => setScheduleFor(row)}
+                        className="inline-flex h-9 items-center gap-1.5 rounded-full bg-slate-800 px-3.5 text-sm font-semibold text-slate-200 hover:bg-slate-700"
+                      >
+                        <CalendarClock size={14} /> পরীক্ষার সময়
                       </button>
                     ) : null}
                     {hasPermission("can_publish_result") ? (
@@ -237,6 +259,17 @@ export default function FreeExamsPage() {
             ))}
           </div>
         </section>
+      ) : null}
+
+      {scheduleFor ? (
+        <EditRoutineExamModal
+          item={scheduleFor}
+          onClose={() => setScheduleFor(null)}
+          onSaved={() => {
+            setScheduleFor(null);
+            void batchesQuery.refetch();
+          }}
+        />
       ) : null}
 
       {timingFor ? (

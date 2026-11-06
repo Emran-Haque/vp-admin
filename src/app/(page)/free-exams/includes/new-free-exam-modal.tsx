@@ -42,7 +42,6 @@ export default function NewFreeExamModal({
   const [negativeMark, setNegativeMark] = useState("0");
   const [resultTiming, setResultTiming] = useState<ResultTiming>("instant");
   const [resultAt, setResultAt] = useState("");
-  const [scheduled, setScheduled] = useState(false);
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -54,8 +53,8 @@ export default function NewFreeExamModal({
 
   const save = async () => {
     if (!title.trim() || busy) return;
-    if (scheduled && (!start || !end)) {
-      setError("শুরু ও শেষ দুই সময়ই দিন, অথবা \"নির্দিষ্ট সময়ে পরীক্ষা\" টিক তুলে দিন।");
+    if (start && end && new Date(end) <= new Date(start)) {
+      setError("পরীক্ষা শেষের সময় শুরুর পরে হতে হবে।");
       return;
     }
     if (resultTiming === "scheduled" && !resultAt) {
@@ -73,7 +72,7 @@ export default function NewFreeExamModal({
           price: "0.00",
           is_published: true,
         }).unwrap());
-      const startIso = scheduled ? localDateTimeToIso(start) ?? null : null;
+      const startIso = start ? localDateTimeToIso(start) ?? null : null;
       const before = new Set(batch.exams?.map((row) => row.exam) ?? []);
       await importRoutine({
         batchId: batch.id,
@@ -84,7 +83,7 @@ export default function NewFreeExamModal({
             subject_label: "",
             exam_date: startIso ? start.slice(0, 10) : null,
             start_time: startIso,
-            end_time: scheduled ? localDateTimeToIso(end) ?? null : null,
+            end_time: end ? localDateTimeToIso(end) ?? null : null,
             duration_minutes: Number(duration) || 30,
             marks_per_question: mark || "1",
             planned_questions: 0,
@@ -150,28 +149,22 @@ export default function NewFreeExamModal({
             </div>
           </div>
 
-          <ResultTimingFields timing={resultTiming} at={resultAt} onTiming={setResultTiming} onAt={setResultAt} />
-
-          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-800 bg-slate-950/40 p-3">
-            <input type="checkbox" className="mt-0.5 size-4 accent-emerald-500" checked={scheduled} onChange={(e) => setScheduled(e.target.checked)} />
-            <span>
-              <span className="block text-sm font-bold text-blue-50">নির্দিষ্ট সময়ে পরীক্ষা (ঐচ্ছিক)</span>
-              <span className="mt-0.5 block text-xs text-slate-400">টিক না দিলে প্রকাশের পর যেকোনো সময় পরীক্ষা দেওয়া যাবে।</span>
-            </span>
-          </label>
-          {scheduled ? (
+          <div>
             <div className="grid grid-cols-2 gap-2 max-[480px]:grid-cols-1">
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-slate-400">শুরু</label>
+                <label className="mb-1.5 block text-xs font-semibold text-slate-400">পরীক্ষা শুরু (ঐচ্ছিক)</label>
                 <input className={dateClass} type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} />
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-slate-400">শেষ</label>
+                <label className="mb-1.5 block text-xs font-semibold text-slate-400">পরীক্ষা শেষ (ঐচ্ছিক)</label>
                 <input className={dateClass} type="datetime-local" value={end} onChange={(e) => setEnd(e.target.value)} />
               </div>
             </div>
-          ) : null}
-          {scheduled && resultTiming === "instant" ? (
+            <p className="mt-1.5 text-xs text-slate-500">খালি রাখলে প্রকাশের পর যেকোনো সময় পরীক্ষা দেওয়া যাবে।</p>
+          </div>
+
+          <ResultTimingFields timing={resultTiming} at={resultAt} onTiming={setResultTiming} onAt={setResultAt} />
+          {(start || end) && resultTiming === "instant" ? (
             <p className="text-xs text-amber-300">
               লাইভ পরীক্ষায় সাথে সাথে রেজাল্ট দেখালে আগে শেষ করা শিক্ষার্থী সঠিক উত্তর অন্যদের জানিয়ে দিতে পারে।
             </p>
