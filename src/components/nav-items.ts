@@ -17,6 +17,7 @@ import {
   Share2,
   PanelsTopLeft,
   School,
+  Gift,
   type LucideIcon,
 } from "lucide-react";
 import type { ModeratorPermissions } from "@/redux/api/moderatorsApi";
@@ -45,6 +46,7 @@ export const navItems: NavItem[] = [
   { label: "অফলাইন ব্যাচ", href: "/offline-batches", icon: School, permission: "can_manage_offline_batches" },
   { label: "MCQ পরীক্ষা", href: "/mcq", icon: ClipboardList, permission: "can_view_exams" },
   { label: "পরীক্ষা ব্যাচ", href: "/exam-batches", icon: ClipboardCheck, permission: "can_manage_exam_batches" },
+  { label: "ফ্রি পরীক্ষা", href: "/free-exams", icon: Gift, permission: ["can_manage_exam_batches", "can_view_exams"] },
   { label: "নোটিশ", href: "/notice", icon: Bell, permission: "can_manage_notices" },
   { label: "ফলাফল", href: "/results", icon: BarChart2, permission: "can_view_results" },
   { label: "অভিভাবক SMS", href: "/guardian-sms", icon: MessageSquare, permission: "can_send_guardian_sms" },

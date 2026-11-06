@@ -88,17 +88,22 @@ function formFromBatch(batch: ExamBatch): BatchForm {
 const fieldClass =
   "w-full rounded-xl border border-slate-800 bg-gray-800 px-4 py-3 text-sm text-blue-50 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/40";
 
-/** Create / edit an exam batch in a popup. `batch` null → create mode. */
+/** Create / edit an exam batch in a popup. `batch` null → create mode.
+ *  `startFree` pre-ticks "ফ্রি ব্যাচ" for a new batch (ফ্রি পরীক্ষা page). */
 export default function BatchFormModal({
   batch,
   onClose,
   onSaved,
+  startFree = false,
 }: {
   batch: ExamBatch | null;
   onClose: () => void;
   onSaved: (saved: ExamBatch) => void;
+  startFree?: boolean;
 }) {
-  const [form, setForm] = useState<BatchForm>(batch ? formFromBatch(batch) : emptyForm);
+  const [form, setForm] = useState<BatchForm>(
+    batch ? formFromBatch(batch) : { ...emptyForm, is_free: startFree },
+  );
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [videoThumbnail, setVideoThumbnail] = useState<File | null>(null);
   const [includes, setIncludes] = useState<IncludeDraft[]>(() => draftsFromIncludes(batch?.includes));

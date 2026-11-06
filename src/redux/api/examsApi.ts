@@ -70,6 +70,8 @@ export type ExamListParams = {
   status?: string;
   result_status?: string;
   search?: string;
+  /** Only exams attached to a course as a free MCQ material. */
+  free_material?: boolean;
   page?: number;
   page_size?: number;
 };
