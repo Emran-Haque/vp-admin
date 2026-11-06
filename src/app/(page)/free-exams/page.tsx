@@ -177,15 +177,17 @@ export default function FreeExamsPage() {
                     >
                       <ListChecks size={14} /> {row.total_questions ? "প্রশ্ন এডিট" : "প্রশ্ন যোগ করুন"}
                     </button>
-                    {published ? (
-                      <button
-                        type="button"
-                        onClick={() => onCopy(row.exam)}
-                        className="inline-flex h-9 items-center gap-1.5 rounded-full bg-slate-800 px-3.5 text-sm font-semibold text-slate-200 hover:bg-slate-700"
-                      >
-                        <Link2 size={14} /> {copied === row.exam ? "কপি হয়েছে ✓" : "লিংক কপি"}
-                      </button>
-                    ) : null}
+                    {/* Shareable before publishing too: the link never changes,
+                        it just shows the exam once it is published. */}
+                    <button
+                      type="button"
+                      onClick={() => onCopy(row.exam)}
+                      title={published ? undefined : "প্রকাশ করার পর এই লিংকে পরীক্ষা খুলবে"}
+                      className="inline-flex h-9 items-center gap-1.5 rounded-full bg-slate-800 px-3.5 text-sm font-semibold text-slate-200 hover:bg-slate-700"
+                    >
+                      <Link2 size={14} />{" "}
+                      {copied === row.exam ? "কপি হয়েছে ✓" : published ? "লিংক কপি" : "লিংক কপি (প্রকাশের পর খুলবে)"}
+                    </button>
                     {hasPermission("can_edit_exam") ? (
                       <button
                         type="button"
