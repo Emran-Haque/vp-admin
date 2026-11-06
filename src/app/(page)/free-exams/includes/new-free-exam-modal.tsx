@@ -10,6 +10,7 @@ import {
 } from "@/redux/api/examsApi";
 import { localDateTimeToIso } from "@/lib/exam-datetime";
 import { extractErrorMessage } from "@/lib/api-error";
+import { ResultTimingFields, resultTimingPayload, type ResultTiming } from "./result-timing";
 
 /** The one hidden-from-admin batch every "নতুন ফ্রি পরীক্ষা" goes into.
  *  Students are joined to it automatically, so its exams simply appear. */
@@ -38,7 +39,8 @@ export default function NewFreeExamModal({
   const [duration, setDuration] = useState("30");
   const [mark, setMark] = useState("1");
   const [negativeMark, setNegativeMark] = useState("0");
-  const [instantResult, setInstantResult] = useState(true);
+  const [resultTiming, setResultTiming] = useState<ResultTiming>("instant");
+  const [resultAt, setResultAt] = useState("");
   const [scheduled, setScheduled] = useState(false);
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
@@ -52,6 +54,10 @@ export default function NewFreeExamModal({
     if (!title.trim() || busy) return;
     if (scheduled && (!start || !end)) {
       setError("শুরু ও শেষ দুই সময়ই দিন, অথবা \"নির্দিষ্ট সময়ে পরীক্ষা\" টিক তুলে দিন।");
+      return;
+    }
+    if (resultTiming === "scheduled" && !resultAt) {
+      setError("রেজাল্ট প্রকাশের তারিখ ও সময় দিন।");
       return;
     }
     setError(null);
@@ -89,11 +95,9 @@ export default function NewFreeExamModal({
         .filter((row) => !before.has(row.exam))
         .sort((a, b) => b.exam - a.exam)[0];
       if (!created) throw new Error("পরীক্ষা তৈরি হয়েছে, কিন্তু তালিকায় পাওয়া যায়নি। পেজ রিফ্রেশ করুন।");
-      if (instantResult) {
-        // A result publish time of "now" = each student sees marks and
-        // answers the moment they submit. (An immediate publish would also
-        // queue an empty guardian-SMS draft and a result notification.)
-        await publishResult({ id: created.exam, data: { result_publish_at: new Date().toISOString() } }).unwrap();
+      const resultPayload = resultTimingPayload(resultTiming, resultAt);
+      if (resultPayload?.result_publish_at) {
+        await publishResult({ id: created.exam, data: resultPayload }).unwrap();
       }
       onCreated({ id: created.exam, title: created.exam_title });
     } catch (err) {
@@ -141,15 +145,7 @@ export default function NewFreeExamModal({
             </div>
           </div>
 
-          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-800 bg-slate-950/40 p-3">
-            <input type="checkbox" className="mt-0.5 size-4 accent-emerald-500" checked={instantResult} onChange={(e) => setInstantResult(e.target.checked)} />
-            <span>
-              <span className="block text-sm font-bold text-blue-50">সাবমিটের সাথে সাথে রেজাল্ট দেখাও</span>
-              <span className="mt-0.5 block text-xs text-slate-400">
-                শিক্ষার্থী জমা দিলেই নম্বর, সঠিক-ভুল উত্তর ও পজিশন দেখবে। টিক না দিলে পরে নিজে &quot;রেজাল্ট প্রকাশ&quot; করতে হবে।
-              </span>
-            </span>
-          </label>
+          <ResultTimingFields timing={resultTiming} at={resultAt} onTiming={setResultTiming} onAt={setResultAt} />
 
           <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-800 bg-slate-950/40 p-3">
             <input type="checkbox" className="mt-0.5 size-4 accent-emerald-500" checked={scheduled} onChange={(e) => setScheduled(e.target.checked)} />
@@ -170,7 +166,7 @@ export default function NewFreeExamModal({
               </div>
             </div>
           ) : null}
-          {scheduled && instantResult ? (
+          {scheduled && resultTiming === "instant" ? (
             <p className="text-xs text-amber-300">
               লাইভ পরীক্ষায় সাথে সাথে রেজাল্ট দেখালে আগে শেষ করা শিক্ষার্থী সঠিক উত্তর অন্যদের জানিয়ে দিতে পারে।
             </p>

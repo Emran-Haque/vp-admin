@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
-import { CheckCircle2, Gift, Link2, ListChecks, Plus, Trash2 } from "lucide-react";
+import { CheckCircle2, Clock, Gift, Link2, ListChecks, Plus, Trash2 } from "lucide-react";
 import ErrorState from "@/components/error-state";
 import { PageLoader } from "@/components/loaders";
 import { usePermissions } from "@/hooks/use-permissions";
@@ -16,6 +16,7 @@ import {
 } from "@/redux/api/examsApi";
 import RoutineMcqEditor from "../exam-batches/includes/routine-mcq-editor";
 import NewFreeExamModal, { FREE_EXAMS_BATCH_TITLE } from "./includes/new-free-exam-modal";
+import { ResultTimingModal, resultTimingLabel } from "./includes/result-timing";
 
 const bn = (n: number | string) => String(n).replace(/[0-9]/g, (d) => "০১২৩৪৫৬৭৮৯"[Number(d)]);
 
@@ -43,6 +44,7 @@ export default function FreeExamsPage() {
   const [editor, setEditor] = useState<{ id: number; title: string } | null>(null);
   const [copied, setCopied] = useState<number | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [timingFor, setTimingFor] = useState<Row | null>(null);
 
   if (editor) {
     return (
@@ -133,7 +135,8 @@ export default function FreeExamsPage() {
           <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
             {rows.map((row, index) => {
               const published = row.exam_status === "published";
-              const resultOpen = row.is_result_published || row.result_status === "published";
+              const result = resultTimingLabel(row);
+              const resultOpen = result.open;
               const busy = busyId === row.exam;
               return (
                 <div
@@ -148,7 +151,7 @@ export default function FreeExamsPage() {
                     </p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       <Badge tone={published ? "green" : "slate"}>{published ? "প্রকাশিত" : "ড্রাফট — শিক্ষার্থীরা দেখছে না"}</Badge>
-                      <Badge tone={resultOpen ? "green" : "amber"}>{resultOpen ? "রেজাল্ট খোলা" : "রেজাল্ট লুকানো"}</Badge>
+                      <Badge tone={resultOpen ? "green" : "amber"}>{result.text}</Badge>
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -168,6 +171,15 @@ export default function FreeExamsPage() {
                         className="inline-flex h-9 items-center gap-1.5 rounded-full bg-slate-800 px-3.5 text-sm font-semibold text-slate-200 hover:bg-slate-700"
                       >
                         <Link2 size={14} /> {copied === row.exam ? "কপি হয়েছে ✓" : "লিংক কপি"}
+                      </button>
+                    ) : null}
+                    {hasPermission("can_publish_result") ? (
+                      <button
+                        type="button"
+                        onClick={() => setTimingFor(row)}
+                        className="inline-flex h-9 items-center gap-1.5 rounded-full bg-slate-800 px-3.5 text-sm font-semibold text-slate-200 hover:bg-slate-700"
+                      >
+                        <Clock size={14} /> রেজাল্টের সময়
                       </button>
                     ) : null}
                     {published && !resultOpen && hasPermission("can_publish_result") ? (
@@ -225,6 +237,22 @@ export default function FreeExamsPage() {
             ))}
           </div>
         </section>
+      ) : null}
+
+      {timingFor ? (
+        <ResultTimingModal
+          exam={{
+            id: timingFor.exam,
+            title: timingFor.exam_title,
+            result_status: timingFor.result_status,
+            result_publish_at: timingFor.result_publish_at,
+          }}
+          onClose={() => setTimingFor(null)}
+          onSaved={() => {
+            setTimingFor(null);
+            void batchesQuery.refetch();
+          }}
+        />
       ) : null}
 
       {showNew ? (
