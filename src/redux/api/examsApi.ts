@@ -812,6 +812,7 @@ export const {
   useGetExamLeaderboardQuery,
   useGetExamAnalyticsQuery,
   useGetExamAttemptsQuery,
+  useLazyGetExamAttemptsQuery,
   useGetAttemptAnswerSheetQuery,
   useGetExamBatchesQuery,
   useGetExamBatchQuery,

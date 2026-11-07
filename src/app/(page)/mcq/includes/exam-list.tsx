@@ -34,6 +34,7 @@ import LinkCoursesButton from "@/components/link-courses-button";
 import CopyExamLinkButton from "../../courses/[id]/includes/copy-exam-link-button";
 import LinkedCoursesBadge from "@/components/linked-courses-badge";
 import { PageLoader } from "@/components/loaders";
+import LeaderboardButtons from "./leaderboard-buttons";
 
 const resultStatusStyles: Record<string, { label: string; className: string }> = {
   published: { label: "রেজাল্ট পাবলিশড", className: "border-emerald-500/40 bg-emerald-500/10 text-emerald-500" },
@@ -142,6 +143,8 @@ export default function ExamList() {
                     অভিভাবক SMS
                   </Link>
                 )}
+
+              {hasPermission("can_view_results") && <LeaderboardButtons exam={exam} />}
 
               {hasPermission("can_view_results") && <ExamAttemptsButton exam={exam} />}
 
