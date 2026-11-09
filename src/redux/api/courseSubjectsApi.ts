@@ -11,6 +11,7 @@ export type CourseSubject = {
 
 export type CourseSubjectListParams = {
   course?: number;
+  page_size?: number;
 };
 
 export type CreateCourseSubjectInput = {

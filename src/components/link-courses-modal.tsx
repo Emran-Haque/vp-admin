@@ -48,7 +48,7 @@ export default function LinkCoursesModal({
   onClose,
 }: Props) {
   const text = KIND_TEXT[kind];
-  const { data, isLoading, isError } = useGetLinkableCoursesQuery();
+  const { data, isLoading, isFetching, isError, error: coursesError, refetch } = useGetLinkableCoursesQuery();
   const [linkToCourses, { isLoading: isSaving }] = useLinkToCoursesMutation();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Record<number, SubjectChoice>>({});
@@ -169,7 +169,24 @@ export default function LinkCoursesModal({
               {isLoading ? (
                 <p className="py-8 text-center text-sm text-slate-400">কোর্স লোড হচ্ছে…</p>
               ) : isError ? (
-                <p className="py-8 text-center text-sm text-red-400">কোর্সের তালিকা আনা যায়নি।</p>
+                <div className="flex flex-col items-center gap-2 py-6 text-center">
+                  <p className="text-sm text-red-400">কোর্সের তালিকা আনা যায়নি।</p>
+                  {/* The server's own answer, so a failure can be diagnosed. */}
+                  <p className="max-w-md break-words text-xs text-slate-500">
+                    {(coursesError as { status?: unknown } | undefined)?.status != null
+                      ? `(${String((coursesError as { status?: unknown }).status)}) `
+                      : ""}
+                    {extractErrorMessage(coursesError)}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => refetch()}
+                    disabled={isFetching}
+                    className="mt-1 rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-bold text-slate-200 hover:bg-slate-800 disabled:opacity-50"
+                  >
+                    {isFetching ? "চেষ্টা হচ্ছে…" : "আবার চেষ্টা করুন"}
+                  </button>
+                </div>
               ) : visible.length === 0 ? (
                 <p className="rounded-xl border border-dashed border-slate-800 py-8 text-center text-sm text-slate-500">
                   {courses.length === 0 ? "যোগ করার মতো আর কোনো কোর্স নেই।" : "এই নামে কোনো কোর্স নেই।"}
@@ -250,7 +267,7 @@ function SubjectPicker({
   value: SubjectChoice;
   onChange: (choice: SubjectChoice) => void;
 }) {
-  const { data, isLoading } = useGetCourseSubjectsQuery({ course: courseId });
+  const { data, isLoading } = useGetCourseSubjectsQuery({ course: courseId, page_size: 100 });
   const subjects = data?.results ?? [];
   return (
     <label className="mt-2.5 flex items-center gap-2 pl-7 text-xs text-slate-400">
